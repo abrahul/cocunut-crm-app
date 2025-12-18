@@ -12,7 +12,7 @@ interface Task {
   };
   numberOfTrees?: number;
   ratePerTree?: number;
-  status: string;
+  status: "pending" | "completed";
 }
 
 export default function StaffTasksPage() {
@@ -63,11 +63,14 @@ export default function StaffTasksPage() {
             <b>Location:</b> {task.location?.name || "—"}
           </p>
 
-          {/* Trees */}
+          {/* Number of Trees */}
           <div className="mt-3">
-            <label className="block text-sm font-medium">Number of Trees</label>
+            <label className="block text-sm font-medium">
+              Number of Trees
+            </label>
             <input
               type="number"
+              disabled={task.status === "completed"}
               className="border p-2 rounded w-full"
               value={task.numberOfTrees ?? ""}
               onChange={e => {
@@ -87,11 +90,14 @@ export default function StaffTasksPage() {
 
           {/* Rate */}
           <div className="mt-3">
-            <label className="block text-sm font-medium">Rate per Tree</label>
+            <label className="block text-sm font-medium">
+              Rate per Tree
+            </label>
             <input
               type="number"
               className="border p-2 rounded w-full"
               value={task.ratePerTree ?? ""}
+              disabled={task.status === "completed"}
               onChange={e => {
                 const value =
                   e.target.value === ""
@@ -122,6 +128,36 @@ export default function StaffTasksPage() {
               </span>
             </p>
           </div>
+
+          {/* Complete Button */}
+          {task.status !== "completed" && (
+            <button
+              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={async () => {
+                const res = await fetch("/api/staff/complete-task", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ taskId: task._id }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                  setTasks(prev =>
+                    prev.map(t =>
+                      t._id === task._id
+                        ? { ...t, status: "completed" }
+                        : t
+                    )
+                  );
+                } else {
+                  alert(data.error || "Failed to complete task");
+                }
+              }}
+            >
+              Mark as Completed
+            </button>
+          )}
         </div>
       ))}
     </div>

@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     await connectDB();
     console.log("✅ DB CONNECTED");
 
-    const staffId = "6943aecda0c1ebef23e82f71";
+    const staffId = "6943aecda0c1ebef23e82f72";
     // const staffId = req.headers.get("staff-id");
     console.log("🧑 STAFF ID:", staffId);
 
