@@ -1,42 +1,54 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
+import Customer from "@/models/Customer";
+import mongoose from "mongoose";
 
 export async function POST(req: Request) {
   try {
     await connectDB();
+    const body = await req.json();
 
-    const {
-      customerId,
-      staffId,
-      treesCount,
-      rate,
-    } = await req.json();
-     
-    if (!customerId || !staffId || !treesCount || !rate) {
+    console.log("📦 TASK BODY RECEIVED:", body);
+
+    const { customerId, staffId, treesCount, rate } = body;
+
+    // ✅ Validate input
+    if (
+      !customerId ||
+      !staffId ||
+      !mongoose.Types.ObjectId.isValid(customerId)
+    ) {
       return NextResponse.json(
-        { error: "Missing fields" },
+        { error: "Invalid customer or staff" },
         { status: 400 }
       );
     }
 
-    const totalAmount = treesCount * rate;
+    const customer = await Customer.findById(customerId).populate("location");
 
-    await Task.create({
+    if (!customer || !customer.location) {
+      return NextResponse.json(
+        { error: "Customer or location not found" },
+        { status: 404 }
+      );
+    }
+
+    const task = await Task.create({
       customer: customerId,
+      location: customer.location._id,
       staff: staffId,
-      treesCount,
-      rate,
-      totalAmount,
+      numberOfTrees: treesCount,
+      ratePerTree: rate,
+      totalAmount: treesCount * rate,
+      status: "pending",
     });
 
-    return NextResponse.json({
-      message: "Task created",
-    });
+    return NextResponse.json({ success: true, task });
   } catch (err: any) {
-    console.error(err);
+    console.error("❌ TASK CREATE ERROR:", err);
     return NextResponse.json(
-      { error: err.message },
+      { error: err.message || "Task creation failed" },
       { status: 500 }
     );
   }

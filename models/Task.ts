@@ -7,20 +7,43 @@ const TaskSchema = new Schema(
       ref: "Customer",
       required: true,
     },
+
+    location: {
+      type: Schema.Types.ObjectId,
+      ref: "Location",
+      required: true,
+    },
+
     staff: {
       type: Schema.Types.ObjectId,
       ref: "Staff",
       required: true,
     },
-    treesCount: { type: Number, required: true },
-    rate: { type: Number, required: true },
-    totalAmount: { type: Number, required: true },
+
+    numberOfTrees: {
+      type: Number,
+      required: true,
+    },
+
+    ratePerTree: {
+      type: Number,
+      required: true,
+    },
+
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+
     status: {
       type: String,
-      enum: ["PENDING", "COMPLETED"],
-      default: "PENDING",
+      enum: ["pending", "completed"],
+      default: "pending",
     },
-    completedAt: { type: Date },
+
+    completedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
