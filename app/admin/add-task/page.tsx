@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from "react";
 
+type Customer = {
+  _id: string;
+  name: string;
+  location?: {
+    name: string;
+  };
+};
+
+type Staff = {
+  _id: string;
+  name: string;
+};
+
 export default function AddTaskPage() {
-  const [customers, setCustomers] = useState([]);
-  const [staff, setStaff] = useState([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+
   const [form, setForm] = useState({
     customerId: "",
     staffId: "",
@@ -12,41 +26,94 @@ export default function AddTaskPage() {
     rate: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
+  // 🔹 Fetch customers & staff
   useEffect(() => {
     fetch("/api/admin/customers")
-      .then((r) => r.json())
-      .then(setCustomers);
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCustomers(data);
+        } else {
+          console.error("Customer API error:", data);
+          setCustomers([]);
+        }
+      })
+      .catch(() => setCustomers([]));
+
     fetch("/api/admin/staff")
-      .then((r) => r.json())
-      .then(setStaff);
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setStaff(data);
+        } else {
+          console.error("Staff API error:", data);
+          setStaff([]);
+        }
+      })
+      .catch(() => setStaff([]));
   }, []);
 
-  const submitHandler = async (e: any) => {
+  // 🔹 Submit handler
+  const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (
+      !form.customerId ||
+      !form.staffId ||
+      !form.treesCount ||
+      !form.rate
+    ) {
+      alert("All fields are required");
+      return;
+    }
+
+    setLoading(true);
 
     const res = await fetch("/api/admin/add-task", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        ...form,
+        customerId: form.customerId,
+        staffId: form.staffId,
         treesCount: Number(form.treesCount),
         rate: Number(form.rate),
       }),
     });
 
     const data = await res.json();
-    alert(data.message || data.error);
+    setLoading(false);
+
+    if (res.ok) {
+      alert("Task created successfully");
+      setForm({
+        customerId: "",
+        staffId: "",
+        treesCount: "",
+        rate: "",
+      });
+    } else {
+      alert(data.error || "Something went wrong");
+    }
   };
 
   return (
     <div className="p-6 max-w-xl">
-      <h1 className="text-xl font-bold mb-4">
+      <h1 className="text-2xl font-bold mb-6">
         Add Task
       </h1>
 
-      <form className="space-y-3" onSubmit={submitHandler}>
+      <form
+        onSubmit={submitHandler}
+        className="space-y-4"
+      >
+        {/* Customer */}
         <select
           className="border p-2 w-full"
+          value={form.customerId}
           onChange={(e) =>
             setForm({
               ...form,
@@ -55,15 +122,18 @@ export default function AddTaskPage() {
           }
         >
           <option value="">Select Customer</option>
-          {customers.map((c: any) => (
+          {customers.map((c) => (
             <option key={c._id} value={c._id}>
-              {c.name} ({c.location.name})
+              {c.name} (
+              {c.location?.name || "No location"})
             </option>
           ))}
         </select>
 
+        {/* Staff */}
         <select
           className="border p-2 w-full"
+          value={form.staffId}
           onChange={(e) =>
             setForm({
               ...form,
@@ -72,17 +142,19 @@ export default function AddTaskPage() {
           }
         >
           <option value="">Select Staff</option>
-          {staff.map((s: any) => (
+          {staff.map((s) => (
             <option key={s._id} value={s._id}>
               {s.name}
             </option>
           ))}
         </select>
 
+        {/* Trees count */}
         <input
           type="number"
           placeholder="Number of Trees"
           className="border p-2 w-full"
+          value={form.treesCount}
           onChange={(e) =>
             setForm({
               ...form,
@@ -91,10 +163,12 @@ export default function AddTaskPage() {
           }
         />
 
+        {/* Rate */}
         <input
           type="number"
           placeholder="Rate per Tree"
           className="border p-2 w-full"
+          value={form.rate}
           onChange={(e) =>
             setForm({
               ...form,
@@ -103,8 +177,11 @@ export default function AddTaskPage() {
           }
         />
 
-        <button className="bg-black text-white px-4 py-2">
-          Create Task
+        <button
+          disabled={loading}
+          className="bg-black text-white px-4 py-2 disabled:opacity-50"
+        >
+          {loading ? "Creating..." : "Create Task"}
         </button>
       </form>
     </div>
