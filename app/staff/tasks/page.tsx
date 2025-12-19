@@ -18,6 +18,7 @@ interface Task {
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetch("/api/staff/tasks")
@@ -46,6 +47,13 @@ export default function StaffTasksPage() {
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
 
+      {/* Success Message */}
+      {message && (
+        <div className="mb-4 bg-green-100 text-green-700 p-2 rounded">
+          {message}
+        </div>
+      )}
+
       {tasks.length === 0 && (
         <p className="text-gray-500">No tasks assigned.</p>
       )}
@@ -63,6 +71,20 @@ export default function StaffTasksPage() {
             <b>Location:</b> {task.location?.name || "—"}
           </p>
 
+          {/* Status Badge */}
+          <div className="mt-2">
+            <b>Status:</b>{" "}
+            {task.status === "completed" ? (
+              <span className="ml-2 inline-block bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+                Completed
+              </span>
+            ) : (
+              <span className="ml-2 inline-block bg-orange-100 text-orange-700 px-2 py-1 rounded text-sm">
+                Pending
+              </span>
+            )}
+          </div>
+
           {/* Number of Trees */}
           <div className="mt-3">
             <label className="block text-sm font-medium">
@@ -70,9 +92,13 @@ export default function StaffTasksPage() {
             </label>
             <input
               type="number"
-              disabled={task.status === "completed"}
-              className="border p-2 rounded w-full"
               value={task.numberOfTrees ?? ""}
+              disabled={task.status === "completed"}
+              className={`border p-2 rounded w-full ${
+                task.status === "completed"
+                  ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                  : ""
+              }`}
               onChange={e => {
                 const value =
                   e.target.value === ""
@@ -95,9 +121,13 @@ export default function StaffTasksPage() {
             </label>
             <input
               type="number"
-              className="border p-2 rounded w-full"
               value={task.ratePerTree ?? ""}
               disabled={task.status === "completed"}
+              className={`border p-2 rounded w-full ${
+                task.status === "completed"
+                  ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                  : ""
+              }`}
               onChange={e => {
                 const value =
                   e.target.value === ""
@@ -113,27 +143,17 @@ export default function StaffTasksPage() {
             />
           </div>
 
-          {/* Status */}
-          <div className="mt-3">
-            <p>
-              <b>Status:</b>{" "}
-              <span
-                className={
-                  task.status === "completed"
-                    ? "text-green-600"
-                    : "text-orange-600"
-                }
-              >
-                {task.status}
-              </span>
-            </p>
-          </div>
-
           {/* Complete Button */}
           {task.status !== "completed" && (
             <button
               className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               onClick={async () => {
+                const confirm = window.confirm(
+                  "Are you sure you want to mark this task as completed? You won't be able to edit it again."
+                );
+
+                if (!confirm) return;
+
                 const res = await fetch("/api/staff/complete-task", {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
@@ -150,6 +170,7 @@ export default function StaffTasksPage() {
                         : t
                     )
                   );
+                  setMessage("Task marked as completed");
                 } else {
                   alert(data.error || "Failed to complete task");
                 }
