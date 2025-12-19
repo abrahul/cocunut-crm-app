@@ -7,17 +7,18 @@ import { authOptions } from "@/lib/auth";
 export async function PATCH(req: Request) {
   try {
     await connectDB();
+    const body = await req.json();
+
+    const { taskId, numberOfTrees, ratePerTree } = body;
 
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { taskId, numberOfTrees, ratePerTree } = body;
-
     const task = await Task.findById(taskId);
+
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
@@ -25,15 +26,12 @@ export async function PATCH(req: Request) {
     const isAdmin = session.user.role === "admin";
     const isStaffOwner = task.staff.toString() === session.user.id;
 
-    // ❌ Staff cannot edit others' tasks
+    // ❌ Cannot edit someone else's task
     if (!isAdmin && !isStaffOwner) {
-      return NextResponse.json(
-        { error: "Not allowed to edit this task" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ❌ Staff cannot edit completed task
+    // ❌ Staff cannot edit completed tasks
     if (task.status === "completed" && !isAdmin) {
       return NextResponse.json(
         { error: "Completed tasks can be edited only by admin" },
@@ -41,26 +39,22 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // ✅ Update values
+    // ✅ Update allowed
     task.numberOfTrees = numberOfTrees;
     task.ratePerTree = ratePerTree;
     task.totalAmount = numberOfTrees * ratePerTree;
 
-    // ✅ If admin edits completed task
     if (isAdmin && task.status === "completed") {
       task.adminEdited = true;
     }
 
     await task.save();
 
-    return NextResponse.json({
-      success: true,
-      task,
-    });
-  } catch (err: any) {
-    console.error("TASK UPDATE ERROR:", err);
+    return NextResponse.json({ success: true, task });
+
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || "Task update failed" },
+      { error: "Task update failed" },
       { status: 500 }
     );
   }
