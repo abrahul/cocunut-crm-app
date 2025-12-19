@@ -1,34 +1,41 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export async function PATCH(req: Request) {
   try {
     await connectDB();
+
     const body = await req.json();
+    const {
+      taskId,
+      numberOfTrees,
+      ratePerTree,
+      userId,
+      role,
+    } = body;
 
-    const { taskId, numberOfTrees, ratePerTree } = body;
-
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!taskId || !userId || !role) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     const task = await Task.findById(taskId);
-
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    const isAdmin = session.user.role === "admin";
-    const isStaffOwner = task.staff.toString() === session.user.id;
+    const isAdmin = role === "admin";
+    const isStaffOwner = task.staff.toString() === userId;
 
-    // ❌ Cannot edit someone else's task
+    // ❌ Staff cannot edit others' tasks
     if (!isAdmin && !isStaffOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Not allowed to edit this task" },
+        { status: 403 }
+      );
     }
 
     // ❌ Staff cannot edit completed tasks
@@ -39,22 +46,26 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // ✅ Update allowed
+    // ✅ Update values
     task.numberOfTrees = numberOfTrees;
     task.ratePerTree = ratePerTree;
     task.totalAmount = numberOfTrees * ratePerTree;
 
+    // ✅ Admin override marker
     if (isAdmin && task.status === "completed") {
       task.adminEdited = true;
     }
 
     await task.save();
 
-    return NextResponse.json({ success: true, task });
-
-  } catch (err) {
+    return NextResponse.json({
+      success: true,
+      task,
+    });
+  } catch (err: any) {
+    console.error("TASK UPDATE ERROR:", err);
     return NextResponse.json(
-      { error: "Task update failed" },
+      { error: err.message || "Task update failed" },
       { status: 500 }
     );
   }
