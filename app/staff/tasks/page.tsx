@@ -1,36 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAuthUser } from "@/lib/authClient";
 
 type Task = {
   _id: string;
-  customerName: string;
+  customer: { name: string };
+  location: { name: string };
   numberOfTrees: number;
   ratePerTree: number;
-  totalAmount: number;
-  status: "pending" | "completed";
+  status: string;
 };
 
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const auth = getAuthUser();
+
+  // TEMP — until OTP auth is ready
+  const STAFF_ID = "6943aecda0c1ebef23e82f72";
 
   useEffect(() => {
-    fetch("/api/staff/tasks")
-      .then((res) => res.json())
-      .then((data) => setTasks(data))
-      .catch(() => alert("Failed to load tasks"));
+    fetch(`/api/staff/tasks?staffId=${STAFF_ID}`)
+      .then(res => res.json())
+      .then(data => setTasks(Array.isArray(data) ? data : []));
   }, []);
 
-  async function updateTask(task: Task, complete = false) {
-    if (!auth) {
-      alert("Not logged in");
-      return;
-    }
-
+  async function markCompleted(task: Task) {
     if (task.status === "completed") {
-      alert("Task already completed. Contact admin for changes.");
+      alert("Already completed. Contact admin.");
       return;
     }
 
@@ -41,119 +36,62 @@ export default function StaffTasksPage() {
         taskId: task._id,
         numberOfTrees: task.numberOfTrees,
         ratePerTree: task.ratePerTree,
-        complete,
-        userId: auth.userId,
-        role: auth.role, // "staff"
+        role: "staff"
       }),
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error);
-      return;
-    }
-
-    alert(complete ? "Task completed" : "Task saved");
-
-    setTasks((prev) =>
-      prev.map((t) =>
-        t._id === task._id
-          ? {
-              ...t,
-              status: complete ? "completed" : t.status,
-            }
-          : t
-      )
-    );
+    if (!res.ok) alert(data.error);
+    else alert("Task completed");
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">My Tasks</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
 
-      {tasks.length === 0 && (
-        <p className="text-gray-500">No tasks assigned</p>
-      )}
+      {tasks.map(task => (
+        <div key={task._id} className="border p-4 mb-4 rounded">
+          <p><b>Customer:</b> {task.customer.name}</p>
+          <p><b>Location:</b> {task.location.name}</p>
 
-      {tasks.map((task) => (
-        <div
-          key={task._id}
-          className="border rounded p-4 mb-4 shadow-sm"
-        >
-          <p className="font-semibold mb-2">
-            Customer: {task.customerName}
-          </p>
+          <label>Trees</label>
+          <input
+            type="number"
+            value={task.numberOfTrees ?? 0}
+            className="border block mb-2"
+            onChange={e =>
+              setTasks(prev =>
+                prev.map(t =>
+                  t._id === task._id
+                    ? { ...t, numberOfTrees: +e.target.value }
+                    : t
+                )
+              )
+            }
+          />
 
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <label className="block text-sm">Trees</label>
-              <input
-                type="number"
-                disabled={task.status === "completed"}
-                value={task.numberOfTrees ?? 0}
-                onChange={(e) =>
-                  setTasks((prev) =>
-                    prev.map((t) =>
-                      t._id === task._id
-                        ? { ...t, numberOfTrees: +e.target.value }
-                        : t
-                    )
-                  )
-                }
-                className="border px-2 py-1 w-full"
-              />
-            </div>
+          <label>Rate</label>
+          <input
+            type="number"
+            value={task.ratePerTree ?? 0}
+            className="border block mb-2"
+            onChange={e =>
+              setTasks(prev =>
+                prev.map(t =>
+                  t._id === task._id
+                    ? { ...t, ratePerTree: +e.target.value }
+                    : t
+                )
+              )
+            }
+          />
 
-            <div>
-              <label className="block text-sm">Rate</label>
-              <input
-                type="number"
-                disabled={task.status === "completed"}
-                value={task.ratePerTree ?? 0}
-                onChange={(e) =>
-                  setTasks((prev) =>
-                    prev.map((t) =>
-                      t._id === task._id
-                        ? { ...t, ratePerTree: +e.target.value }
-                        : t
-                    )
-                  )
-                }
-                className="border px-2 py-1 w-full"
-              />
-            </div>
-          </div>
-
-          {task.status === "completed" ? (
-            <p className="text-green-600 font-semibold">
-              ✅ Completed
-            </p>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={() => updateTask(task)}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Save
-              </button>
-
-              <button
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Mark this task as completed? You won't be able to edit it."
-                    )
-                  ) {
-                    updateTask(task, true);
-                  }
-                }}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
-                Complete Task
-              </button>
-            </div>
-          )}
+          <button
+            onClick={() => markCompleted(task)}
+            className="bg-green-600 text-white px-4 py-1 rounded"
+          >
+            Mark Completed
+          </button>
         </div>
       ))}
     </div>
