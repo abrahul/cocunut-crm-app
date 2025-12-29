@@ -9,18 +9,16 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
 
-    let filter = {};
-
-    if (q) {
-      filter = {
-        $or: [
-          { name: { $regex: q, $options: "i" } },
-          { mobile: { $regex: q, $options: "i" } },
-        ],
-      };
+    if (!q) {
+      return NextResponse.json([]);
     }
 
-    const staff = await Staff.find(filter).sort({ createdAt: -1 });
+    const staff = await Staff.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { phone: { $regex: q, $options: "i" } },
+      ],
+    }).sort({ createdAt: -1 });
 
     return NextResponse.json(staff);
   } catch (err: any) {
