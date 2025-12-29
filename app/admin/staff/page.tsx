@@ -6,73 +6,68 @@ import Link from "next/link";
 type Staff = {
   _id: string;
   name: string;
-  phone: string;
+  mobile: string;
+  isActive: boolean;
 };
 
-export default function AdminStaffPage() {
+export default function StaffListPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  async function loadStaff(search = "") {
-    setLoading(true);
-    const res = await fetch(`/api/admin/staff?q=${search}`);
-    const data = await res.json();
-    setStaff(data);
-    setLoading(false);
-  }
 
   useEffect(() => {
-    loadStaff(); // load ALL staff initially
+    fetch("/api/admin/staff")
+      .then(res => res.json())
+      .then(setStaff);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadStaff(query);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
+  const filtered = staff.filter(s =>
+    s.name.toLowerCase().includes(query.toLowerCase()) ||
+    s.mobile.includes(query)
+  );
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Staff</h1>
+      <div className="flex justify-between mb-4">
+        <h1 className="text-2xl font-bold">Staff</h1>
+        <Link href="/admin/add-staff" className="text-blue-600 underline">
+          + Add Staff
+        </Link>
+      </div>
 
-      {/* 🔍 SEARCH */}
       <input
-        type="text"
-        placeholder="Search by name or phone"
+        placeholder="Search by name or mobile"
+        className="border p-2 w-full mb-4"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="border p-2 w-full mb-6"
       />
 
-      {loading && <p>Loading...</p>}
-
-      {!loading && staff.length === 0 && (
-        <p className="text-gray-500">No staff found</p>
-      )}
-
-      <ul className="space-y-3">
-        {staff.map((s) => (
-          <li
-            key={s._id}
-            className="border p-4 rounded flex justify-between items-center"
-          >
-            <div>
-              <p className="font-semibold">{s.name}</p>
-              <p className="text-sm text-gray-600">{s.phone}</p>
-            </div>
-
-            <Link
-              href={`/admin/staff/${s._id}`}
-              className="text-blue-600 underline"
-            >
-              View
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Name</th>
+            <th className="border p-2">Mobile</th>
+            <th className="border p-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(s => (
+            <tr key={s._id}>
+              <td className="border p-2">
+                <Link
+                  href={`/admin/staff/${s._id}`}
+                  className="text-blue-600 underline"
+                >
+                  {s.name}
+                </Link>
+              </td>
+              <td className="border p-2">{s.mobile}</td>
+              <td className="border p-2">
+                {s.isActive ? "Active" : "Inactive"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
