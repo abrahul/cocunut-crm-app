@@ -16,13 +16,14 @@ export default function StaffListPage() {
 
   useEffect(() => {
     fetch("/api/admin/staff")
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setStaff);
   }, []);
 
-  const filtered = staff.filter(s =>
-    s.name.toLowerCase().includes(query.toLowerCase()) ||
-    s.mobile.includes(query)
+  const filtered = staff.filter(
+    (s) =>
+      s.name.toLowerCase().includes(query.toLowerCase()) ||
+      s.mobile.includes(query)
   );
 
   return (
@@ -50,7 +51,7 @@ export default function StaffListPage() {
           </tr>
         </thead>
         <tbody>
-          {filtered.map(s => (
+          {filtered.map((s) => (
             <tr key={s._id}>
               <td className="border p-2">
                 <Link
@@ -62,7 +63,22 @@ export default function StaffListPage() {
               </td>
               <td className="border p-2">{s.mobile}</td>
               <td className="border p-2">
-                {s.isActive ? "Active" : "Inactive"}
+                <span
+                  className={`px-2 py-1 rounded text-sm ${
+                    s.isActive ? "bg-green-100" : "bg-red-100"
+                  }`}
+                >
+                  {s.isActive ? "Active" : "Disabled"}
+                </span>
+              </td>
+
+              <td className="border p-2">
+                <Link
+                  href={`/admin/staff/${s._id}/edit`}
+                  className="text-blue-600 underline"
+                >
+                  Edit
+                </Link>
               </td>
             </tr>
           ))}
