@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
+import "@/models/Staff";     // 👈 VERY IMPORTANT
+import "@/models/Customer"; // (if populated)
+import "@/models/Location"; // (if populated)
 
 export async function PATCH(req: Request) {
   try {
