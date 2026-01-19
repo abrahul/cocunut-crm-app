@@ -1,34 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Task = {
   _id: string;
-  customer: { name: string };
-  location: { name: string };
+  customerName: string;
+  location: string;
   numberOfTrees: number;
   ratePerTree: number;
+  totalAmount: number;
   status: string;
 };
 
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
-
-  // TEMP — until OTP auth is ready
-  const STAFF_ID = "6943aecda0c1ebef23e82f72";
+  const router = useRouter();
 
   useEffect(() => {
-    fetch(`/api/staff/tasks?staffId=${STAFF_ID}`)
-      .then(res => res.json())
-      .then(data => setTasks(Array.isArray(data) ? data : []));
-  }, []);
+    async function loadTasks() {
+      const res = await fetch("/api/staff/tasks");
 
-  async function markCompleted(task: Task) {
-    if (task.status === "completed") {
-      alert("Already completed. Contact admin.");
-      return;
+      if (res.status === 401) {
+        router.push("/staff/login");
+        return;
+      }
+
+      const data = await res.json();
+      setTasks(Array.isArray(data) ? data : []);
     }
 
+    loadTasks();
+  }, [router]);
+
+  async function submitTask(task: Task) {
     const res = await fetch("/api/tasks/update", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -36,62 +41,81 @@ export default function StaffTasksPage() {
         taskId: task._id,
         numberOfTrees: task.numberOfTrees,
         ratePerTree: task.ratePerTree,
-        role: "staff"
+        role: "staff",
       }),
     });
 
     const data = await res.json();
-    if (!res.ok) alert(data.error);
-    else alert("Task completed");
+    if (!res.ok) {
+      alert(data.error || "Failed to update task");
+      return;
+    }
+
+    alert("Task completed");
+    location.reload();
   }
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
+      <h1 className="text-xl font-bold mb-4">My Tasks</h1>
 
-      {tasks.map(task => (
-        <div key={task._id} className="border p-4 mb-4 rounded">
-          <p><b>Customer:</b> {task.customer.name}</p>
-          <p><b>Location:</b> {task.location.name}</p>
+      {tasks.length === 0 && (
+        <p className="text-gray-500">No tasks assigned</p>
+      )}
 
-          <label>Trees</label>
+      {tasks.map((task, index) => (
+        <div
+          key={task._id}
+          className="border p-4 mb-4 rounded"
+        >
+          <p><b>Customer:</b> {task.customerName}</p>
+          <p><b>Location:</b> {task.location}</p>
+
+          <label className="block mt-2">Trees</label>
           <input
             type="number"
-            value={task.numberOfTrees ?? 0}
-            className="border block mb-2"
-            onChange={e =>
-              setTasks(prev =>
-                prev.map(t =>
-                  t._id === task._id
-                    ? { ...t, numberOfTrees: +e.target.value }
-                    : t
-                )
-              )
-            }
+            value={task.numberOfTrees}
+            disabled={task.status === "completed"}
+            onChange={(e) => {
+              const updated = [...tasks];
+              updated[index].numberOfTrees = Number(e.target.value);
+              setTasks(updated);
+            }}
+            className="border p-1 w-full"
           />
 
-          <label>Rate</label>
+          <label className="block mt-2">Rate per tree</label>
           <input
             type="number"
-            value={task.ratePerTree ?? 0}
-            className="border block mb-2"
-            onChange={e =>
-              setTasks(prev =>
-                prev.map(t =>
-                  t._id === task._id
-                    ? { ...t, ratePerTree: +e.target.value }
-                    : t
-                )
-              )
-            }
+            value={task.ratePerTree}
+            disabled={task.status === "completed"}
+            onChange={(e) => {
+              const updated = [...tasks];
+              updated[index].ratePerTree = Number(e.target.value);
+              setTasks(updated);
+            }}
+            className="border p-1 w-full"
           />
 
-          <button
-            onClick={() => markCompleted(task)}
-            className="bg-green-600 text-white px-4 py-1 rounded"
-          >
-            Mark Completed
-          </button>
+          <p className="mt-2">
+            <b>Total:</b> ₹
+            {task.numberOfTrees * task.ratePerTree}
+          </p>
+
+          {task.status !== "completed" && (
+            <button
+              onClick={() => submitTask(task)}
+              className="mt-3 bg-black text-white px-4 py-2"
+            >
+              Complete Task
+            </button>
+          )}
+
+          {task.status === "completed" && (
+            <p className="mt-2 text-green-600 font-semibold">
+              Completed
+            </p>
+          )}
         </div>
       ))}
     </div>
