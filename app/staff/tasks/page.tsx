@@ -41,7 +41,6 @@ export default function StaffTasksPage() {
         taskId: task._id,
         numberOfTrees: task.numberOfTrees,
         ratePerTree: task.ratePerTree,
-        role: "staff",
       }),
     });
 

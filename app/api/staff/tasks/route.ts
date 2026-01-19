@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
-import { getStaffFromRequest } from "@/lib/authServer";
+import { getAuthUser } from "@/lib/authServer";
 import "@/models/Customer";
 import "@/models/Location";
 
 export async function GET() {
   await connectDB();
 
-  const auth = await getStaffFromRequest(); // ✅ await
+  const auth = await getAuthUser(); // ✅ await
   if (!auth || auth.role !== "staff") {
     return NextResponse.json(
       { error: "Unauthorized" },
