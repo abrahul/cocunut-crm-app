@@ -56,19 +56,28 @@ export default function StaffTasksPage() {
 
   return (
     <div className="p-6">
+      <button
+        onClick={async () => {
+          await fetch("/api/auth/logout", { method: "POST" });
+          window.location.href = "/staff/login";
+        }}
+        className="mb-4 bg-red-600 text-white px-4 py-2 rounded"
+      >
+        Logout
+      </button>
+
       <h1 className="text-xl font-bold mb-4">My Tasks</h1>
 
-      {tasks.length === 0 && (
-        <p className="text-gray-500">No tasks assigned</p>
-      )}
+      {tasks.length === 0 && <p className="text-gray-500">No tasks assigned</p>}
 
       {tasks.map((task, index) => (
-        <div
-          key={task._id}
-          className="border p-4 mb-4 rounded"
-        >
-          <p><b>Customer:</b> {task.customerName}</p>
-          <p><b>Location:</b> {task.location}</p>
+        <div key={task._id} className="border p-4 mb-4 rounded">
+          <p>
+            <b>Customer:</b> {task.customerName}
+          </p>
+          <p>
+            <b>Location:</b> {task.location}
+          </p>
 
           <label className="block mt-2">Trees</label>
           <input
@@ -97,8 +106,7 @@ export default function StaffTasksPage() {
           />
 
           <p className="mt-2">
-            <b>Total:</b> ₹
-            {task.numberOfTrees * task.ratePerTree}
+            <b>Total:</b> ₹{task.numberOfTrees * task.ratePerTree}
           </p>
 
           {task.status !== "completed" && (
@@ -111,9 +119,7 @@ export default function StaffTasksPage() {
           )}
 
           {task.status === "completed" && (
-            <p className="mt-2 text-green-600 font-semibold">
-              Completed
-            </p>
+            <p className="mt-2 text-green-600 font-semibold">Completed</p>
           )}
         </div>
       ))}
