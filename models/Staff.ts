@@ -4,15 +4,14 @@ const StaffSchema = new Schema(
   {
     name: { type: String, required: true },
     mobile: { type: String, required: true, unique: true },
-    isActive: { type: Boolean, default: true },
-     otpHash: String,
+
+    otpHash: String,
     otpExpiresAt: Date,
+
+    otpLastSentAt: Date,
+    otpAttempts: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-export default models.Staff ||
-  mongoose.model("Staff", StaffSchema);
-
-
-
+export default models.Staff || mongoose.model("Staff", StaffSchema);
