@@ -1,58 +1,56 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
-import { generateOTP, hashOTP } from "@/lib/otp";
-
-const OTP_COOLDOWN_MS = 60 * 1000; // 60 seconds
 
 export async function POST(req: Request) {
-  await connectDB();
+  try {
+    const { mobile } = await req.json();
 
-  const body = await req.json();
-  const mobile = String(body.mobile).trim();
-
-  if (!mobile) {
-    return NextResponse.json(
-      { error: "Mobile required" },
-      { status: 400 }
-    );
-  }
-
-  const staff = await Staff.findOne({ mobile });
-  if (!staff) {
-    return NextResponse.json(
-      { error: "Staff not found" },
-      { status: 404 }
-    );
-  }
-
-  // ⏳ RESEND COOLDOWN
-  if (
-    staff.otpLastSentAt &&
-    Date.now() - staff.otpLastSentAt.getTime() < OTP_COOLDOWN_MS
-  ) {
-    const wait =
-      Math.ceil(
-        (OTP_COOLDOWN_MS -
-          (Date.now() - staff.otpLastSentAt.getTime())) / 1000
+    if (!mobile) {
+      return NextResponse.json(
+        { error: "Mobile number is required" },
+        { status: 400 }
       );
+    }
 
+    await connectDB();
+
+    const staff = await Staff.findOne({ mobile });
+    if (!staff) {
+      return NextResponse.json(
+        { error: "Staff not found" },
+        { status: 404 }
+      );
+    }
+
+    const response = await fetch(
+      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${mobile}/AUTOGEN`,
+      { method: "GET" }
+    );
+
+    const data = await response.json();
+
+    if (data.Status !== "Success") {
+      return NextResponse.json(
+        { error: "Failed to send OTP", providerError: data },
+        { status: 400 }
+      );
+    }
+
+    staff.otpSessionId = data.Details;
+    staff.otpAttempts = 0;
+    await staff.save();
+
+    return NextResponse.json({
+      success: true,
+      sessionId: data.Details, // ✅ IMPORTANT
+    });
+
+  } catch (err) {
+    console.error("Send OTP Error:", err);
     return NextResponse.json(
-      { error: `Wait ${wait}s before requesting OTP again` },
-      { status: 429 }
+      { error: "Server error" },
+      { status: 500 }
     );
   }
-
-  const otp = generateOTP();
-
-  staff.otpHash = hashOTP(otp);
-  staff.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  staff.otpLastSentAt = new Date();
-  staff.otpAttempts = 0; // reset attempts on resend
-
-  await staff.save();
-
-  console.log(`OTP for ${mobile}: ${otp}`);
-
-  return NextResponse.json({ success: true });
 }

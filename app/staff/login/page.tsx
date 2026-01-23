@@ -1,85 +1,68 @@
 "use client";
 import { useState } from "react";
 
-export default function StaffLoginPage() {
+export default function LoginPage() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"mobile" | "otp">("mobile");
-  const [error, setError] = useState("");
+  const [sessionId, setSessionId] = useState("");
 
-  async function sendOTP() {
-    setError("");
+  async function send() {
+    if (mobile.length !== 10) {
+      alert("Enter valid mobile number");
+      return;
+    }
+
     const res = await fetch("/api/auth/staff/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile }),
+      body: JSON.stringify({ mobile }), // ✅ FIX
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      setError("Failed to send OTP");
+      alert(data.error);
       return;
     }
 
-    setStep("otp");
+    setSessionId(data.sessionId);
   }
 
-  async function verifyOTP() {
-    setError("");
+  async function verify() {
     const res = await fetch("/api/auth/staff/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, otp }),
+      body: JSON.stringify({ sessionId, otp }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      setError("Invalid OTP");
+      alert(data.error || "OTP failed");
       return;
     }
 
+    alert("Login successful 🎉");
     window.location.href = "/staff/tasks";
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="border p-6 w-80">
-        <h1 className="text-xl font-bold mb-4">Staff Login</h1>
+    <div>
+      <input
+        placeholder="Mobile"
+        onChange={e => setMobile(e.target.value)}
+      />
+      <button onClick={send}>Send OTP</button>
 
-        {error && <p className="text-red-600 mb-2">{error}</p>}
-
-        {step === "mobile" && (
-          <>
-            <input
-              placeholder="Mobile"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              className="border p-2 w-full mb-4"
-            />
-            <button
-              onClick={sendOTP}
-              className="w-full bg-black text-white p-2"
-            >
-              Send OTP
-            </button>
-          </>
-        )}
-
-        {step === "otp" && (
-          <>
-            <input
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="border p-2 w-full mb-4"
-            />
-            <button
-              onClick={verifyOTP}
-              className="w-full bg-black text-white p-2"
-            >
-              Verify OTP
-            </button>
-          </>
-        )}
-      </div>
+      {sessionId && (
+        <>
+          <input
+            placeholder="OTP"
+            onChange={e => setOtp(e.target.value)}
+          />
+          <button onClick={verify}>Verify</button>
+        </>
+      )}
     </div>
   );
 }

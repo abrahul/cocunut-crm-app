@@ -1,95 +1,36 @@
-import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { connectDB } from "@/lib/db";
-import Staff from "@/models/Staff";
-import { hashOTP } from "@/lib/otp";
+import { NextRequest, NextResponse } from "next/server";
 
-const MAX_ATTEMPTS = 3;
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    await connectDB();
+    const { sessionId, otp } = await req.json();
 
-    const { mobile, otp } = await req.json();
-
-    if (!mobile || !otp) {
+    if (!sessionId || !otp) {
       return NextResponse.json(
-        { error: "Mobile and OTP required" },
+        { error: "Session ID and OTP are required" },
         { status: 400 }
       );
     }
 
-    const staff = await Staff.findOne({ mobile });
-
-    // ✅ FIRST: validate staff + otp presence
-    if (!staff || !staff.otpHash || !staff.otpExpiresAt) {
-      return NextResponse.json(
-        { error: "Invalid OTP" },
-        { status: 401 }
-      );
-    }
-
-    // 🚫 HARD BLOCK
-    if (staff.otpAttempts >= MAX_ATTEMPTS) {
-      return NextResponse.json(
-        { error: "Too many attempts. Request new OTP." },
-        { status: 429 }
-      );
-    }
-
-    // ⏰ EXPIRED
-    if (staff.otpExpiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "OTP expired" },
-        { status: 401 }
-      );
-    }
-
-    // ❌ WRONG OTP
-    if (staff.otpHash !== hashOTP(otp)) {
-      const nextAttempts = staff.otpAttempts + 1;
-      staff.otpAttempts = nextAttempts;
-      await staff.save();
-
-      // 🔥 THIS IS THE KEY FIX
-      if (nextAttempts >= MAX_ATTEMPTS) {
-        return NextResponse.json(
-          { error: "Too many attempts. Request new OTP." },
-          { status: 429 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: "Invalid OTP" },
-        { status: 401 }
-      );
-    }
-
-    // ✅ SUCCESS — RESET
-    staff.otpHash = undefined;
-    staff.otpExpiresAt = undefined;
-    staff.otpAttempts = 0;
-    await staff.save();
-
-    const token = jwt.sign(
-      { staffId: staff._id, role: "staff" },
-      JWT_SECRET,
-      { expiresIn: "7d" }
+    const response = await fetch(
+      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`,
+      { method: "GET" }
     );
 
-    const res = NextResponse.json({ success: true });
-    res.cookies.set("auth_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-    });
+    const data = await response.json();
 
-    return res;
-  } catch (err) {
-    console.error("Verify OTP error:", err);
+    if (data.Status !== "Success") {
+      return NextResponse.json(
+        { error: "Invalid or expired OTP", providerError: data },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error("Verify OTP error:", error);
     return NextResponse.json(
-      { error: "Server error" },
+      { error: "Server error while verifying OTP" },
       { status: 500 }
     );
   }
