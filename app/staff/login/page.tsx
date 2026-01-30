@@ -1,21 +1,16 @@
 "use client";
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function StaffLoginPage() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
-  const [sessionId, setSessionId] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
-  async function send() {
-    if (mobile.length !== 10) {
-      alert("Enter valid mobile number");
-      return;
-    }
-
+  async function sendOtp() {
     const res = await fetch("/api/auth/staff/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile }), // ✅ FIX
+      body: JSON.stringify({ mobile }),
     });
 
     const data = await res.json();
@@ -25,42 +20,47 @@ export default function LoginPage() {
       return;
     }
 
-    setSessionId(data.sessionId);
+    setOtpSent(true);
   }
 
-  async function verify() {
+  async function verifyOtp() {
     const res = await fetch("/api/auth/staff/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, otp }),
+      body: JSON.stringify({ mobile, otp }),
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || "OTP failed");
+      alert(data.error);
       return;
     }
 
-    alert("Login successful 🎉");
+    // ✅ SESSION CREATED → REDIRECT
     window.location.href = "/staff/tasks";
   }
 
   return (
     <div>
       <input
-        placeholder="Mobile"
-        onChange={e => setMobile(e.target.value)}
+        placeholder="Mobile number"
+        value={mobile}
+        onChange={(e) => setMobile(e.target.value)}
       />
-      <button onClick={send}>Send OTP</button>
 
-      {sessionId && (
+      {!otpSent && (
+        <button onClick={sendOtp}>Send OTP</button>
+      )}
+
+      {otpSent && (
         <>
           <input
             placeholder="OTP"
-            onChange={e => setOtp(e.target.value)}
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
           />
-          <button onClick={verify}>Verify</button>
+          <button onClick={verifyOtp}>Verify OTP</button>
         </>
       )}
     </div>

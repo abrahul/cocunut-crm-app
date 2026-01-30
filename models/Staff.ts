@@ -7,6 +7,7 @@ const StaffSchema = new Schema(
 
     otpHash: String,
     otpExpiresAt: Date,
+    otpSessionId: String,
 
     otpLastSentAt: Date,
     otpAttempts: { type: Number, default: 0 },

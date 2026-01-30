@@ -1,12 +1,15 @@
-import crypto from "crypto";
+const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY!;
 
-export function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+export async function sendOTP(mobile: string) {
+  const url = `https://2factor.in/API/V1/${TWO_FACTOR_API_KEY}/SMS/${mobile}/AUTOGEN`;
 
-export function hashOTP(otp: string) {
-  return crypto
-    .createHash("sha256")
-    .update(otp)
-    .digest("hex");
+  const res = await fetch(url, { method: "GET" });
+  const data = await res.json();
+
+  if (data.Status !== "Success") {
+    throw new Error("Failed to send OTP");
+  }
+
+  // 2Factor returns SessionId → VERY IMPORTANT
+  return data.Details; // sessionId
 }

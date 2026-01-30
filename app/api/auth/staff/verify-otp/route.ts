@@ -1,36 +1,82 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import Staff from "@/models/Staff";
+import jwt from "jsonwebtoken";
 
-export async function POST(req: NextRequest) {
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+
+export async function POST(req: Request) {
   try {
-    const { sessionId, otp } = await req.json();
+    // ✅ 1. Parse body FIRST
+    const { mobile, otp } = await req.json();
 
-    if (!sessionId || !otp) {
+    if (!mobile || !otp) {
       return NextResponse.json(
-        { error: "Session ID and OTP are required" },
+        { error: "Mobile and OTP required" },
         { status: 400 }
       );
     }
 
-    const response = await fetch(
-      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`,
-      { method: "GET" }
+    await connectDB();
+
+    // ✅ 2. Find staff
+    const staff = await Staff.findOne({ mobile });
+
+    if (!staff || !staff.otpSessionId) {
+      return NextResponse.json(
+        { error: "Invalid session" },
+        { status: 401 }
+      );
+    }
+
+    console.log("Verifying OTP for:", mobile);
+    console.log("Session ID:", staff.otpSessionId);
+
+    // ✅ 3. Verify OTP with 2Factor
+    const res = await fetch(
+      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/VERIFY/${staff.otpSessionId}/${otp}`
     );
 
-    const data = await response.json();
+    const data = await res.json();
 
     if (data.Status !== "Success") {
       return NextResponse.json(
-        { error: "Invalid or expired OTP", providerError: data },
-        { status: 400 }
+        { error: "Invalid OTP" },
+        { status: 401 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    // ✅ 4. Clear OTP session
+    staff.otpSessionId = undefined;
+    staff.otpAttempts = 0;
+    await staff.save();
 
-  } catch (error) {
-    console.error("Verify OTP error:", error);
+    // ✅ 5. Create JWT
+    const token = jwt.sign(
+      {
+        staffId: staff._id,
+        role: "staff",
+      },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // ✅ 6. Set cookie
+    const response = NextResponse.json({ success: true });
+
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+
+    return response;
+
+  } catch (err: any) {
+    console.error("Verify OTP error:", err.message);
     return NextResponse.json(
-      { error: "Server error while verifying OTP" },
+      { error: "OTP verification failed" },
       { status: 500 }
     );
   }
