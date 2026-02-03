@@ -6,7 +6,21 @@ export default function AdminLoginPage() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState("");
+
+  function startCooldown(seconds: number) {
+    setCooldown(seconds);
+    const interval = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
 
   async function sendOtp() {
     setError("");
@@ -25,6 +39,7 @@ export default function AdminLoginPage() {
     }
 
     setOtpSent(true);
+    startCooldown(60);
   }
 
   async function verifyOtp() {
@@ -65,9 +80,10 @@ export default function AdminLoginPage() {
         {!otpSent && (
           <button
             onClick={sendOtp}
-            className="w-full bg-black text-white p-2"
+            disabled={cooldown > 0}
+            className="w-full bg-black text-white p-2 disabled:opacity-60"
           >
-            Send OTP
+            {cooldown > 0 ? `Resend in ${cooldown}s` : "Send OTP"}
           </button>
         )}
 
@@ -84,6 +100,13 @@ export default function AdminLoginPage() {
               className="w-full bg-black text-white p-2"
             >
               Verify OTP
+            </button>
+            <button
+              onClick={sendOtp}
+              disabled={cooldown > 0}
+              className="w-full mt-2 text-sm text-blue-600 underline disabled:opacity-60"
+            >
+              {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
             </button>
           </>
         )}
