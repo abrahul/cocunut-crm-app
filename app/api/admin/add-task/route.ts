@@ -14,13 +14,24 @@ export async function POST(req: Request) {
     const { customerId, staffId, treesCount, rate } = body;
 
     // ✅ Validate input
+    const trees = Number(treesCount);
+    const ratePerTree = Number(rate);
+
     if (
       !customerId ||
       !staffId ||
-      !mongoose.Types.ObjectId.isValid(customerId)
+      !mongoose.Types.ObjectId.isValid(customerId) ||
+      !mongoose.Types.ObjectId.isValid(staffId)
     ) {
       return NextResponse.json(
         { error: "Invalid customer or staff" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(trees) || !Number.isFinite(ratePerTree) || trees < 0 || ratePerTree < 0) {
+      return NextResponse.json(
+        { error: "Invalid trees count or rate" },
         { status: 400 }
       );
     }
@@ -38,9 +49,9 @@ export async function POST(req: Request) {
       customer: customerId,
       location: customer.location._id,
       staff: staffId,
-      numberOfTrees: treesCount,
-      ratePerTree: rate,
-      totalAmount: treesCount * rate,
+      numberOfTrees: trees,
+      ratePerTree,
+      totalAmount: trees * ratePerTree,
       status: "pending",
     });
 
