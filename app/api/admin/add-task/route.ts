@@ -3,10 +3,18 @@ import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
 import Customer from "@/models/Customer";
 import mongoose from "mongoose";
+import { getAuthUser } from "@/lib/authServer";
 
 export async function POST(req: Request) {
   try {
     await connectDB();
+    const auth = await getAuthUser();
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const body = await req.json();
 
     console.log("📦 TASK BODY RECEIVED:", body);

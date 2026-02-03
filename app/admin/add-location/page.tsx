@@ -21,6 +21,11 @@ export default function AddLocationPage() {
     const data = await res.json();
     setLoading(false);
 
+    if (res.status === 401) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
     if (res.ok) {
       setName("");
       setMessage("✅ Location added successfully");

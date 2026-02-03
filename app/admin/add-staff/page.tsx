@@ -23,6 +23,11 @@ export default function AddStaffPage() {
     const data = await res.json();
     setLoading(false);
 
+    if (res.status === 401) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
     if (!res.ok) {
       setError(data.error || "Something went wrong");
       return;

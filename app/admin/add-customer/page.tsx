@@ -13,8 +13,17 @@ export default function AddCustomerPage() {
 
   useEffect(() => {
     fetch("/api/admin/locations")
-      .then((res) => res.json())
-      .then(setLocations);
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        setLocations(data);
+      });
   }, []);
 
   const submitHandler = async (e: any) => {
@@ -27,14 +36,18 @@ export default function AddCustomerPage() {
     });
 
     const data = await res.json();
+
+    if (res.status === 401) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
     alert(data.message || data.error);
   };
 
   return (
     <div className="p-6 max-w-xl">
-      <h1 className="text-xl font-bold mb-4">
-        Add Customer
-      </h1>
+      <h1 className="text-xl font-bold mb-4">Add Customer</h1>
 
       <form onSubmit={submitHandler} className="space-y-3">
         <input

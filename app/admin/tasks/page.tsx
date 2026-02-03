@@ -19,9 +19,16 @@ export default function AdminTasksPage() {
 
   useEffect(() => {
     fetch("/api/admin/tasks")
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
-        console.log("ADMIN TASKS:", data); // 🔍 DEBUG
+        if (!data) return;
+        console.log("ADMIN TASKS:", data); // DEBUG
         if (Array.isArray(data)) {
           setTasks(data);
         } else {
@@ -77,7 +84,6 @@ export default function AdminTasksPage() {
             </span>
           </p>
 
-          {/* Admin can always edit */}
           <button
             onClick={() => {
               const trees = prompt(
@@ -99,7 +105,13 @@ export default function AdminTasksPage() {
                   numberOfTrees: Number(trees),
                   ratePerTree: Number(rate),
                 }),
-              }).then(() => location.reload());
+              }).then((res) => {
+                if (res.status === 401) {
+                  window.location.href = "/admin/login";
+                  return;
+                }
+                location.reload();
+              });
             }}
             className="mt-2 text-blue-600 underline"
           >

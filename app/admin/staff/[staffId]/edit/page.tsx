@@ -17,12 +17,17 @@ export default function EditStaffPage() {
 
     fetch(`/api/admin/staff/${staffId}`)
       .then(async (res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
         if (!res.ok) {
           throw new Error("Failed to fetch staff");
         }
         return res.json();
       })
       .then((data) => {
+        if (!data) return;
         setName(data.name);
         setMobile(data.mobile);
       })
@@ -40,6 +45,11 @@ export default function EditStaffPage() {
     });
 
     const data = await res.json();
+
+    if (res.status === 401) {
+      window.location.href = "/admin/login";
+      return;
+    }
 
     if (!res.ok) {
       alert(data.error);

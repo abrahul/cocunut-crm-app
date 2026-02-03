@@ -16,8 +16,17 @@ export default function StaffListPage() {
 
   useEffect(() => {
     fetch("/api/admin/staff")
-      .then((res) => res.json())
-      .then(setStaff);
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        setStaff(data);
+      });
   }, []);
 
   const filtered = staff.filter(

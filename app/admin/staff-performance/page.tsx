@@ -18,8 +18,15 @@ export default function StaffPerformancePage() {
 
   useEffect(() => {
     fetch("/api/admin/staff-performance")
-      .then(res => res.json())
-      .then(result => {
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        return res.json();
+      })
+      .then((result) => {
+        if (!result) return;
         if (Array.isArray(result)) {
           setData(result);
         } else {
@@ -55,22 +62,14 @@ export default function StaffPerformancePage() {
                   </span>
                 </Link>
                 <br />
-                <span className="text-sm text-gray-500">
-                  {s.phone}
-                </span>
+                <span className="text-sm text-gray-500">{s.phone}</span>
               </td>
 
-              <td className="border p-2 text-center">
-                {s.totalTasks}
-              </td>
+              <td className="border p-2 text-center">{s.totalTasks}</td>
 
-              <td className="border p-2 text-center">
-                {s.totalTrees}
-              </td>
+              <td className="border p-2 text-center">{s.totalTrees}</td>
 
-              <td className="border p-2 text-center">
-                ₹{s.totalEarnings}
-              </td>
+              <td className="border p-2 text-center">₹{s.totalEarnings}</td>
 
               <td className="border p-2 text-center">
                 {s.lastTaskDate

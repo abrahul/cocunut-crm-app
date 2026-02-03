@@ -20,33 +20,52 @@ export default function StaffTaskHistoryPage() {
 
   useEffect(() => {
     fetch(`/api/admin/staff/${staffId}/tasks`)
-      .then(res => res.json())
-      .then(setTasks);
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        setTasks(data);
+      });
   }, [staffId]);
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Staff Task History
-      </h1>
+      <h1 className="text-2xl font-bold mb-4">Staff Task History</h1>
 
-      {tasks.length === 0 && (
-        <p>No tasks found for this staff.</p>
-      )}
+      {tasks.length === 0 && <p>No tasks found for this staff.</p>}
 
-      {tasks.map(task => (
+      {tasks.map((task) => (
         <div
           key={task._id}
           className="border rounded p-4 mb-4 bg-white shadow"
         >
-          <p><b>Customer:</b> {task.customer?.name}</p>
-          <p><b>Location:</b> {task.location?.name}</p>
-          <p><b>Trees:</b> {task.numberOfTrees}</p>
-          <p><b>Rate:</b> ₹{task.ratePerTree}</p>
-          <p><b>Total:</b> ₹{task.totalAmount}</p>
+          <p>
+            <b>Customer:</b> {task.customer?.name}
+          </p>
+          <p>
+            <b>Location:</b> {task.location?.name}
+          </p>
+          <p>
+            <b>Trees:</b> {task.numberOfTrees}
+          </p>
+          <p>
+            <b>Rate:</b> ₹{task.ratePerTree}
+          </p>
+          <p>
+            <b>Total:</b> ₹{task.totalAmount}
+          </p>
           <p>
             <b>Status:</b>{" "}
-            <span className={task.status === "completed" ? "text-green-600" : "text-orange-600"}>
+            <span
+              className={
+                task.status === "completed" ? "text-green-600" : "text-orange-600"
+              }
+            >
               {task.status}
             </span>
           </p>

@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
+import { getAuthUser } from "@/lib/authServer";
 
 export async function GET(
   req: Request,
   context: { params: Promise<{ staffId: string }> }
 ) {
   await connectDB();
+  const auth = await getAuthUser();
+  if (!auth || auth.role !== "admin") {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
 
-  const { staffId } = await context.params; // ✅ MUST AWAIT
+  const { staffId } = await context.params;
 
   if (!staffId) {
     return NextResponse.json(
@@ -34,6 +42,13 @@ export async function PATCH(
   context: { params: Promise<{ staffId: string }> }
 ) {
   await connectDB();
+  const auth = await getAuthUser();
+  if (!auth || auth.role !== "admin") {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
 
   const { staffId } = await context.params;
   const { name, mobile } = await req.json();
