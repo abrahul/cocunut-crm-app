@@ -8,10 +8,7 @@ export async function PATCH(req: Request) {
     await connectDB();
     const auth = await getAuthUser();
     if (!auth || auth.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await req.json();
 
@@ -20,10 +17,32 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Admin override (status irrelevant)
-    task.numberOfTrees = body.numberOfTrees;
-    task.ratePerTree = body.ratePerTree;
-    task.totalAmount = body.numberOfTrees * body.ratePerTree;
+    if (typeof body.staffId === "string" && body.staffId) {
+      task.staff = body.staffId;
+    }
+
+    if (typeof body.locationId === "string" && body.locationId) {
+      task.location = body.locationId;
+    }
+
+    if (typeof body.numberOfTrees === "number") {
+      task.numberOfTrees = body.numberOfTrees;
+    }
+
+    if (typeof body.ratePerTree === "number") {
+      task.ratePerTree = body.ratePerTree;
+    }
+
+    if (body.status === "pending" || body.status === "completed") {
+      task.status = body.status;
+    }
+
+    if (
+      typeof task.numberOfTrees === "number" &&
+      typeof task.ratePerTree === "number"
+    ) {
+      task.totalAmount = task.numberOfTrees * task.ratePerTree;
+    }
 
     task.adminEdited = true;
 
@@ -31,9 +50,6 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
