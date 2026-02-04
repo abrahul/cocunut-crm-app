@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Task = {
   _id: string;
@@ -17,16 +18,11 @@ type Task = {
 export default function StaffTaskHistoryPage() {
   const { staffId } = useParams();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch(`/api/admin/staff/${staffId}/tasks`)
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch(`/api/admin/staff/${staffId}/tasks`)
+      .then((res) => res.json())
       .then((data) => {
         if (!data) return;
         setTasks(data);

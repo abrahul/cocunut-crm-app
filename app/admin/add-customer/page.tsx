@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddCustomerPage() {
   const [locations, setLocations] = useState([]);
@@ -10,16 +11,11 @@ export default function AddCustomerPage() {
     address: "",
     locationId: "",
   });
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/locations")
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch("/api/admin/locations")
+      .then((res) => res.json())
       .then((data) => {
         if (!data) return;
         setLocations(data);
@@ -29,18 +25,13 @@ export default function AddCustomerPage() {
   const submitHandler = async (e: any) => {
     e.preventDefault();
 
-    const res = await fetch("/api/admin/add-customer", {
+    const res = await adminFetch("/api/admin/add-customer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
     const data = await res.json();
-
-    if (res.status === 401) {
-      window.location.href = "/admin/login";
-      return;
-    }
 
     alert(data.message || data.error);
   };

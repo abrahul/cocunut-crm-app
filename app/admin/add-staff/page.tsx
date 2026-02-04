@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddStaffPage() {
   const router = useRouter();
+  const { adminFetch } = useAdminAuth();
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ export default function AddStaffPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/add-staff", {
+    const res = await adminFetch("/api/admin/add-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, mobile }),
@@ -22,11 +24,6 @@ export default function AddStaffPage() {
 
     const data = await res.json();
     setLoading(false);
-
-    if (res.status === 401) {
-      window.location.href = "/admin/login";
-      return;
-    }
 
     if (!res.ok) {
       setError(data.error || "Something went wrong");

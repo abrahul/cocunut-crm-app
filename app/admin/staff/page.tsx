@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Staff = {
   _id: string;
@@ -13,16 +14,11 @@ type Staff = {
 export default function StaffListPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [query, setQuery] = useState("");
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/staff")
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch("/api/admin/staff")
+      .then((res) => res.json())
       .then((data) => {
         if (!data) return;
         setStaff(data);

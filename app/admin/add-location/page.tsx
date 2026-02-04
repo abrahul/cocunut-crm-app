@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddLocationPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const { adminFetch } = useAdminAuth();
 
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const res = await fetch("/api/admin/add-location", {
+    const res = await adminFetch("/api/admin/add-location", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -20,11 +22,6 @@ export default function AddLocationPage() {
 
     const data = await res.json();
     setLoading(false);
-
-    if (res.status === 401) {
-      window.location.href = "/admin/login";
-      return;
-    }
 
     if (res.ok) {
       setName("");

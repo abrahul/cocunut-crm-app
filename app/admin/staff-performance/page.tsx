@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type StaffPerformance = {
   staffId: string;
@@ -15,16 +16,11 @@ type StaffPerformance = {
 
 export default function StaffPerformancePage() {
   const [data, setData] = useState<StaffPerformance[]>([]);
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/staff-performance")
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch("/api/admin/staff-performance")
+      .then((res) => res.json())
       .then((result) => {
         if (!result) return;
         if (Array.isArray(result)) {

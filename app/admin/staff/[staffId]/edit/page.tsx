@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function EditStaffPage() {
   const params = useParams();
   const staffId = params.staffId as string;
   const router = useRouter();
+  const { adminFetch } = useAdminAuth();
 
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -15,12 +17,8 @@ export default function EditStaffPage() {
   useEffect(() => {
     if (!staffId) return;
 
-    fetch(`/api/admin/staff/${staffId}`)
+    adminFetch(`/api/admin/staff/${staffId}`)
       .then(async (res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
         if (!res.ok) {
           throw new Error("Failed to fetch staff");
         }
@@ -38,18 +36,13 @@ export default function EditStaffPage() {
   }, [staffId]);
 
   async function handleUpdate() {
-    const res = await fetch(`/api/admin/staff/${staffId}`, {
+    const res = await adminFetch(`/api/admin/staff/${staffId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, mobile }),
     });
 
     const data = await res.json();
-
-    if (res.status === 401) {
-      window.location.href = "/admin/login";
-      return;
-    }
 
     if (!res.ok) {
       alert(data.error);

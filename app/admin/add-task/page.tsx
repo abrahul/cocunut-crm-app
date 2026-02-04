@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Customer = {
   _id: string;
@@ -18,6 +19,7 @@ type Staff = {
 export default function AddTaskPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const { adminFetch } = useAdminAuth();
 
   const [form, setForm] = useState({
     customerId: "",
@@ -29,14 +31,8 @@ export default function AddTaskPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/customers")
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch("/api/admin/customers")
+      .then((res) => res.json())
       .then((data) => {
         if (!data) return;
         if (Array.isArray(data)) {
@@ -48,14 +44,8 @@ export default function AddTaskPage() {
       })
       .catch(() => setCustomers([]));
 
-    fetch("/api/admin/staff")
-      .then((res) => {
-        if (res.status === 401) {
-          window.location.href = "/admin/login";
-          return null;
-        }
-        return res.json();
-      })
+    adminFetch("/api/admin/staff")
+      .then((res) => res.json())
       .then((data) => {
         if (!data) return;
         if (Array.isArray(data)) {
@@ -83,7 +73,7 @@ export default function AddTaskPage() {
 
     setLoading(true);
 
-    const res = await fetch("/api/admin/add-task", {
+    const res = await adminFetch("/api/admin/add-task", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,11 +88,6 @@ export default function AddTaskPage() {
 
     const data = await res.json();
     setLoading(false);
-
-    if (res.status === 401) {
-      window.location.href = "/admin/login";
-      return;
-    }
 
     if (res.ok) {
       alert("Task created successfully");
