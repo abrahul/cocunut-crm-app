@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Customer from "@/models/Customer";
+import Task from "@/models/Task";
 import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
@@ -20,7 +21,42 @@ export async function GET() {
       .populate("location")
       .lean();
 
-    return NextResponse.json(customers, { status: 200 });
+    const lastServiceDates = await Task.aggregate([
+      { $match: { serviceDate: { $type: "string", $ne: "" } } },
+      {
+        $addFields: {
+          serviceDateAsDate: {
+            $dateFromString: { dateString: "$serviceDate" },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$customer",
+          lastServiceDate: { $max: "$serviceDateAsDate" },
+        },
+      },
+    ]);
+
+    const lastServiceMap = new Map(
+      lastServiceDates.map((item: any) => [
+        String(item._id),
+        item.lastServiceDate,
+      ])
+    );
+
+    const customersWithLastService = customers.map((customer: any) => {
+      const lastServiceDate = lastServiceMap.get(String(customer._id));
+      if (lastServiceDate) {
+        return {
+          ...customer,
+          lastDateOfService: lastServiceDate,
+        };
+      }
+      return customer;
+    });
+
+    return NextResponse.json(customersWithLastService, { status: 200 });
   } catch (error: any) {
     console.error("CUSTOMER API ERROR:", error);
 

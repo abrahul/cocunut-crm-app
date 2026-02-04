@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Customer from "@/models/Customer";
+import Task from "@/models/Task";
 import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
@@ -13,10 +14,7 @@ export async function GET(
     await connectDB();
     const auth = await getAuthUser();
     if (!auth || auth.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { customerId } = await params;
@@ -31,20 +29,173 @@ export async function GET(
       .populate("location")
       .lean();
 
+    const lastService = await Task.aggregate([
+      {
+        $match: {
+          customer: new mongoose.Types.ObjectId(customerId),
+          serviceDate: { $type: "string", $ne: "" },
+        },
+      },
+      {
+        $addFields: {
+          serviceDateAsDate: {
+            $dateFromString: { dateString: "$serviceDate" },
+          },
+        },
+      },
+      { $sort: { serviceDateAsDate: -1 } },
+      { $limit: 1 },
+    ]);
+
+    const lastServiceDate = lastService?.[0]?.serviceDateAsDate;
+
     if (!customer) {
-      return NextResponse.json(
-        { error: "Customer not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
-    return NextResponse.json(customer, { status: 200 });
+    return NextResponse.json(
+      {
+        ...customer,
+        lastDateOfService: lastServiceDate || customer?.lastDateOfService,
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("CUSTOMER DETAIL ERROR:", error);
 
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ customerId: string }> }
+) {
+  try {
+    await connectDB();
+    const auth = await getAuthUser();
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { customerId } = await params;
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return NextResponse.json(
+        { error: "Invalid customer id" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      name,
+      mobile,
+      alternateMobile,
+      profession,
+      latitude,
+      longitude,
+      address,
+      email,
+      remark,
+      lastDateOfService,
+      locationId,
+    } = await req.json();
+
+    const latNumber = Number(latitude);
+    const lngNumber = Number(longitude);
+
+    if (
+      !name ||
+      !mobile ||
+      !address ||
+      !email ||
+      !locationId ||
+      Number.isNaN(latNumber) ||
+      Number.isNaN(lngNumber) ||
+      !mongoose.Types.ObjectId.isValid(locationId)
+    ) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    const hasLastDate =
+      typeof lastDateOfService === "string" &&
+      lastDateOfService.trim() !== "";
+
+    let parsedLastDate: Date | undefined;
+    if (hasLastDate) {
+      parsedLastDate = new Date(lastDateOfService);
+      if (Number.isNaN(parsedLastDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid last service date" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const updateDoc: Record<string, any> = {
+      name,
+      mobile,
+      alternateMobile,
+      profession,
+      latitude: latNumber,
+      longitude: lngNumber,
+      address,
+      email,
+      remark,
+      location: locationId,
+    };
+
+    if (hasLastDate) {
+      updateDoc.lastDateOfService = parsedLastDate;
+    }
+
+    const updated = await Customer.findByIdAndUpdate(
+      customerId,
+      updateDoc,
+      { new: true }
+    )
+      .populate("location")
+      .lean();
+
+    if (!updated) {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updated, { status: 200 });
+  } catch (error: any) {
+    console.error("CUSTOMER UPDATE ERROR:", error);
+
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ customerId: string }> }
+) {
+  try {
+    await connectDB();
+    const auth = await getAuthUser();
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { customerId } = await params;
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return NextResponse.json(
+        { error: "Invalid customer id" },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await Customer.findByIdAndDelete(customerId).lean();
+    if (!deleted) {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error: any) {
+    console.error("CUSTOMER DELETE ERROR:", error);
+
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

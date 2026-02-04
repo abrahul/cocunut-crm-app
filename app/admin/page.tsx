@@ -6,6 +6,7 @@ export default function AdminDashboard() {
   const cards = [
     { title: "Add Location", href: "/admin/add-location" },
     { title: "Add Customer", href: "/admin/add-customer" },
+    { title: "Manage Customers", href: "/admin/customers" },
     { title: "Add Staff", href: "/admin/add-staff" },
     { title: "Add Task", href: "/admin/add-task" },
     { title: "Manage Tasks", href: "/admin/tasks" },

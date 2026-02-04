@@ -128,6 +128,25 @@ export async function POST(req: Request) {
       exactAddress,
     });
 
+    let parsedServiceDate: Date | null = null;
+    if (serviceDate) {
+      const candidate = new Date(serviceDate);
+      if (!Number.isNaN(candidate.getTime())) {
+        parsedServiceDate = candidate;
+      }
+    }
+
+    if (parsedServiceDate) {
+      const existingLast = customer.lastDateOfService
+        ? new Date(customer.lastDateOfService)
+        : null;
+      if (!existingLast || parsedServiceDate > existingLast) {
+        await Customer.findByIdAndUpdate(customerId, {
+          lastDateOfService: parsedServiceDate,
+        });
+      }
+    }
+
     if (typeof remark === "string" && remark.trim()) {
       await Customer.findByIdAndUpdate(customerId, {
         remark: remark.trim(),
