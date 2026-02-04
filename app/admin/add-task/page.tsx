@@ -8,6 +8,7 @@ type Customer = {
   name: string;
   location?: {
     name: string;
+    defaultRate?: number;
   };
 };
 
@@ -110,12 +111,21 @@ export default function AddTaskPage() {
         <select
           className="border p-2 w-full"
           value={form.customerId}
-          onChange={(e) =>
+          onChange={(e) => {
+            const customerId = e.target.value;
+            const selectedCustomer = customers.find(
+              (c) => c._id === customerId
+            );
+            const defaultRate = selectedCustomer?.location?.defaultRate;
             setForm({
               ...form,
-              customerId: e.target.value,
-            })
-          }
+              customerId,
+              rate:
+                typeof defaultRate === "number"
+                  ? String(defaultRate)
+                  : "",
+            });
+          }}
         >
           <option value="">Select Customer</option>
           {customers.map((c) => (
