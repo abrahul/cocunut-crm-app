@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
+import Customer from "@/models/Customer";
 import { getAuthUser } from "@/lib/authServer";
 
 // ✅ FORCE schema registration
@@ -8,7 +9,7 @@ import "@/models/Staff";
 import "@/models/Customer";
 import "@/models/Location";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
     const auth = await getAuthUser();
@@ -19,7 +20,22 @@ export async function GET() {
       );
     }
 
-    const tasks = await Task.find()
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get("q")?.trim();
+
+    let taskFilter = {};
+    if (q) {
+      const customers = await Customer.find({
+        $or: [
+          { name: { $regex: q, $options: "i" } },
+          { mobile: { $regex: q, $options: "i" } },
+        ],
+      }).select("_id");
+      const ids = customers.map((c: any) => c._id);
+      taskFilter = { customer: { $in: ids } };
+    }
+
+    const tasks = await Task.find(taskFilter)
       .populate("customer", "name mobile")
       .populate("location", "name")
       .populate("staff", "name phone")

@@ -36,6 +36,7 @@ export default function AdminTasksPage() {
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<"pending" | "completed">(
     "pending"
@@ -56,44 +57,53 @@ export default function AdminTasksPage() {
 
   useEffect(() => {
     let active = true;
+    const timer = setTimeout(() => {
+      const loadData = async () => {
+        setLoading(true);
+        try {
+          const searchParam = searchQuery.trim()
+            ? `?q=${encodeURIComponent(searchQuery.trim())}`
+            : "";
+          const [tasksRes, staffRes, locationsRes] = await Promise.all([
+            adminFetch(`/api/admin/tasks${searchParam}`),
+            adminFetch("/api/admin/staff"),
+            adminFetch("/api/admin/locations"),
+          ]);
 
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [tasksRes, staffRes, locationsRes] = await Promise.all([
-          adminFetch("/api/admin/tasks"),
-          adminFetch("/api/admin/staff"),
-          adminFetch("/api/admin/locations"),
-        ]);
+          const [tasksData, staffData, locationsData] = await Promise.all([
+            tasksRes.json(),
+            staffRes.json(),
+            locationsRes.json(),
+          ]);
 
-        const [tasksData, staffData, locationsData] = await Promise.all([
-          tasksRes.json(),
-          staffRes.json(),
-          locationsRes.json(),
-        ]);
+          if (!active) return;
 
-        if (!active) return;
+          setTasks(Array.isArray(tasksData) ? tasksData : []);
+          setStaffOptions(Array.isArray(staffData) ? staffData : []);
+          setLocationOptions(Array.isArray(locationsData) ? locationsData : []);
+          setSelectedIds(new Set());
+          if (editingId) {
+            cancelEdit();
+          }
+        } catch (err) {
+          console.error("Admin tasks fetch error", err);
+          if (!active) return;
+          setTasks([]);
+          setStaffOptions([]);
+          setLocationOptions([]);
+        } finally {
+          if (active) setLoading(false);
+        }
+      };
 
-        setTasks(Array.isArray(tasksData) ? tasksData : []);
-        setStaffOptions(Array.isArray(staffData) ? staffData : []);
-        setLocationOptions(Array.isArray(locationsData) ? locationsData : []);
-      } catch (err) {
-        console.error("Admin tasks fetch error", err);
-        if (!active) return;
-        setTasks([]);
-        setStaffOptions([]);
-        setLocationOptions([]);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    loadData();
+      loadData();
+    }, 300);
 
     return () => {
       active = false;
+      clearTimeout(timer);
     };
-  }, [adminFetch]);
+  }, [adminFetch, searchQuery, editingId]);
 
   const startEdit = (task: Task) => {
     setEditingId(task._id);
@@ -326,6 +336,17 @@ export default function AdminTasksPage() {
         <div className="mb-4 flex flex-col gap-3">
           <div className="flex flex-wrap items-end gap-3">
             <label className="text-xs font-semibold text-gray-600">
+              Search
+              <input
+                type="text"
+                placeholder="Customer name or mobile"
+                className="mt-1 w-56 rounded border px-2 py-1"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </label>
+
+            <label className="text-xs font-semibold text-gray-600">
               Staff
               <select
                 className="mt-1 w-48 rounded border px-2 py-1"
@@ -372,6 +393,7 @@ export default function AdminTasksPage() {
 
             <button
               onClick={() => {
+                setSearchQuery("");
                 setStaffFilter("all");
                 setLocationFilter("all");
                 setStatusFilter("all");
