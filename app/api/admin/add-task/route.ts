@@ -19,7 +19,17 @@ export async function POST(req: Request) {
 
     console.log("TASK BODY RECEIVED:", body);
 
-    const { customerId, staffId, treesCount, rate } = body;
+    const {
+      customerId,
+      staffId,
+      treesCount,
+      rate,
+      serviceDate,
+      serviceTime,
+      medicine,
+      exactAddress,
+      remark,
+    } = body;
 
     const trees = Number(treesCount);
     const hasRate =
@@ -43,6 +53,32 @@ export async function POST(req: Request) {
     if (!Number.isFinite(trees) || trees < 0) {
       return NextResponse.json(
         { error: "Invalid trees count" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !serviceDate ||
+      !serviceTime ||
+      typeof serviceDate !== "string" ||
+      typeof serviceTime !== "string"
+    ) {
+      return NextResponse.json(
+        { error: "Service date and time are required" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof medicine !== "boolean") {
+      return NextResponse.json(
+        { error: "Medicine selection is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!exactAddress || typeof exactAddress !== "string") {
+      return NextResponse.json(
+        { error: "Exact address is required" },
         { status: 400 }
       );
     }
@@ -86,7 +122,17 @@ export async function POST(req: Request) {
       ratePerTree,
       totalAmount: trees * ratePerTree,
       status: "pending",
+      serviceDate,
+      serviceTime,
+      medicine,
+      exactAddress,
     });
+
+    if (typeof remark === "string" && remark.trim()) {
+      await Customer.findByIdAndUpdate(customerId, {
+        remark: remark.trim(),
+      });
+    }
 
     return NextResponse.json({ success: true, task });
   } catch (err: any) {
