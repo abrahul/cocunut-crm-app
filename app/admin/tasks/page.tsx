@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Task = {
   _id: string;
@@ -16,12 +17,14 @@ type Task = {
 export default function AdminTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/tasks")
+    adminFetch("/api/admin/tasks")
       .then((res) => res.json())
       .then((data) => {
-        console.log("ADMIN TASKS:", data); // 🔍 DEBUG
+        if (!data) return;
+        console.log("ADMIN TASKS:", data); // DEBUG
         if (Array.isArray(data)) {
           setTasks(data);
         } else {
@@ -77,7 +80,6 @@ export default function AdminTasksPage() {
             </span>
           </p>
 
-          {/* Admin can always edit */}
           <button
             onClick={() => {
               const trees = prompt(
@@ -91,7 +93,7 @@ export default function AdminTasksPage() {
 
               if (!trees || !rate) return;
 
-              fetch("/api/admin/tasks/update", {
+              adminFetch("/api/admin/tasks/update", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

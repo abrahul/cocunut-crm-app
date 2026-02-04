@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type StaffPerformance = {
   staffId: string;
@@ -15,11 +16,13 @@ type StaffPerformance = {
 
 export default function StaffPerformancePage() {
   const [data, setData] = useState<StaffPerformance[]>([]);
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/staff-performance")
-      .then(res => res.json())
-      .then(result => {
+    adminFetch("/api/admin/staff-performance")
+      .then((res) => res.json())
+      .then((result) => {
+        if (!result) return;
         if (Array.isArray(result)) {
           setData(result);
         } else {
@@ -55,22 +58,14 @@ export default function StaffPerformancePage() {
                   </span>
                 </Link>
                 <br />
-                <span className="text-sm text-gray-500">
-                  {s.phone}
-                </span>
+                <span className="text-sm text-gray-500">{s.phone}</span>
               </td>
 
-              <td className="border p-2 text-center">
-                {s.totalTasks}
-              </td>
+              <td className="border p-2 text-center">{s.totalTasks}</td>
 
-              <td className="border p-2 text-center">
-                {s.totalTrees}
-              </td>
+              <td className="border p-2 text-center">{s.totalTrees}</td>
 
-              <td className="border p-2 text-center">
-                ₹{s.totalEarnings}
-              </td>
+              <td className="border p-2 text-center">₹{s.totalEarnings}</td>
 
               <td className="border p-2 text-center">
                 {s.lastTaskDate

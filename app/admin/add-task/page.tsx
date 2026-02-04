@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Customer = {
   _id: string;
@@ -18,6 +19,7 @@ type Staff = {
 export default function AddTaskPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const { adminFetch } = useAdminAuth();
 
   const [form, setForm] = useState({
     customerId: "",
@@ -28,11 +30,11 @@ export default function AddTaskPage() {
 
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Fetch customers & staff
   useEffect(() => {
-    fetch("/api/admin/customers")
+    adminFetch("/api/admin/customers")
       .then((res) => res.json())
       .then((data) => {
+        if (!data) return;
         if (Array.isArray(data)) {
           setCustomers(data);
         } else {
@@ -42,9 +44,10 @@ export default function AddTaskPage() {
       })
       .catch(() => setCustomers([]));
 
-    fetch("/api/admin/staff")
+    adminFetch("/api/admin/staff")
       .then((res) => res.json())
       .then((data) => {
+        if (!data) return;
         if (Array.isArray(data)) {
           setStaff(data);
         } else {
@@ -55,7 +58,6 @@ export default function AddTaskPage() {
       .catch(() => setStaff([]));
   }, []);
 
-  // 🔹 Submit handler
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -71,7 +73,7 @@ export default function AddTaskPage() {
 
     setLoading(true);
 
-    const res = await fetch("/api/admin/add-task", {
+    const res = await adminFetch("/api/admin/add-task", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -102,15 +104,9 @@ export default function AddTaskPage() {
 
   return (
     <div className="p-6 max-w-xl">
-      <h1 className="text-2xl font-bold mb-6">
-        Add Task
-      </h1>
+      <h1 className="text-2xl font-bold mb-6">Add Task</h1>
 
-      <form
-        onSubmit={submitHandler}
-        className="space-y-4"
-      >
-        {/* Customer */}
+      <form onSubmit={submitHandler} className="space-y-4">
         <select
           className="border p-2 w-full"
           value={form.customerId}
@@ -124,13 +120,11 @@ export default function AddTaskPage() {
           <option value="">Select Customer</option>
           {customers.map((c) => (
             <option key={c._id} value={c._id}>
-              {c.name} (
-              {c.location?.name || "No location"})
+              {c.name} ({c.location?.name || "No location"})
             </option>
           ))}
         </select>
 
-        {/* Staff */}
         <select
           className="border p-2 w-full"
           value={form.staffId}
@@ -149,7 +143,6 @@ export default function AddTaskPage() {
           ))}
         </select>
 
-        {/* Trees count */}
         <input
           type="number"
           placeholder="Number of Trees"
@@ -163,7 +156,6 @@ export default function AddTaskPage() {
           }
         />
 
-        {/* Rate */}
         <input
           type="number"
           placeholder="Rate per Tree"

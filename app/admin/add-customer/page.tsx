@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddCustomerPage() {
   const [locations, setLocations] = useState([]);
@@ -10,31 +11,34 @@ export default function AddCustomerPage() {
     address: "",
     locationId: "",
   });
+  const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    fetch("/api/admin/locations")
+    adminFetch("/api/admin/locations")
       .then((res) => res.json())
-      .then(setLocations);
+      .then((data) => {
+        if (!data) return;
+        setLocations(data);
+      });
   }, []);
 
   const submitHandler = async (e: any) => {
     e.preventDefault();
 
-    const res = await fetch("/api/admin/add-customer", {
+    const res = await adminFetch("/api/admin/add-customer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
     const data = await res.json();
+
     alert(data.message || data.error);
   };
 
   return (
     <div className="p-6 max-w-xl">
-      <h1 className="text-xl font-bold mb-4">
-        Add Customer
-      </h1>
+      <h1 className="text-xl font-bold mb-4">Add Customer</h1>
 
       <form onSubmit={submitHandler} className="space-y-3">
         <input
