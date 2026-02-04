@@ -204,6 +204,32 @@ export default function AdminTasksPage() {
     }
   };
 
+  const handleDelete = async (taskId: string) => {
+    if (!window.confirm("Delete this task? This cannot be undone.")) return;
+    setNotice(null);
+    setSuccess(null);
+    try {
+      await adminFetch("/api/admin/tasks/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+      setTasks((prev) => prev.filter((task) => task._id !== taskId));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
+      if (editingId === taskId) {
+        cancelEdit();
+      }
+      setSuccess("Task deleted.");
+    } catch (err) {
+      console.error("Delete task error", err);
+      setNotice("Delete failed. Please try again.");
+    }
+  };
+
   const handleSave = async () => {
     if (!editingId || !editForm) return;
 
@@ -452,12 +478,20 @@ export default function AdminTasksPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => startEdit(task)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => startEdit(task)}
+                          className="text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(task._id)}
+                          className="text-red-600 hover:text-red-700 font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
