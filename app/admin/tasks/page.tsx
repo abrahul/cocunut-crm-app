@@ -332,114 +332,112 @@ export default function AdminTasksPage() {
         </div>
       )}
 
-      {tasks.length > 0 && (
-        <div className="mb-4 flex flex-col gap-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="text-xs font-semibold text-gray-600">
-              Search
-              <input
-                type="text"
-                placeholder="Customer name or mobile"
-                className="mt-1 w-56 rounded border px-2 py-1"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-              />
-            </label>
+      <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-xs font-semibold text-gray-600">
+            Search
+            <input
+              type="text"
+              placeholder="Customer name or mobile"
+              className="mt-1 w-56 rounded border px-2 py-1"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+          </label>
 
-            <label className="text-xs font-semibold text-gray-600">
-              Staff
-              <select
-                className="mt-1 w-48 rounded border px-2 py-1"
-                value={staffFilter}
-                onChange={(event) => setStaffFilter(event.target.value)}
-              >
-                <option value="all">All</option>
-                {staffOptions.map((staff) => (
-                  <option key={staff._id} value={staff._id}>
-                    {staff.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs font-semibold text-gray-600">
-              Location
-              <select
-                className="mt-1 w-48 rounded border px-2 py-1"
-                value={locationFilter}
-                onChange={(event) => setLocationFilter(event.target.value)}
-              >
-                <option value="all">All</option>
-                {locationOptions.map((location) => (
-                  <option key={location._id} value={location._id}>
-                    {location.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs font-semibold text-gray-600">
-              Status
-              <select
-                className="mt-1 w-40 rounded border px-2 py-1"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
-            </label>
-
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setStaffFilter("all");
-                setLocationFilter("all");
-                setStatusFilter("all");
-              }}
-              className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+          <label className="text-xs font-semibold text-gray-600">
+            Staff
+            <select
+              className="mt-1 w-48 rounded border px-2 py-1"
+              value={staffFilter}
+              onChange={(event) => setStaffFilter(event.target.value)}
             >
-              Clear filters
-            </button>
-          </div>
+              <option value="all">All</option>
+              {staffOptions.map((staff) => (
+                <option key={staff._id} value={staff._id}>
+                  {staff.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <div className="flex flex-wrap items-end gap-3">
-            <span className="text-xs font-semibold text-gray-600">
-              {selectedIds.size} selected
-            </span>
-            <label className="text-xs font-semibold text-gray-600">
-              Bulk status
-              <select
-                className="mt-1 w-40 rounded border px-2 py-1"
-                value={bulkStatus}
-                onChange={(event) =>
-                  setBulkStatus(
-                    event.target.value === "completed" ? "completed" : "pending"
-                  )
-                }
-              >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
-            </label>
-            <button
-              onClick={applyBulkStatus}
-              disabled={selectedIds.size === 0 || bulkSaving}
-              className="rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+          <label className="text-xs font-semibold text-gray-600">
+            Location
+            <select
+              className="mt-1 w-48 rounded border px-2 py-1"
+              value={locationFilter}
+              onChange={(event) => setLocationFilter(event.target.value)}
             >
-              {bulkSaving ? "Updating..." : "Apply"}
-            </button>
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              disabled={selectedIds.size === 0}
-              className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-60"
+              <option value="all">All</option>
+              {locationOptions.map((location) => (
+                <option key={location._id} value={location._id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs font-semibold text-gray-600">
+            Status
+            <select
+              className="mt-1 w-40 rounded border px-2 py-1"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
             >
-              Clear selection
-            </button>
-          </div>
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setStaffFilter("all");
+              setLocationFilter("all");
+              setStatusFilter("all");
+            }}
+            className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+          >
+            Clear filters
+          </button>
         </div>
-      )}
+
+        <div className="flex flex-wrap items-end gap-3">
+          <span className="text-xs font-semibold text-gray-600">
+            {selectedIds.size} selected
+          </span>
+          <label className="text-xs font-semibold text-gray-600">
+            Bulk status
+            <select
+              className="mt-1 w-40 rounded border px-2 py-1"
+              value={bulkStatus}
+              onChange={(event) =>
+                setBulkStatus(
+                  event.target.value === "completed" ? "completed" : "pending"
+                )
+              }
+            >
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+          <button
+            onClick={applyBulkStatus}
+            disabled={selectedIds.size === 0 || bulkSaving}
+            className="rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {bulkSaving ? "Updating..." : "Apply"}
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            disabled={selectedIds.size === 0}
+            className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-60"
+          >
+            Clear selection
+          </button>
+        </div>
+      </div>
 
       {tasks.length === 0 && <p className="text-gray-500">No tasks found</p>}
       {tasks.length > 0 && filteredTasks.length === 0 && (
