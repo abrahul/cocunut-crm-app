@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     const tasks = await Task.find()
-      .populate("customer", "name")
+      .populate("customer", "name mobile")
       .populate("location", "name")
       .populate("staff", "name phone")
       .sort({ createdAt: -1 });

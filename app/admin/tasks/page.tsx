@@ -6,6 +6,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 type Entity = {
   _id: string;
   name: string;
+  mobile?: string;
 };
 
 type Task = {
@@ -435,7 +436,9 @@ export default function AdminTasksPage() {
                     onChange={toggleSelectAllVisible}
                   />
                 </th>
+                <th className="px-4 py-3 text-left font-semibold">No.</th>
                 <th className="px-4 py-3 text-left font-semibold">Customer</th>
+                <th className="px-4 py-3 text-left font-semibold">Phone</th>
                 <th className="px-4 py-3 text-left font-semibold">Location</th>
                 <th className="px-4 py-3 text-left font-semibold">Staff</th>
                 <th className="px-4 py-3 text-left font-semibold">Trees</th>
@@ -446,7 +449,7 @@ export default function AdminTasksPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filteredTasks.map((task) => (
+              {filteredTasks.map((task, index) => (
                 <Fragment key={task._id}>
                   <tr className="hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -456,8 +459,12 @@ export default function AdminTasksPage() {
                         onChange={() => toggleSelectOne(task._id)}
                       />
                     </td>
+                    <td className="px-4 py-3 text-gray-500">{index + 1}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">
                       {task.customer?.name || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {task.customer?.mobile || "-"}
                     </td>
                     <td className="px-4 py-3">{task.location?.name || "-"}</td>
                     <td className="px-4 py-3">{task.staff?.name || "-"}</td>
@@ -497,7 +504,7 @@ export default function AdminTasksPage() {
 
                   {editingId === task._id && editForm && (
                     <tr className="bg-slate-50">
-                      <td colSpan={9} className="px-4 py-4">
+                      <td colSpan={10} className="px-4 py-4">
                         <div className="grid gap-3 md:grid-cols-6">
                           <label className="text-xs font-semibold text-gray-600">
                             Staff
