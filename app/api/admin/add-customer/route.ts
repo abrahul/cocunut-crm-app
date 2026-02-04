@@ -14,10 +14,32 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, mobile, address, locationId } =
-      await req.json();
+    const {
+      name,
+      mobile,
+      alternateMobile,
+      profession,
+      latitude,
+      longitude,
+      address,
+      email,
+      remark,
+      lastDateOfService,
+      locationId,
+    } = await req.json();
 
-    if (!name || !mobile || !locationId) {
+    const latNumber = Number(latitude);
+    const lngNumber = Number(longitude);
+
+    if (
+      !name ||
+      !mobile ||
+      !locationId ||
+      !address ||
+      !email ||
+      Number.isNaN(latNumber) ||
+      Number.isNaN(lngNumber)
+    ) {
       return NextResponse.json(
         { error: "Missing fields" },
         { status: 400 }
@@ -27,7 +49,16 @@ export async function POST(req: Request) {
     const customer = await Customer.create({
       name,
       mobile,
+      alternateMobile,
+      profession,
+      latitude: latNumber,
+      longitude: lngNumber,
       address,
+      email,
+      remark,
+      lastDateOfService: lastDateOfService
+        ? new Date(lastDateOfService)
+        : undefined,
       location: locationId,
     });
 
