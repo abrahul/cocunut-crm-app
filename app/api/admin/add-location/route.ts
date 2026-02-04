@@ -14,11 +14,36 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name } = await req.json();
+    const { name, latitude, longitude, defaultRate } = await req.json();
+
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    const rate = Number(defaultRate);
 
     if (!name) {
       return NextResponse.json(
         { error: "Location name required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      return NextResponse.json(
+        { error: "Valid latitude and longitude required" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(rate) || rate < 0) {
+      return NextResponse.json(
+        { error: "Valid default rate required" },
         { status: 400 }
       );
     }
@@ -31,7 +56,12 @@ export async function POST(req: Request) {
       );
     }
 
-    await Location.create({ name });
+    await Location.create({
+      name,
+      latitude: lat,
+      longitude: lng,
+      defaultRate: rate,
+    });
 
     return NextResponse.json({ message: "Location added" });
   } catch (err: any) {

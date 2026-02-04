@@ -17,13 +17,16 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
 
-    console.log("📦 TASK BODY RECEIVED:", body);
+    console.log("TASK BODY RECEIVED:", body);
 
     const { customerId, staffId, treesCount, rate } = body;
 
-    // ✅ Validate input
     const trees = Number(treesCount);
-    const ratePerTree = Number(rate);
+    const hasRate =
+      rate !== undefined &&
+      rate !== null &&
+      String(rate).trim() !== "";
+    const rateCandidate = Number(rate);
 
     if (
       !customerId ||
@@ -37,9 +40,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!Number.isFinite(trees) || !Number.isFinite(ratePerTree) || trees < 0 || ratePerTree < 0) {
+    if (!Number.isFinite(trees) || trees < 0) {
       return NextResponse.json(
-        { error: "Invalid trees count or rate" },
+        { error: "Invalid trees count" },
         { status: 400 }
       );
     }
@@ -50,6 +53,28 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Customer or location not found" },
         { status: 404 }
+      );
+    }
+
+    const locationDefaultRate = Number(
+      (customer.location as any).defaultRate
+    );
+
+    let ratePerTree: number;
+    if (hasRate) {
+      if (!Number.isFinite(rateCandidate) || rateCandidate < 0) {
+        return NextResponse.json(
+          { error: "Invalid rate" },
+          { status: 400 }
+        );
+      }
+      ratePerTree = rateCandidate;
+    } else if (Number.isFinite(locationDefaultRate)) {
+      ratePerTree = locationDefaultRate;
+    } else {
+      return NextResponse.json(
+        { error: "Rate is required" },
+        { status: 400 }
       );
     }
 
@@ -65,7 +90,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, task });
   } catch (err: any) {
-    console.error("❌ TASK CREATE ERROR:", err);
+    console.error("TASK CREATE ERROR:", err);
     return NextResponse.json(
       { error: err.message || "Task creation failed" },
       { status: 500 }

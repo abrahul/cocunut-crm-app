@@ -5,6 +5,9 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddLocationPage() {
   const [name, setName] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [defaultRate, setDefaultRate] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const { adminFetch } = useAdminAuth();
@@ -17,7 +20,12 @@ export default function AddLocationPage() {
     const res = await adminFetch("/api/admin/add-location", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({
+        name,
+        latitude,
+        longitude,
+        defaultRate,
+      }),
     });
 
     const data = await res.json();
@@ -25,9 +33,12 @@ export default function AddLocationPage() {
 
     if (res.ok) {
       setName("");
-      setMessage("✅ Location added successfully");
+      setLatitude("");
+      setLongitude("");
+      setDefaultRate("");
+      setMessage("Location added successfully");
     } else {
-      setMessage(data.error || "❌ Failed to add location");
+      setMessage(data.error || "Failed to add location");
     }
   };
 
@@ -41,6 +52,30 @@ export default function AddLocationPage() {
           placeholder="Location name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          className="w-full border p-2 rounded"
+        />
+        <input
+          type="number"
+          step="any"
+          placeholder="Latitude (-90 to 90)"
+          value={latitude}
+          onChange={(e) => setLatitude(e.target.value)}
+          className="w-full border p-2 rounded"
+        />
+        <input
+          type="number"
+          step="any"
+          placeholder="Longitude (-180 to 180)"
+          value={longitude}
+          onChange={(e) => setLongitude(e.target.value)}
+          className="w-full border p-2 rounded"
+        />
+        <input
+          type="number"
+          step="any"
+          placeholder="Default rate"
+          value={defaultRate}
+          onChange={(e) => setDefaultRate(e.target.value)}
           className="w-full border p-2 rounded"
         />
 
