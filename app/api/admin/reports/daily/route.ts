@@ -1,0 +1,125 @@
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import Task from "@/models/Task";
+import { getAuthUser } from "@/lib/authServer";
+import mongoose from "mongoose";
+
+export async function GET(request: Request) {
+  try {
+    await connectDB();
+    const auth = await getAuthUser();
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const from = searchParams.get("from")?.trim();
+    const to = searchParams.get("to")?.trim();
+    const staffId = searchParams.get("staffId")?.trim();
+    const locationId = searchParams.get("locationId")?.trim();
+
+    const match: Record<string, any> = {};
+    if (from && to) {
+      match.serviceDate = { $gte: from, $lte: to };
+    } else if (from) {
+      match.serviceDate = { $gte: from };
+    } else if (to) {
+      match.serviceDate = { $lte: to };
+    }
+
+    if (staffId && mongoose.Types.ObjectId.isValid(staffId)) {
+      match.staff = new mongoose.Types.ObjectId(staffId);
+    }
+
+    if (locationId && mongoose.Types.ObjectId.isValid(locationId)) {
+      match.location = new mongoose.Types.ObjectId(locationId);
+    }
+
+    const data = await Task.aggregate([
+      { $match: match },
+      {
+        $facet: {
+          daily: [
+            {
+              $group: {
+                _id: "$serviceDate",
+                totalTasks: { $sum: 1 },
+                completedTasks: {
+                  $sum: {
+                    $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
+                  },
+                },
+                pendingTasks: {
+                  $sum: {
+                    $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
+                  },
+                },
+                totalTrees: { $sum: "$numberOfTrees" },
+                totalRevenue: { $sum: "$totalAmount" },
+              },
+            },
+            { $sort: { _id: 1 } },
+            {
+              $project: {
+                _id: 0,
+                date: "$_id",
+                totalTasks: 1,
+                completedTasks: 1,
+                pendingTasks: 1,
+                totalTrees: 1,
+                totalRevenue: 1,
+              },
+            },
+          ],
+          summary: [
+            {
+              $group: {
+                _id: null,
+                totalTasks: { $sum: 1 },
+                completedTasks: {
+                  $sum: {
+                    $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
+                  },
+                },
+                pendingTasks: {
+                  $sum: {
+                    $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
+                  },
+                },
+                totalTrees: { $sum: "$numberOfTrees" },
+                totalRevenue: { $sum: "$totalAmount" },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                totalTasks: 1,
+                completedTasks: 1,
+                pendingTasks: 1,
+                totalTrees: 1,
+                totalRevenue: 1,
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const payload = data?.[0] || { daily: [], summary: [] };
+    const summary =
+      payload.summary?.[0] || {
+        totalTasks: 0,
+        completedTasks: 0,
+        pendingTasks: 0,
+        totalTrees: 0,
+        totalRevenue: 0,
+      };
+
+    return NextResponse.json({
+      summary,
+      days: payload.daily || [],
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

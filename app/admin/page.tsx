@@ -41,7 +41,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Reports",
-      href: "#",
+      href: "/admin/reports",
       description: "View summaries and insights",
     },
   ];
