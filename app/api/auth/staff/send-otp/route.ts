@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import Admin from "@/models/Admin";
 import Staff from "@/models/Staff";
 
 export async function POST(req: Request) {
@@ -31,9 +32,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // 📲 SEND OTP
+    const adminMobileFromEnv =
+      process.env.STAFF_OTP_ADMIN_MOBILE || process.env.ADMIN_MOBILE;
+
+    let adminMobile = adminMobileFromEnv;
+    if (!adminMobile) {
+      const admin = await Admin.findOne().sort({ createdAt: 1 });
+      if (!admin?.mobile) {
+        return NextResponse.json(
+          { error: "Admin mobile not configured" },
+          { status: 500 }
+        );
+      }
+      adminMobile = admin.mobile;
+    }
+
+    // 📲 SEND OTP to admin (staff mobile is just username)
     const res = await fetch(
-      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${mobile}/AUTOGEN`
+      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${adminMobile}/AUTOGEN`
     );
 
     const data = await res.json();
