@@ -8,16 +8,27 @@ type Staff = {
   _id: string;
   name: string;
   mobile: string;
-  isActive: boolean;
+  isActive: boolean | string | number | null | undefined;
 };
+
+function normalizeIsActive(value: unknown) {
+  if (value === false || value === "false" || value === 0 || value === "0") {
+    return false;
+  }
+  if (value === true || value === "true" || value === 1 || value === "1") {
+    return true;
+  }
+  return true;
+}
 
 export default function StaffListPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [query, setQuery] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    adminFetch("/api/admin/staff")
+    adminFetch("/api/admin/staff", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (!data) return;
@@ -26,23 +37,38 @@ export default function StaffListPage() {
   }, []);
 
   const handleToggle = async (staffId: string, nextActive: boolean) => {
-    const res = await adminFetch(`/api/admin/staff/${staffId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: nextActive }),
-    });
+    setUpdatingId(staffId);
+    try {
+      const res = await adminFetch(`/api/admin/staff/${staffId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: nextActive }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error || "Failed to update status");
-      return;
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(data?.error || "Failed to update status");
+        return;
+      }
+
+      const confirmedActive =
+        typeof data?.staff?.isActive === "boolean"
+          ? data.staff.isActive
+          : nextActive;
+
+      setStaff((prev) =>
+        prev.map((s) =>
+          s._id === staffId
+            ? { ...s, isActive: confirmedActive }
+            : s
+        )
+      );
+    } catch (err: any) {
+      alert(err?.message || "Failed to update status");
+    } finally {
+      setUpdatingId((prev) => (prev === staffId ? null : prev));
     }
-
-    setStaff((prev) =>
-      prev.map((s) =>
-        s._id === staffId ? { ...s, isActive: nextActive } : s
-      )
-    );
   };
 
   const handleDelete = async (staffId: string) => {
@@ -96,7 +122,10 @@ export default function StaffListPage() {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((s) => (
+          {filtered.map((s) => {
+            const isActive = normalizeIsActive(s.isActive);
+            const isUpdating = updatingId === s._id;
+            return (
             <tr key={s._id}>
               <td className="border p-2">
                 <Link
@@ -110,10 +139,10 @@ export default function StaffListPage() {
               <td className="border p-2">
                 <span
                   className={`px-2 py-1 rounded text-sm ${
-                    s.isActive ? "bg-green-100" : "bg-red-100"
+                    isActive ? "bg-green-100" : "bg-red-100"
                   }`}
                 >
-                  {s.isActive ? "Active" : "Disabled"}
+                  {isActive ? "Active" : "Disabled"}
                 </span>
               </td>
 
@@ -121,10 +150,15 @@ export default function StaffListPage() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    className="text-blue-600 underline"
-                    onClick={() => handleToggle(s._id, !s.isActive)}
+                    className="text-blue-600 underline disabled:opacity-50"
+                    disabled={isUpdating}
+                    onClick={() => handleToggle(s._id, !isActive)}
                   >
-                    {s.isActive ? "Disable" : "Activate"}
+                    {isUpdating
+                      ? "Updating..."
+                      : isActive
+                        ? "Disable"
+                        : "Activate"}
                   </button>
                   <Link
                     href={`/admin/staff/${s._id}/edit`}
@@ -142,7 +176,7 @@ export default function StaffListPage() {
                 </div>
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
     </div>

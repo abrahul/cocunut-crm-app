@@ -3,6 +3,18 @@ import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
 import { getAuthUser } from "@/lib/authServer";
 
+export const dynamic = "force-dynamic";
+
+function normalizeIsActive(value: unknown) {
+  if (value === false || value === "false" || value === 0 || value === "0") {
+    return false;
+  }
+  if (value === true || value === "true" || value === 1 || value === "1") {
+    return true;
+  }
+  return true;
+}
+
 export async function GET(req: Request) {
   try {
     await connectDB();
@@ -33,7 +45,7 @@ export async function GET(req: Request) {
     return NextResponse.json(
       staff.map((s) => ({
         ...s.toObject(),
-        isActive: s.isActive ?? true,
+        isActive: normalizeIsActive(s.isActive),
       }))
     );
   } catch (err: any) {

@@ -4,7 +4,7 @@ const StaffSchema = new Schema(
   {
     name: { type: String, required: true },
     mobile: { type: String, required: true, unique: true },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true, required: true },
 
     otpHash: String,
     otpExpiresAt: Date,

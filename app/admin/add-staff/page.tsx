@@ -19,7 +19,7 @@ export default function AddStaffPage() {
     const res = await adminFetch("/api/admin/add-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, mobile }),
+      body: JSON.stringify({ name, mobile, isActive: true }),
     });
 
     const data = await res.json();

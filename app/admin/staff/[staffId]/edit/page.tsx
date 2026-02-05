@@ -17,7 +17,7 @@ export default function EditStaffPage() {
   useEffect(() => {
     if (!staffId) return;
 
-    adminFetch(`/api/admin/staff/${staffId}`)
+    adminFetch(`/api/admin/staff/${staffId}`, { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch staff");
@@ -79,6 +79,7 @@ export default function EditStaffPage() {
       >
         Save Changes
       </button>
+
     </div>
   );
 }

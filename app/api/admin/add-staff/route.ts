@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
 
-    const { name, mobile } = body;
+    const { name, mobile, isActive } = body;
 
     if (!name || !mobile) {
       return NextResponse.json(
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     const staff = await Staff.create({
       name,
       mobile,
+      isActive: typeof isActive === "boolean" ? isActive : true,
     });
 
     return NextResponse.json({ success: true, staff });

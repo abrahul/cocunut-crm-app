@@ -3,6 +3,16 @@ import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
 import { getAuthUser } from "@/lib/authServer";
 
+function normalizeIsActive(value: unknown) {
+  if (value === false || value === "false" || value === 0 || value === "0") {
+    return false;
+  }
+  if (value === true || value === "true" || value === 1 || value === "1") {
+    return true;
+  }
+  return true;
+}
+
 export async function GET(
   req: Request,
   context: { params: Promise<{ staffId: string }> }
@@ -34,7 +44,10 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(staff);
+  return NextResponse.json({
+    ...staff.toObject(),
+    isActive: normalizeIsActive(staff.isActive),
+  });
 }
 
 export async function PATCH(
@@ -57,6 +70,15 @@ export async function PATCH(
 
   if (typeof isActive === "boolean") {
     update.isActive = isActive;
+  } else if (
+    isActive === "true" ||
+    isActive === "false" ||
+    isActive === 1 ||
+    isActive === 0 ||
+    isActive === "1" ||
+    isActive === "0"
+  ) {
+    update.isActive = normalizeIsActive(isActive);
   }
 
   if (name || mobile) {
@@ -92,6 +114,7 @@ export async function PATCH(
 
   const staff = await Staff.findByIdAndUpdate(staffId, update, {
     new: true,
+    runValidators: true,
   });
 
   if (!staff) {
@@ -101,7 +124,13 @@ export async function PATCH(
     );
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    staff: {
+      ...staff.toObject(),
+      isActive: normalizeIsActive(staff.isActive),
+    },
+  });
 }
 
 export async function DELETE(
