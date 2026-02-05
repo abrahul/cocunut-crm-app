@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+
+const SESSION_TIMEOUT_MS = 60_000;
+const REFRESH_THROTTLE_MS = 20_000;
 
 const navItems = [
   { label: "Dashboard", href: "/admin" },
@@ -25,6 +29,74 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const isAuthRoute = pathname?.startsWith("/admin/login");
+
+  useEffect(() => {
+    if (isAuthRoute) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let lastRefreshAt = 0;
+
+    const logout = async () => {
+      try {
+        localStorage.removeItem("adminLastActivityAt");
+      } catch {}
+
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {}
+
+      window.location.href = "/admin/login";
+    };
+
+    const scheduleLogout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      const lastActivity = Number(localStorage.getItem("adminLastActivityAt"));
+      const remaining = SESSION_TIMEOUT_MS - (Date.now() - lastActivity);
+      if (remaining <= 0) {
+        void logout();
+        return;
+      }
+      timeoutId = setTimeout(() => {
+        void logout();
+      }, remaining);
+    };
+
+    const touchActivity = async () => {
+      const now = Date.now();
+      try {
+        localStorage.setItem("adminLastActivityAt", String(now));
+      } catch {}
+      scheduleLogout();
+
+      if (now - lastRefreshAt >= REFRESH_THROTTLE_MS) {
+        lastRefreshAt = now;
+        try {
+          await fetch("/api/auth/refresh", { method: "POST" });
+        } catch {}
+      }
+    };
+
+    const existing = Number(localStorage.getItem("adminLastActivityAt"));
+    if (!Number.isFinite(existing)) {
+      try {
+        localStorage.setItem("adminLastActivityAt", String(Date.now()));
+      } catch {}
+    }
+
+    scheduleLogout();
+
+    const events = ["click", "keydown", "mousemove", "scroll", "touchstart"];
+    events.forEach((evt) => window.addEventListener(evt, touchActivity, { passive: true }));
+    document.addEventListener("visibilitychange", touchActivity);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach((evt) =>
+        window.removeEventListener(evt, touchActivity)
+      );
+      document.removeEventListener("visibilitychange", touchActivity);
+    };
+  }, [isAuthRoute]);
 
   if (isAuthRoute) {
     return <>{children}</>;

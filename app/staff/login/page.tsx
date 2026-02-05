@@ -54,6 +54,10 @@ export default function StaffLoginPage() {
       return;
     }
 
+    try {
+      localStorage.setItem("staffLastActivityAt", Date.now().toString());
+    } catch {}
+
     window.location.href = "/staff/tasks";
   }
 

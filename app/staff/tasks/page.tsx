@@ -68,6 +68,9 @@ export default function StaffTasksPage() {
         </div>
         <button
           onClick={async () => {
+            try {
+              localStorage.removeItem("staffLastActivityAt");
+            } catch {}
             await fetch("/api/auth/logout", { method: "POST" });
             window.location.href = "/staff/login";
           }}

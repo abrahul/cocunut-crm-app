@@ -58,6 +58,10 @@ export default function AdminLoginPage() {
       return;
     }
 
+    try {
+      localStorage.setItem("adminLastActivityAt", Date.now().toString());
+    } catch {}
+
     window.location.href = "/admin/";
   }
 

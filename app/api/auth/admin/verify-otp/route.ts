@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         role: "admin",
       },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1m" }
     );
 
     const response = NextResponse.json({ success: true });
@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
+      maxAge: 60,
     });
 
     return response;

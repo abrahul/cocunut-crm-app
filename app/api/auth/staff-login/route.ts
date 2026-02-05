@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   const token = jwt.sign(
     { staffId: staff._id, role: "staff" },
     JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "1m" }
   );
 
   const res = NextResponse.json({
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    maxAge: 60,
   });
 
   return res;

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         role: "staff",
       },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1m" }
     );
 
     // ✅ 6. Set cookie
@@ -76,6 +76,7 @@ export async function POST(req: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
+      maxAge: 60,
     });
 
     return response;
