@@ -40,16 +40,49 @@ export default function LoginPage() {
 
 
   return (
-    <div>
-      <input placeholder="Phone" onChange={e => setPhone(e.target.value)} />
-      <button onClick={send}>Send OTP</button>
+    <div className="min-h-screen px-5 py-10">
+      <div className="mx-auto w-full max-w-md">
+        <div className="crm-card">
+          <p className="crm-pill">Legacy Access</p>
+          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--ink)]">
+            Login
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Request a one-time code to continue.
+          </p>
 
-      {sessionId && (
-        <>
-          <input placeholder="OTP" onChange={e => setOtp(e.target.value)} />
-          <button onClick={verify}>Verify</button>
-        </>
-      )}
+          <div className="mt-6 space-y-4">
+            <label className="block">
+              <span className="crm-label">Phone</span>
+              <input
+                placeholder="Phone"
+                onChange={(e) => setPhone(e.target.value)}
+                className="crm-input mt-2"
+              />
+            </label>
+
+            <button onClick={send} className="crm-btn-primary w-full">
+              Send OTP
+            </button>
+
+            {sessionId && (
+              <>
+                <label className="block">
+                  <span className="crm-label">OTP</span>
+                  <input
+                    placeholder="OTP"
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="crm-input mt-2"
+                  />
+                </label>
+                <button onClick={verify} className="crm-btn-outline w-full">
+                  Verify
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

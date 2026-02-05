@@ -62,54 +62,72 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="border p-6 w-80">
-        <h1 className="text-xl font-bold mb-4">Admin Login</h1>
+    <div className="min-h-screen px-5 py-10">
+      <div className="mx-auto w-full max-w-md">
+        <div className="crm-card">
+          <p className="crm-pill">Secure Access</p>
+          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--ink)]">
+            Admin Login
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Enter your mobile number to receive a one-time password.
+          </p>
 
-        {error && (
-          <p className="text-red-600 mb-2">{error}</p>
-        )}
+          {error && (
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
-        <input
-          placeholder="Mobile number"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value)}
-          className="border p-2 w-full mb-2"
-        />
+          <div className="mt-6 space-y-4">
+            <label className="block">
+              <span className="crm-label">Mobile number</span>
+              <input
+                placeholder="Enter mobile"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                className="crm-input mt-2"
+              />
+            </label>
 
-        {!otpSent && (
-          <button
-            onClick={sendOtp}
-            disabled={cooldown > 0}
-            className="w-full bg-black text-white p-2 disabled:opacity-60"
-          >
-            {cooldown > 0 ? `Resend in ${cooldown}s` : "Send OTP"}
-          </button>
-        )}
+            {!otpSent && (
+              <button
+                onClick={sendOtp}
+                disabled={cooldown > 0}
+                className="crm-btn-primary w-full disabled:opacity-60"
+              >
+                {cooldown > 0 ? `Resend in ${cooldown}s` : "Send OTP"}
+              </button>
+            )}
 
-        {otpSent && (
-          <>
-            <input
-              placeholder="OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="border p-2 w-full mb-4 mt-2"
-            />
-            <button
-              onClick={verifyOtp}
-              className="w-full bg-black text-white p-2"
-            >
-              Verify OTP
-            </button>
-            <button
-              onClick={sendOtp}
-              disabled={cooldown > 0}
-              className="w-full mt-2 text-sm text-blue-600 underline disabled:opacity-60"
-            >
-              {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
-            </button>
-          </>
-        )}
+            {otpSent && (
+              <>
+                <label className="block">
+                  <span className="crm-label">OTP</span>
+                  <input
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="crm-input mt-2"
+                  />
+                </label>
+                <button
+                  onClick={verifyOtp}
+                  className="crm-btn-primary w-full"
+                >
+                  Verify OTP
+                </button>
+                <button
+                  onClick={sendOtp}
+                  disabled={cooldown > 0}
+                  className="crm-btn-ghost w-full text-sm disabled:opacity-60"
+                >
+                  {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

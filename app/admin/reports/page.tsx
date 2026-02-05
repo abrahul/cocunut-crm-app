@@ -65,9 +65,7 @@ export default function ReportsPage() {
     return toLocalInputDate(d);
   }, []);
   const initialTo = useMemo(() => toLocalInputDate(today), [today]);
-  const [fromDate, setFromDate] = useState(() => {
-    return initialFrom;
-  });
+  const [fromDate, setFromDate] = useState(() => initialFrom);
   const [toDate, setToDate] = useState(() => initialTo);
   const [days, setDays] = useState<DailyRow[]>([]);
   const [summary, setSummary] = useState<Summary>({
@@ -77,9 +75,9 @@ export default function ReportsPage() {
     totalTrees: 0,
     totalRevenue: 0,
   });
-  const [staffPerformance, setStaffPerformance] = useState<
-    StaffPerformance[]
-  >([]);
+  const [staffPerformance, setStaffPerformance] = useState<StaffPerformance[]>(
+    []
+  );
   const [staffOptions, setStaffOptions] = useState<Option[]>([]);
   const [locationOptions, setLocationOptions] = useState<Option[]>([]);
   const [staffFilter, setStaffFilter] = useState<string>("all");
@@ -132,9 +130,7 @@ export default function ReportsPage() {
             totalRevenue: 0,
           }
         );
-        setStaffPerformance(
-          Array.isArray(staffResult) ? staffResult : []
-        );
+        setStaffPerformance(Array.isArray(staffResult) ? staffResult : []);
       } catch (err: any) {
         if (!active) return;
         setNotice(err?.message || "Report load failed.");
@@ -172,9 +168,7 @@ export default function ReportsPage() {
         ]);
         if (!active) return;
         setStaffOptions(Array.isArray(staffData) ? staffData : []);
-        setLocationOptions(
-          Array.isArray(locationData) ? locationData : []
-        );
+        setLocationOptions(Array.isArray(locationData) ? locationData : []);
       } catch (err) {
         if (!active) return;
         setStaffOptions([]);
@@ -189,11 +183,14 @@ export default function ReportsPage() {
   }, [adminFetch]);
 
   return (
-    <div className="p-6">
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Reports</h1>
-          <p className="text-sm text-gray-500">
+          <p className="crm-pill">Insights</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+            Reports
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             Daily stats grouped by service date
           </p>
         </div>
@@ -210,9 +207,7 @@ export default function ReportsPage() {
                 setRangePreset("today");
               }}
               className={
-                rangePreset === "today"
-                  ? "rounded border border-slate-900 bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
-                  : "rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+                rangePreset === "today" ? "crm-btn-primary" : "crm-btn-outline"
               }
             >
               Today
@@ -226,9 +221,7 @@ export default function ReportsPage() {
                 setRangePreset("week");
               }}
               className={
-                rangePreset === "week"
-                  ? "rounded border border-slate-900 bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
-                  : "rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+                rangePreset === "week" ? "crm-btn-primary" : "crm-btn-outline"
               }
             >
               This Week
@@ -242,156 +235,136 @@ export default function ReportsPage() {
                 setRangePreset("month");
               }}
               className={
-                rangePreset === "month"
-                  ? "rounded border border-slate-900 bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
-                  : "rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+                rangePreset === "month" ? "crm-btn-primary" : "crm-btn-outline"
               }
             >
               This Month
             </button>
           </div>
-
-          <label className="text-xs font-semibold text-gray-600">
-            From
-            <input
-              type="date"
-              className="mt-1 rounded border px-2 py-1"
-              value={fromDate}
-              onChange={(event) => {
-                setFromDate(event.target.value);
-                setRangePreset("custom");
-              }}
-            />
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            To
-            <input
-              type="date"
-              className="mt-1 rounded border px-2 py-1"
-              value={toDate}
-              onChange={(event) => {
-                setToDate(event.target.value);
-                setRangePreset("custom");
-              }}
-            />
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            Staff
-            <select
-              className="mt-1 rounded border px-2 py-1"
-              value={staffFilter}
-              onChange={(event) => setStaffFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              {staffOptions.map((staff) => (
-                <option key={staff._id} value={staff._id}>
-                  {staff.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            Location
-            <select
-              className="mt-1 rounded border px-2 py-1"
-              value={locationFilter}
-              onChange={(event) => setLocationFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              {locationOptions.map((location) => (
-                <option key={location._id} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
       </div>
 
+      <div className="crm-toolbar">
+        <label className="block">
+          <span className="crm-label">From</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={fromDate}
+            onChange={(event) => {
+              setFromDate(event.target.value);
+              setRangePreset("custom");
+            }}
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">To</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={toDate}
+            onChange={(event) => {
+              setToDate(event.target.value);
+              setRangePreset("custom");
+            }}
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">Staff</span>
+          <select
+            className="crm-select mt-2"
+            value={staffFilter}
+            onChange={(event) => setStaffFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            {staffOptions.map((staff) => (
+              <option key={staff._id} value={staff._id}>
+                {staff.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="crm-label">Location</span>
+          <select
+            className="crm-select mt-2"
+            value={locationFilter}
+            onChange={(event) => setLocationFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            {locationOptions.map((location) => (
+              <option key={location._id} value={location._id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       {notice && (
-        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {notice}
         </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading report...</p>
+        <p className="text-sm text-[color:var(--muted)]">Loading report...</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="rounded border bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Tasks</p>
-              <p className="text-2xl font-bold">{summary.totalTasks}</p>
-            </div>
-            <div className="rounded border bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Completed</p>
-              <p className="text-2xl font-bold text-green-700">
-                {summary.completedTasks}
-              </p>
-            </div>
-            <div className="rounded border bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Pending</p>
-              <p className="text-2xl font-bold text-yellow-700">
-                {summary.pendingTasks}
-              </p>
-            </div>
-            <div className="rounded border bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Trees</p>
-              <p className="text-2xl font-bold">{summary.totalTrees}</p>
-            </div>
-            <div className="rounded border bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Revenue</p>
-              <p className="text-2xl font-bold">Rs. {summary.totalRevenue}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-5">
+            {[
+              { label: "Tasks", value: summary.totalTasks },
+              { label: "Completed", value: summary.completedTasks },
+              { label: "Pending", value: summary.pendingTasks },
+              { label: "Trees", value: summary.totalTrees },
+              { label: "Revenue", value: `Rs. ${summary.totalRevenue}` },
+            ].map((item) => (
+              <div key={item.label} className="crm-card-soft">
+                <p className="crm-label">{item.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-[color:var(--ink)]">
+                  {item.value}
+                </p>
+              </div>
+            ))}
           </div>
 
           {days.length === 0 ? (
-            <p className="text-gray-500">No data for this range.</p>
+            <div className="crm-card">
+              <p className="text-sm text-[color:var(--muted)]">
+                No data for this range.
+              </p>
+            </div>
           ) : (
-            <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-gray-600">
+            <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+              <table className="crm-table">
+                <thead className="bg-white/70">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Tasks
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Completed
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Pending
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Trees
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Revenue
-                    </th>
+                    <th className="crm-th">Date</th>
+                    <th className="crm-th">Tasks</th>
+                    <th className="crm-th">Completed</th>
+                    <th className="crm-th">Pending</th>
+                    <th className="crm-th">Trees</th>
+                    <th className="crm-th">Revenue</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-[color:var(--border)]">
                   {days.map((row) => (
-                    <tr key={row.date}>
-                      <td className="px-4 py-3">
+                    <tr key={row.date} className="hover:bg-white/70">
+                      <td className="crm-td">
                         {new Date(row.date).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3">{row.totalTasks}</td>
-                      <td className="px-4 py-3 text-green-700">
+                      <td className="crm-td">{row.totalTasks}</td>
+                      <td className="crm-td text-emerald-700">
                         {row.completedTasks}
                       </td>
-                      <td className="px-4 py-3 text-yellow-700">
+                      <td className="crm-td text-amber-700">
                         {row.pendingTasks}
                       </td>
-                      <td className="px-4 py-3">{row.totalTrees}</td>
-                      <td className="px-4 py-3">
-                        Rs. {row.totalRevenue}
-                      </td>
+                      <td className="crm-td">{row.totalTrees}</td>
+                      <td className="crm-td">Rs. {row.totalRevenue}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -399,67 +372,57 @@ export default function ReportsPage() {
             </div>
           )}
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-3">
-              Staff Performance
-            </h2>
+          <div className="mt-8 space-y-4">
+            <div>
+              <p className="crm-pill">Performance</p>
+              <h2 className="mt-3 text-2xl font-semibold text-[color:var(--ink)]">
+                Staff Performance
+              </h2>
+            </div>
+
             {staffPerformance.length === 0 ? (
-              <p className="text-gray-500">No staff data for this range.</p>
+              <div className="crm-card">
+                <p className="text-sm text-[color:var(--muted)]">
+                  No staff data for this range.
+                </p>
+              </div>
             ) : (
-              <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-slate-50 text-gray-600">
+              <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+                <table className="crm-table">
+                  <thead className="bg-white/70">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Staff
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Tasks
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Completed
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Pending
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Trees
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Earnings
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold">
-                        Last Service
-                      </th>
+                      <th className="crm-th">Staff</th>
+                      <th className="crm-th">Tasks</th>
+                      <th className="crm-th">Completed</th>
+                      <th className="crm-th">Pending</th>
+                      <th className="crm-th">Trees</th>
+                      <th className="crm-th">Earnings</th>
+                      <th className="crm-th">Last Service</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-[color:var(--border)]">
                     {staffPerformance.map((row) => (
-                      <tr key={row.staffId}>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">
+                      <tr key={row.staffId} className="hover:bg-white/70">
+                        <td className="crm-td">
+                          <div className="font-semibold text-[color:var(--ink)]">
                             {row.staffName}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-[color:var(--muted)]">
                             {row.mobile || "-"}
                           </div>
                         </td>
-                        <td className="px-4 py-3">{row.totalTasks}</td>
-                        <td className="px-4 py-3 text-green-700">
+                        <td className="crm-td">{row.totalTasks}</td>
+                        <td className="crm-td text-emerald-700">
                           {row.completedTasks}
                         </td>
-                        <td className="px-4 py-3 text-yellow-700">
+                        <td className="crm-td text-amber-700">
                           {row.pendingTasks}
                         </td>
-                        <td className="px-4 py-3">{row.totalTrees}</td>
-                        <td className="px-4 py-3">
-                          Rs. {row.totalEarnings}
-                        </td>
-                        <td className="px-4 py-3">
+                        <td className="crm-td">{row.totalTrees}</td>
+                        <td className="crm-td">Rs. {row.totalEarnings}</td>
+                        <td className="crm-td">
                           {row.lastServiceDate
-                            ? new Date(
-                                row.lastServiceDate
-                              ).toLocaleDateString()
+                            ? new Date(row.lastServiceDate).toLocaleDateString()
                             : "-"}
                         </td>
                       </tr>

@@ -274,12 +274,10 @@ export default function AdminTasksPage() {
       });
 
       const nextStaff =
-        staffOptions.find((staff) => staff._id === editForm.staffId) ||
-        null;
+        staffOptions.find((staff) => staff._id === editForm.staffId) || null;
       const nextLocation =
-        locationOptions.find(
-          (location) => location._id === editForm.locationId
-        ) || null;
+        locationOptions.find((location) => location._id === editForm.locationId) ||
+        null;
 
       setTasks((prev) =>
         prev.map((task) => {
@@ -309,85 +307,19 @@ export default function AdminTasksPage() {
   if (loading) return <p className="p-4">Loading...</p>;
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">All Tasks</h1>
-        <p className="text-sm text-gray-500">
-          {filteredTasks.length}{" "}
-          {filteredTasks.length === 1 ? "task" : "tasks"}
-        </p>
-      </div>
-
-      {success && (
-        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
-          {success}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="crm-pill">Task Control</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+            All Tasks
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            {filteredTasks.length}{" "}
+            {filteredTasks.length === 1 ? "task" : "tasks"}
+          </p>
         </div>
-      )}
-
-      {notice && (
-        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          {notice}
-        </div>
-      )}
-
-      <div className="mb-4 flex flex-col gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="text-xs font-semibold text-gray-600">
-            Search
-            <input
-              type="text"
-              placeholder="Customer name or mobile"
-              className="mt-1 w-56 rounded border px-2 py-1"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            Staff
-            <select
-              className="mt-1 w-48 rounded border px-2 py-1"
-              value={staffFilter}
-              onChange={(event) => setStaffFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              {staffOptions.map((staff) => (
-                <option key={staff._id} value={staff._id}>
-                  {staff.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            Location
-            <select
-              className="mt-1 w-48 rounded border px-2 py-1"
-              value={locationFilter}
-              onChange={(event) => setLocationFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              {locationOptions.map((location) => (
-                <option key={location._id} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="text-xs font-semibold text-gray-600">
-            Status
-            <select
-              className="mt-1 w-40 rounded border px-2 py-1"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-            </select>
-          </label>
-
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => {
               setSearchQuery("");
@@ -395,130 +327,204 @@ export default function AdminTasksPage() {
               setLocationFilter("all");
               setStatusFilter("all");
             }}
-            className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+            className="crm-btn-outline"
           >
-            Clear filters
-          </button>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-3">
-          <span className="text-xs font-semibold text-gray-600">
-            {selectedIds.size} selected
-          </span>
-          <label className="text-xs font-semibold text-gray-600">
-            Bulk status
-            <select
-              className="mt-1 w-40 rounded border px-2 py-1"
-              value={bulkStatus}
-              onChange={(event) =>
-                setBulkStatus(
-                  event.target.value === "completed" ? "completed" : "pending"
-                )
-              }
-            >
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-            </select>
-          </label>
-          <button
-            onClick={applyBulkStatus}
-            disabled={selectedIds.size === 0 || bulkSaving}
-            className="rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-          >
-            {bulkSaving ? "Updating..." : "Apply"}
-          </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            disabled={selectedIds.size === 0}
-            className="rounded border px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-white disabled:opacity-60"
-          >
-            Clear selection
+            Clear Filters
           </button>
         </div>
       </div>
 
-      {tasks.length === 0 && <p className="text-gray-500">No tasks found</p>}
+      {success && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {notice && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {notice}
+        </div>
+      )}
+
+      <div className="crm-toolbar">
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Search</span>
+          <input
+            type="text"
+            placeholder="Customer name or mobile"
+            className="crm-input mt-2"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </label>
+
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Staff</span>
+          <select
+            className="crm-select mt-2"
+            value={staffFilter}
+            onChange={(event) => setStaffFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            {staffOptions.map((staff) => (
+              <option key={staff._id} value={staff._id}>
+                {staff.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Location</span>
+          <select
+            className="crm-select mt-2"
+            value={locationFilter}
+            onChange={(event) => setLocationFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            {locationOptions.map((location) => (
+              <option key={location._id} value={location._id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Status</span>
+          <select
+            className="crm-select mt-2"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="crm-toolbar">
+        <span className="text-xs font-semibold text-[color:var(--muted)]">
+          {selectedIds.size} selected
+        </span>
+        <label className="block w-full max-w-[180px]">
+          <span className="crm-label">Bulk status</span>
+          <select
+            className="crm-select mt-2"
+            value={bulkStatus}
+            onChange={(event) =>
+              setBulkStatus(
+                event.target.value === "completed" ? "completed" : "pending"
+              )
+            }
+          >
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
+        <button
+          onClick={applyBulkStatus}
+          disabled={selectedIds.size === 0 || bulkSaving}
+          className="crm-btn-primary disabled:opacity-60"
+        >
+          {bulkSaving ? "Updating..." : "Apply"}
+        </button>
+        <button
+          onClick={() => setSelectedIds(new Set())}
+          disabled={selectedIds.size === 0}
+          className="crm-btn-outline disabled:opacity-60"
+        >
+          Clear selection
+        </button>
+      </div>
+
+      {tasks.length === 0 && (
+        <div className="crm-card">
+          <p className="text-sm text-[color:var(--muted)]">No tasks found</p>
+        </div>
+      )}
       {tasks.length > 0 && filteredTasks.length === 0 && (
-        <p className="text-gray-500">No tasks match the filters.</p>
+        <div className="crm-card">
+          <p className="text-sm text-[color:var(--muted)]">
+            No tasks match the filters.
+          </p>
+        </div>
       )}
 
       {filteredTasks.length > 0 && (
-        <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-gray-600">
+        <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+          <table className="crm-table">
+            <thead className="bg-white/70">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">
+                <th className="crm-th">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
                     onChange={toggleSelectAllVisible}
                   />
                 </th>
-                <th className="px-4 py-3 text-left font-semibold">No.</th>
-                <th className="px-4 py-3 text-left font-semibold">Customer</th>
-                <th className="px-4 py-3 text-left font-semibold">Phone</th>
-                <th className="px-4 py-3 text-left font-semibold">Location</th>
-                <th className="px-4 py-3 text-left font-semibold">
-                  Service due
-                </th>
-                <th className="px-4 py-3 text-left font-semibold">Staff</th>
-                <th className="px-4 py-3 text-left font-semibold">Trees</th>
-                <th className="px-4 py-3 text-left font-semibold">Rate</th>
-                <th className="px-4 py-3 text-left font-semibold">Total</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                <th className="crm-th">No.</th>
+                <th className="crm-th">Customer</th>
+                <th className="crm-th">Phone</th>
+                <th className="crm-th">Location</th>
+                <th className="crm-th">Service due</th>
+                <th className="crm-th">Staff</th>
+                <th className="crm-th">Trees</th>
+                <th className="crm-th">Rate</th>
+                <th className="crm-th">Total</th>
+                <th className="crm-th">Status</th>
+                <th className="crm-th">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-[color:var(--border)]">
               {filteredTasks.map((task, index) => (
                 <Fragment key={task._id}>
-                  <tr className="hover:bg-slate-50">
-                    <td className="px-4 py-3">
+                  <tr className="hover:bg-white/70">
+                    <td className="crm-td">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(task._id)}
                         onChange={() => toggleSelectOne(task._id)}
                       />
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{index + 1}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
+                    <td className="crm-td text-[color:var(--muted)]">
+                      {index + 1}
+                    </td>
+                    <td className="crm-td font-semibold text-[color:var(--ink)]">
                       {task.customer?.name || "-"}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {task.customer?.mobile || "-"}
-                    </td>
-                    <td className="px-4 py-3">{task.location?.name || "-"}</td>
-                    <td className="px-4 py-3">
-                      {task.serviceDate || "-"}
-                    </td>
-                    <td className="px-4 py-3">{task.staff?.name || "-"}</td>
-                    <td className="px-4 py-3">{task.numberOfTrees}</td>
-                    <td className="px-4 py-3">Rs. {task.ratePerTree}</td>
-                    <td className="px-4 py-3 font-semibold">
+                    <td className="crm-td">{task.customer?.mobile || "-"}</td>
+                    <td className="crm-td">{task.location?.name || "-"}</td>
+                    <td className="crm-td">{task.serviceDate || "-"}</td>
+                    <td className="crm-td">{task.staff?.name || "-"}</td>
+                    <td className="crm-td">{task.numberOfTrees}</td>
+                    <td className="crm-td">Rs. {task.ratePerTree}</td>
+                    <td className="crm-td font-semibold">
                       Rs. {task.totalAmount}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="crm-td">
                       <span
                         className={
                           task.status === "completed"
-                            ? "inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
-                            : "inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-700"
+                            ? "crm-badge-success"
+                            : "crm-badge-warning"
                         }
                       >
                         {task.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="crm-td">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => startEdit(task)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
+                          className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(task._id)}
-                          className="text-red-600 hover:text-red-700 font-medium"
+                          className="text-red-600 hover:text-red-700 font-semibold"
                         >
                           Delete
                         </button>
@@ -527,13 +533,13 @@ export default function AdminTasksPage() {
                   </tr>
 
                   {editingId === task._id && editForm && (
-                    <tr className="bg-slate-50">
-                      <td colSpan={11} className="px-4 py-4">
+                    <tr className="bg-white/70">
+                      <td colSpan={12} className="px-4 py-4">
                         <div className="grid gap-3 md:grid-cols-6">
-                          <label className="text-xs font-semibold text-gray-600">
-                            Staff
+                          <label className="block">
+                            <span className="crm-label">Staff</span>
                             <select
-                              className="mt-1 w-full rounded border px-2 py-1"
+                              className="crm-select mt-2"
                               value={editForm.staffId}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -552,10 +558,10 @@ export default function AdminTasksPage() {
                             </select>
                           </label>
 
-                          <label className="text-xs font-semibold text-gray-600">
-                            Location
+                          <label className="block">
+                            <span className="crm-label">Location</span>
                             <select
-                              className="mt-1 w-full rounded border px-2 py-1"
+                              className="crm-select mt-2"
                               value={editForm.locationId}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -577,12 +583,12 @@ export default function AdminTasksPage() {
                             </select>
                           </label>
 
-                          <label className="text-xs font-semibold text-gray-600">
-                            Trees
+                          <label className="block">
+                            <span className="crm-label">Trees</span>
                             <input
                               type="number"
                               min={0}
-                              className="mt-1 w-full rounded border px-2 py-1"
+                              className="crm-input mt-2"
                               value={editForm.numberOfTrees}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -597,12 +603,12 @@ export default function AdminTasksPage() {
                             />
                           </label>
 
-                          <label className="text-xs font-semibold text-gray-600">
-                            Rate
+                          <label className="block">
+                            <span className="crm-label">Rate</span>
                             <input
                               type="number"
                               min={0}
-                              className="mt-1 w-full rounded border px-2 py-1"
+                              className="crm-input mt-2"
                               value={editForm.ratePerTree}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -617,10 +623,10 @@ export default function AdminTasksPage() {
                             />
                           </label>
 
-                          <label className="text-xs font-semibold text-gray-600">
-                            Status
+                          <label className="block">
+                            <span className="crm-label">Status</span>
                             <select
-                              className="mt-1 w-full rounded border px-2 py-1"
+                              className="crm-select mt-2"
                               value={editForm.status}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -641,11 +647,11 @@ export default function AdminTasksPage() {
                             </select>
                           </label>
 
-                          <div className="text-xs font-semibold text-gray-600">
-                            Total
-                            <div className="mt-2 text-sm text-gray-900">
+                          <div>
+                            <span className="crm-label">Total</span>
+                            <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">
                               Rs. {previewTotal}
-                            </div>
+                            </p>
                           </div>
                         </div>
 
@@ -653,13 +659,15 @@ export default function AdminTasksPage() {
                           <button
                             onClick={handleSave}
                             disabled={savingId === editingId}
-                            className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                            className="crm-btn-primary disabled:opacity-60"
                           >
-                            {savingId === editingId ? "Saving..." : "Save changes"}
+                            {savingId === editingId
+                              ? "Saving..."
+                              : "Save changes"}
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="rounded border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-white"
+                            className="crm-btn-outline"
                           >
                             Cancel
                           </button>

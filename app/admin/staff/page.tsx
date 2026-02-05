@@ -34,7 +34,7 @@ export default function StaffListPage() {
         if (!data) return;
         setStaff(data);
       });
-  }, []);
+  }, [adminFetch]);
 
   const handleToggle = async (staffId: string, nextActive: boolean) => {
     setUpdatingId(staffId);
@@ -59,9 +59,7 @@ export default function StaffListPage() {
 
       setStaff((prev) =>
         prev.map((s) =>
-          s._id === staffId
-            ? { ...s, isActive: confirmedActive }
-            : s
+          s._id === staffId ? { ...s, isActive: confirmedActive } : s
         )
       );
     } catch (err: any) {
@@ -97,88 +95,104 @@ export default function StaffListPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Staff</h1>
-        <Link href="/admin/add-staff" className="text-blue-600 underline">
-          + Add Staff
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="crm-pill">Staff Directory</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+            Staff
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            Manage field team access and activity status.
+          </p>
+        </div>
+        <Link href="/admin/add-staff" className="crm-btn-primary">
+          Add Staff
         </Link>
       </div>
 
-      <input
-        placeholder="Search by name or mobile"
-        className="border p-2 w-full mb-4"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="crm-toolbar">
+        <label className="block w-full md:max-w-sm">
+          <span className="crm-label">Search</span>
+          <input
+            placeholder="Search by name or mobile"
+            className="crm-input mt-2"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+      </div>
 
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Mobile</th>
-            <th className="border p-2">Status</th>
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((s) => {
-            const isActive = normalizeIsActive(s.isActive);
-            const isUpdating = updatingId === s._id;
-            return (
-            <tr key={s._id}>
-              <td className="border p-2">
-                <Link
-                  href={`/admin/staff/${s._id}`}
-                  className="text-blue-600 underline"
-                >
-                  {s.name}
-                </Link>
-              </td>
-              <td className="border p-2">{s.mobile}</td>
-              <td className="border p-2">
-                <span
-                  className={`px-2 py-1 rounded text-sm ${
-                    isActive ? "bg-green-100" : "bg-red-100"
-                  }`}
-                >
-                  {isActive ? "Active" : "Disabled"}
-                </span>
-              </td>
-
-              <td className="border p-2">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="text-blue-600 underline disabled:opacity-50"
-                    disabled={isUpdating}
-                    onClick={() => handleToggle(s._id, !isActive)}
-                  >
-                    {isUpdating
-                      ? "Updating..."
-                      : isActive
-                        ? "Disable"
-                        : "Activate"}
-                  </button>
-                  <Link
-                    href={`/admin/staff/${s._id}/edit`}
-                    className="text-blue-600 underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    type="button"
-                    className="text-red-600 underline"
-                    onClick={() => handleDelete(s._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+      <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+        <table className="crm-table min-w-[520px]">
+          <thead className="bg-white/70">
+            <tr>
+              <th className="crm-th">Name</th>
+              <th className="crm-th">Mobile</th>
+              <th className="crm-th">Status</th>
+              <th className="crm-th">Actions</th>
             </tr>
-          )})}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-[color:var(--border)]">
+            {filtered.map((s) => {
+              const isActive = normalizeIsActive(s.isActive);
+              const isUpdating = updatingId === s._id;
+              return (
+                <tr key={s._id} className="hover:bg-white/70">
+                  <td className="crm-td font-semibold text-[color:var(--ink)]">
+                    <Link
+                      href={`/admin/staff/${s._id}`}
+                      className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)]"
+                    >
+                      {s.name}
+                    </Link>
+                  </td>
+                  <td className="crm-td">{s.mobile}</td>
+                  <td className="crm-td">
+                    <span
+                      className={
+                        isActive ? "crm-badge-success" : "crm-badge-warning"
+                      }
+                    >
+                      {isActive ? "Active" : "Disabled"}
+                    </span>
+                  </td>
+
+                  <td className="crm-td">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold disabled:opacity-50"
+                        disabled={isUpdating}
+                        onClick={() => handleToggle(s._id, !isActive)}
+                      >
+                        {isUpdating
+                          ? "Updating..."
+                          : isActive
+                            ? "Disable"
+                            : "Activate"}
+                      </button>
+                      <Link
+                        href={`/admin/staff/${s._id}/edit`}
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        type="button"
+                        className="text-red-600 hover:text-red-700 font-semibold"
+                        onClick={() => handleDelete(s._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

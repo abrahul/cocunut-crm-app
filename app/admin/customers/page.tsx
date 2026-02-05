@@ -116,108 +116,122 @@ export default function AdminCustomersPage() {
   if (loading) return <p className="p-4">Loading...</p>;
 
   return (
-    <div className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Manage Customers</h1>
-          <p className="text-sm text-gray-500">
+          <p className="crm-pill">Directory</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+            Manage Customers
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             {filteredCustomers.length}{" "}
             {filteredCustomers.length === 1 ? "customer" : "customers"}
           </p>
         </div>
-        <Link href="/admin/add-customer" className="text-blue-600 underline">
-          + Add Customer
+        <Link href="/admin/add-customer" className="crm-btn-primary">
+          Add Customer
         </Link>
       </div>
 
       {success && (
-        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           {success}
         </div>
       )}
 
       {notice && (
-        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {notice}
         </div>
       )}
 
-      <input
-        placeholder="Search by name or phone number"
-        className="border p-2 w-full mb-4"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="crm-toolbar">
+        <label className="block w-full md:max-w-sm">
+          <span className="crm-label">Search</span>
+          <input
+            placeholder="Search by name or phone number"
+            className="crm-input mt-2"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+      </div>
 
       {customers.length === 0 && (
-        <p className="text-gray-500">No customers found.</p>
+        <div className="crm-card">
+          <p className="text-sm text-[color:var(--muted)]">
+            No customers found.
+          </p>
+        </div>
       )}
       {customers.length > 0 && filteredCustomers.length === 0 && (
-        <p className="text-gray-500">No customers match the search.</p>
+        <div className="crm-card">
+          <p className="text-sm text-[color:var(--muted)]">
+            No customers match the search.
+          </p>
+        </div>
       )}
 
       {filteredCustomers.length > 0 && (
-        <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-gray-600">
+        <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+          <table className="crm-table">
+            <thead className="bg-white/70">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">No.</th>
-                <th className="px-4 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 py-3 text-left font-semibold">Mobile</th>
-                <th className="px-4 py-3 text-left font-semibold">
-                  Alternate Mobile
-                </th>
-                <th className="px-4 py-3 text-left font-semibold">Profession</th>
-                <th className="px-4 py-3 text-left font-semibold">Email</th>
-                <th className="px-4 py-3 text-left font-semibold">Address</th>
-                <th className="px-4 py-3 text-left font-semibold">Location</th>
-                <th className="px-4 py-3 text-left font-semibold">Latitude</th>
-                <th className="px-4 py-3 text-left font-semibold">Longitude</th>
-                <th className="px-4 py-3 text-left font-semibold">Remark</th>
-                <th className="px-4 py-3 text-left font-semibold">
-                  Last Climbed Date
-                </th>
-                <th className="px-4 py-3 text-left font-semibold">Due Days</th>
-                <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                <th className="crm-th">No.</th>
+                <th className="crm-th">Name</th>
+                <th className="crm-th">Mobile</th>
+                <th className="crm-th">Alternate</th>
+                <th className="crm-th">Profession</th>
+                <th className="crm-th">Email</th>
+                <th className="crm-th">Address</th>
+                <th className="crm-th">Location</th>
+                <th className="crm-th">Latitude</th>
+                <th className="crm-th">Longitude</th>
+                <th className="crm-th">Remark</th>
+                <th className="crm-th">Last Climbed</th>
+                <th className="crm-th">Due Days</th>
+                <th className="crm-th">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-[color:var(--border)]">
               {filteredCustomers.map((customer, index) => (
-                <tr key={customer._id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-gray-500">{index + 1}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                <tr key={customer._id} className="hover:bg-white/70">
+                  <td className="crm-td text-[color:var(--muted)]">
+                    {index + 1}
+                  </td>
+                  <td className="crm-td font-semibold text-[color:var(--ink)]">
                     {customer.name || "-"}
                   </td>
-                  <td className="px-4 py-3">{customer.mobile || "-"}</td>
-                  <td className="px-4 py-3">
+                  <td className="crm-td">{customer.mobile || "-"}</td>
+                  <td className="crm-td">
                     {customer.alternateMobile || "-"}
                   </td>
-                  <td className="px-4 py-3">{customer.profession || "-"}</td>
-                  <td className="px-4 py-3">{customer.email || "-"}</td>
-                  <td className="px-4 py-3">{customer.address || "-"}</td>
-                  <td className="px-4 py-3">
+                  <td className="crm-td">{customer.profession || "-"}</td>
+                  <td className="crm-td">{customer.email || "-"}</td>
+                  <td className="crm-td">{customer.address || "-"}</td>
+                  <td className="crm-td">
                     {customer.location?.name || "-"}
                   </td>
-                  <td className="px-4 py-3">{customer.latitude ?? "-"}</td>
-                  <td className="px-4 py-3">{customer.longitude ?? "-"}</td>
-                  <td className="px-4 py-3">{customer.remark || "-"}</td>
-                  <td className="px-4 py-3">
+                  <td className="crm-td">{customer.latitude ?? "-"}</td>
+                  <td className="crm-td">{customer.longitude ?? "-"}</td>
+                  <td className="crm-td">{customer.remark || "-"}</td>
+                  <td className="crm-td">
                     {formatDate(customer.lastDateOfService)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="crm-td">
                     {getDueDays(customer.lastDateOfService)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="crm-td">
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/customers/${customer._id}/edit`}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
                       >
                         Edit
                       </Link>
                       <button
                         onClick={() => handleDelete(customer._id)}
-                        className="text-red-600 hover:text-red-700 font-medium"
+                        className="text-red-600 hover:text-red-700 font-semibold"
                       >
                         Delete
                       </button>

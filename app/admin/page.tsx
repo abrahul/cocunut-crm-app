@@ -47,18 +47,43 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="crm-pill">Overview</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+            Admin Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Jump back into daily operations with the essentials below.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/add-task" className="crm-btn-primary">
+            Create Task
+          </Link>
+          <Link href="/admin/reports" className="crm-btn-outline">
+            View Reports
+          </Link>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {cards.map((card) => (
           <Link
             key={card.title}
             href={card.href}
-            className="border rounded-lg p-6 bg-white shadow hover:shadow-lg transition"
+            className="crm-card transition hover:-translate-y-1 hover:shadow-[0_30px_70px_-45px_rgba(15,23,42,0.6)]"
           >
-            <h2 className="text-xl font-semibold">{card.title}</h2>
-            <p className="text-gray-500 mt-2">{card.description}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              Shortcut
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-[color:var(--ink)]">
+              {card.title}
+            </h2>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              {card.description}
+            </p>
           </Link>
         ))}
       </div>

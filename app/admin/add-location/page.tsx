@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AddLocationPage() {
@@ -12,7 +12,7 @@ export default function AddLocationPage() {
   const [message, setMessage] = useState("");
   const { adminFetch } = useAdminAuth();
 
-  const submitHandler = async (e: React.FormEvent) => {
+  const submitHandler = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
@@ -43,52 +43,79 @@ export default function AddLocationPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow">
-      <h1 className="text-xl font-bold mb-4">Add Location</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Service Areas</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Add Location
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Define coverage zones and default pricing for new customers.
+        </p>
+      </div>
 
-      <form onSubmit={submitHandler} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Location name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="number"
-          step="any"
-          placeholder="Latitude (-90 to 90)"
-          value={latitude}
-          onChange={(e) => setLatitude(e.target.value)}
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="number"
-          step="any"
-          placeholder="Longitude (-180 to 180)"
-          value={longitude}
-          onChange={(e) => setLongitude(e.target.value)}
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="number"
-          step="any"
-          placeholder="Default rate"
-          value={defaultRate}
-          onChange={(e) => setDefaultRate(e.target.value)}
-          className="w-full border p-2 rounded"
-        />
+      <form onSubmit={submitHandler} className="crm-card space-y-4">
+        <label className="block">
+          <span className="crm-label">Location name</span>
+          <input
+            type="text"
+            placeholder="Location name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="crm-input mt-2"
+          />
+        </label>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Latitude</span>
+            <input
+              type="number"
+              step="any"
+              placeholder="Latitude (-90 to 90)"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              className="crm-input mt-2"
+            />
+          </label>
+          <label className="block">
+            <span className="crm-label">Longitude</span>
+            <input
+              type="number"
+              step="any"
+              placeholder="Longitude (-180 to 180)"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              className="crm-input mt-2"
+            />
+          </label>
+        </div>
+        <label className="block">
+          <span className="crm-label">Default rate</span>
+          <input
+            type="number"
+            step="any"
+            placeholder="Default rate"
+            value={defaultRate}
+            onChange={(e) => setDefaultRate(e.target.value)}
+            className="crm-input mt-2"
+          />
+        </label>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white p-2 rounded"
-        >
-          {loading ? "Adding..." : "Add Location"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className="crm-btn-primary disabled:opacity-60"
+          >
+            {loading ? "Adding..." : "Add Location"}
+          </button>
+          {message && (
+            <p className="text-sm font-semibold text-[color:var(--muted)]">
+              {message}
+            </p>
+          )}
+        </div>
       </form>
-
-      {message && <p className="mt-4 text-center">{message}</p>}
     </div>
   );
 }

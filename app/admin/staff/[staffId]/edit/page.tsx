@@ -56,30 +56,42 @@ export default function EditStaffPage() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="p-6 max-w-md">
-      <h1 className="text-xl font-bold mb-4">Edit Staff</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Staff Profile</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Edit Staff
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Update contact details for this team member.
+        </p>
+      </div>
 
-      <input
-        className="border p-2 w-full mb-3"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <div className="crm-card space-y-4">
+        <label className="block">
+          <span className="crm-label">Name</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
 
-      <input
-        className="border p-2 w-full mb-3"
-        placeholder="Mobile"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
-      />
+        <label className="block">
+          <span className="crm-label">Mobile</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Mobile"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+          />
+        </label>
 
-      <button
-        onClick={handleUpdate}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Save Changes
-      </button>
-
+        <button onClick={handleUpdate} className="crm-btn-primary">
+          Save Changes
+        </button>
+      </div>
     </div>
   );
 }

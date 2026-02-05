@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Customer = {
@@ -38,7 +38,6 @@ export default function AddTaskPage() {
   });
   const [previousRemark, setPreviousRemark] = useState("");
   const [updatingRemark, setUpdatingRemark] = useState(false);
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -67,9 +66,9 @@ export default function AddTaskPage() {
         }
       })
       .catch(() => setStaff([]));
-  }, []);
+  }, [adminFetch]);
 
-  const submitHandler = async (e: React.FormEvent) => {
+  const submitHandler = async (e: FormEvent) => {
     e.preventDefault();
 
     if (
@@ -168,242 +167,258 @@ export default function AddTaskPage() {
       alert(data?.error || "Failed to update remark");
     }
   };
+
   return (
-    <div className="p-6 max-w-xl">
-      <h1 className="text-2xl font-bold mb-6">Add Task</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Task Creation</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Add Task
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Assign a customer, staff member, and service details in one flow.
+        </p>
+      </div>
 
-      <form onSubmit={submitHandler} className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700">
-          Customer
-        </label>
-        <select
-          className="border p-2 w-full"
-          value={form.customerId}
-          onChange={(e) => {
-            const customerId = e.target.value;
-            const selectedCustomer = customers.find(
-              (c) => c._id === customerId
-            );
-            const defaultRate = selectedCustomer?.location?.defaultRate;
-            const nextPreviousRemark = selectedCustomer?.remark || "";
-            const nextExactAddress =
-              selectedCustomer?.address || "";
-            setForm({
-              ...form,
-              customerId,
-              rate:
-                typeof defaultRate === "number"
-                  ? String(defaultRate)
-                  : "",
-              exactAddress: nextExactAddress,
-              remark: "",
-            });
-            setPreviousRemark(nextPreviousRemark);
-
-            if (customerId) {
-              adminFetch(`/api/admin/customers/${customerId}`)
-                .then((res) => res.json())
-                .then((data) => {
-                  if (!data || data?.error) return;
-                  setPreviousRemark(
-                    typeof data.remark === "string"
-                      ? data.remark
-                      : ""
-                  );
-                  setForm((prev) => ({
-                    ...prev,
-                    exactAddress:
-                      typeof data.address === "string"
-                        ? data.address
-                        : prev.exactAddress,
-                    rate:
-                      typeof data?.location?.defaultRate ===
-                      "number"
-                        ? String(data.location.defaultRate)
-                        : prev.rate,
-                  }));
-                })
-                .catch(() => {});
-            }
-          }}
-        >
-          <option value="">Select Customer</option>
-          {customers.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name} ({c.location?.name || "No location"})
-            </option>
-          ))}
-        </select>
-
-        <label className="block text-sm font-medium text-gray-700">
-          Staff
-        </label>
-        <select
-          className="border p-2 w-full"
-          value={form.staffId}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              staffId: e.target.value,
-            })
-          }
-        >
-          <option value="">Select Staff</option>
-          {staff.map((s) => (
-            <option key={s._id} value={s._id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-
-        <label className="block text-sm font-medium text-gray-700">
-          Number of Trees
-        </label>
-        <input
-          type="number"
-          className="border p-2 w-full"
-          value={form.treesCount}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              treesCount: e.target.value,
-            })
-          }
-        />
-
-        <label className="block text-sm font-medium text-gray-700">
-          Rate per Tree
-        </label>
-        <input
-          type="number"
-          className="border p-2 w-full"
-          value={form.rate}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              rate: e.target.value,
-            })
-          }
-        />
-
-        <label className="block text-sm font-medium text-gray-700">
-          Date of Service
-        </label>
-        <input
-          type="date"
-          className="border p-2 w-full"
-          value={form.serviceDate}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              serviceDate: e.target.value,
-            })
-          }
-        />
-
-        <label className="block text-sm font-medium text-gray-700">
-          Time of Service
-        </label>
-        <input
-          type="time"
-          className="border p-2 w-full"
-          value={form.serviceTime}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              serviceTime: e.target.value,
-            })
-          }
-        />
-
-        <div className="border p-2 w-full">
-          <p className="text-sm text-gray-600 mb-2">
-            Medicine required?
-          </p>
-          <label className="mr-4">
-            <input
-              type="radio"
-              name="medicine"
-              value="yes"
-              checked={form.medicine === "yes"}
-              onChange={(e) =>
+      <form onSubmit={submitHandler} className="crm-card space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Customer</span>
+            <select
+              className="crm-select mt-2"
+              value={form.customerId}
+              onChange={(e) => {
+                const customerId = e.target.value;
+                const selectedCustomer = customers.find(
+                  (c) => c._id === customerId
+                );
+                const defaultRate = selectedCustomer?.location?.defaultRate;
+                const nextPreviousRemark = selectedCustomer?.remark || "";
+                const nextExactAddress = selectedCustomer?.address || "";
                 setForm({
                   ...form,
-                  medicine: e.target.value,
-                })
-              }
-            />{" "}
-            Yes
+                  customerId,
+                  rate:
+                    typeof defaultRate === "number"
+                      ? String(defaultRate)
+                      : "",
+                  exactAddress: nextExactAddress,
+                  remark: "",
+                });
+                setPreviousRemark(nextPreviousRemark);
+
+                if (customerId) {
+                  adminFetch(`/api/admin/customers/${customerId}`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                      if (!data || data?.error) return;
+                      setPreviousRemark(
+                        typeof data.remark === "string" ? data.remark : ""
+                      );
+                      setForm((prev) => ({
+                        ...prev,
+                        exactAddress:
+                          typeof data.address === "string"
+                            ? data.address
+                            : prev.exactAddress,
+                        rate:
+                          typeof data?.location?.defaultRate === "number"
+                            ? String(data.location.defaultRate)
+                            : prev.rate,
+                      }));
+                    })
+                    .catch(() => {});
+                }
+              }}
+            >
+              <option value="">Select Customer</option>
+              {customers.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} ({c.location?.name || "No location"})
+                </option>
+              ))}
+            </select>
           </label>
-          <label>
-            <input
-              type="radio"
-              name="medicine"
-              value="no"
-              checked={form.medicine === "no"}
+
+          <label className="block">
+            <span className="crm-label">Staff</span>
+            <select
+              className="crm-select mt-2"
+              value={form.staffId}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  medicine: e.target.value,
+                  staffId: e.target.value,
                 })
               }
-            />{" "}
-            No
+            >
+              <option value="">Select Staff</option>
+              {staff.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
-        <label className="block text-sm font-medium text-gray-700">
-          Exact Address
-        </label>
-        <input
-          type="text"
-          className="border p-2 w-full"
-          value={form.exactAddress}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              exactAddress: e.target.value,
-            })
-          }
-        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Number of trees</span>
+            <input
+              type="number"
+              className="crm-input mt-2"
+              value={form.treesCount}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  treesCount: e.target.value,
+                })
+              }
+            />
+          </label>
 
-        <label className="block text-sm font-medium text-gray-700">
-          Remark
-        </label>
-        <textarea
-          className="border p-2 w-full"
-          rows={3}
-          value={form.remark}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              remark: e.target.value,
-            })
-          }
-        />
+          <label className="block">
+            <span className="crm-label">Rate per tree</span>
+            <input
+              type="number"
+              className="crm-input mt-2"
+              value={form.rate}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  rate: e.target.value,
+                })
+              }
+            />
+          </label>
+        </div>
 
-        <button
-          type="button"
-          onClick={updateRemarkHandler}
-          disabled={updatingRemark}
-          className="bg-gray-700 text-white px-4 py-2 disabled:opacity-50"
-        >
-          {updatingRemark ? "Updating..." : "Update Remark"}
-        </button>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Date of service</span>
+            <input
+              type="date"
+              className="crm-input mt-2"
+              value={form.serviceDate}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  serviceDate: e.target.value,
+                })
+              }
+            />
+          </label>
 
-        <label className="block text-sm font-medium text-gray-700">
-          Previous Remark
+          <label className="block">
+            <span className="crm-label">Time of service</span>
+            <input
+              type="time"
+              className="crm-input mt-2"
+              value={form.serviceTime}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  serviceTime: e.target.value,
+                })
+              }
+            />
+          </label>
+        </div>
+
+        <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
+          <p className="crm-label">Medicine required?</p>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm font-semibold text-[color:var(--ink)]">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="medicine"
+                value="yes"
+                checked={form.medicine === "yes"}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    medicine: e.target.value,
+                  })
+                }
+              />
+              Yes
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="medicine"
+                value="no"
+                checked={form.medicine === "no"}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    medicine: e.target.value,
+                  })
+                }
+              />
+              No
+            </label>
+          </div>
+        </div>
+
+        <label className="block">
+          <span className="crm-label">Exact address</span>
+          <input
+            type="text"
+            className="crm-input mt-2"
+            value={form.exactAddress}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                exactAddress: e.target.value,
+              })
+            }
+          />
         </label>
-        <textarea
-          className="border p-2 w-full bg-gray-50"
-          rows={3}
-          value={previousRemark}
-          readOnly
-        />
+
+        <label className="block">
+          <span className="crm-label">Remark</span>
+          <textarea
+            className="crm-textarea mt-2"
+            rows={3}
+            value={form.remark}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                remark: e.target.value,
+              })
+            }
+          />
+        </label>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={updateRemarkHandler}
+            disabled={updatingRemark}
+            className="crm-btn-outline disabled:opacity-50"
+          >
+            {updatingRemark ? "Updating..." : "Update Remark"}
+          </button>
+          <div className="flex-1 text-sm text-[color:var(--muted)]">
+            Save remarks to keep notes available for future tasks.
+          </div>
+        </div>
+
+        <label className="block">
+          <span className="crm-label">Previous remark</span>
+          <textarea
+            className="crm-textarea mt-2 bg-white/60"
+            rows={3}
+            value={previousRemark}
+            readOnly
+          />
+        </label>
 
         <button
           disabled={loading}
-          className="bg-black text-white px-4 py-2 disabled:opacity-50"
+          className="crm-btn-primary disabled:opacity-50"
         >
           {loading ? "Creating..." : "Create Task"}
         </button>

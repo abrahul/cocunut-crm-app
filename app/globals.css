@@ -1,26 +1,134 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f6f1e7;
+  --bg-deep: #efe7d8;
+  --surface: #ffffff;
+  --surface-strong: #fffaf2;
+  --ink: #18251b;
+  --muted: #5e6c60;
+  --brand: #1f7a5a;
+  --brand-dark: #15533f;
+  --accent: #f0b04a;
+  --border: #e3e2d6;
+  --ring: #aacbb8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-coconut-sans);
+  --font-display: var(--font-coconut-display);
+  --font-mono: var(--font-coconut-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(
+      1200px 600px at 0% -10%,
+      #fff5dd 0%,
+      rgba(255, 245, 221, 0) 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% -20%,
+      #e4f2e8 0%,
+      rgba(228, 242, 232, 0) 60%
+    ),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+  color: var(--ink);
+  font-family: var(--font-coconut-sans), ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(240, 176, 74, 0.35);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-coconut-display), var(--font-coconut-sans),
+      ui-sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .crm-shell {
+    @apply mx-auto w-full max-w-6xl;
+  }
+
+  .crm-page {
+    @apply px-5 pb-10 pt-6 sm:px-8;
+  }
+
+  .crm-card {
+    @apply rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)]/90 p-6 shadow-[0_20px_60px_-45px_rgba(17,24,39,0.6)];
+  }
+
+  .crm-card-soft {
+    @apply rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)]/80 p-6;
+  }
+
+  .crm-label {
+    @apply text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)];
+  }
+
+  .crm-input {
+    @apply w-full rounded-xl border border-[color:var(--border)] bg-white/90 px-3 py-2 text-sm text-[color:var(--ink)] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:border-transparent;
+  }
+
+  .crm-textarea {
+    @apply w-full rounded-xl border border-[color:var(--border)] bg-white/90 px-3 py-2 text-sm text-[color:var(--ink)] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:border-transparent;
+  }
+
+  .crm-select {
+    @apply w-full rounded-xl border border-[color:var(--border)] bg-white/90 px-3 py-2 text-sm text-[color:var(--ink)] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:border-transparent;
+  }
+
+  .crm-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)];
+  }
+
+  .crm-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] bg-[color:var(--brand)] text-white hover:bg-[color:var(--brand-dark)];
+  }
+
+  .crm-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] border border-[color:var(--border)] bg-white/80 text-[color:var(--ink)] hover:bg-white;
+  }
+
+  .crm-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg)] text-[color:var(--ink)] hover:bg-white/70;
+  }
+
+  .crm-pill {
+    @apply inline-flex items-center rounded-full border border-[color:var(--border)] bg-white/80 px-3 py-1 text-xs font-semibold text-[color:var(--muted)];
+  }
+
+  .crm-badge-success {
+    @apply inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700;
+  }
+
+  .crm-badge-warning {
+    @apply inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700;
+  }
+
+  .crm-table {
+    @apply w-full min-w-[720px] text-sm text-[color:var(--ink)];
+  }
+
+  .crm-th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)];
+  }
+
+  .crm-td {
+    @apply px-4 py-3 align-top;
+  }
+
+  .crm-toolbar {
+    @apply flex flex-wrap items-center gap-3 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4;
+  }
 }

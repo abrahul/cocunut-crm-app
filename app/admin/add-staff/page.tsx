@@ -34,32 +34,50 @@ export default function AddStaffPage() {
   }
 
   return (
-    <div className="max-w-md p-6">
-      <h1 className="text-2xl font-bold mb-4">Add Staff</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Team Management</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Add Staff
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Register a new staff member for upcoming assignments.
+        </p>
+      </div>
 
-      <input
-        className="border p-2 w-full mb-3"
-        placeholder="Staff Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <div className="crm-card space-y-4">
+        <label className="block">
+          <span className="crm-label">Staff name</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Staff Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
 
-      <input
-        className="border p-2 w-full mb-3"
-        placeholder="Mobile Number"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
-      />
+        <label className="block">
+          <span className="crm-label">Mobile number</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Mobile Number"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+          />
+        </label>
 
-      {error && <p className="text-red-600 mb-3">{error}</p>}
+        {error && (
+          <p className="text-sm font-semibold text-red-600">{error}</p>
+        )}
 
-      <button
-        onClick={submit}
-        disabled={loading}
-        className="bg-black text-white px-4 py-2 rounded"
-      >
-        {loading ? "Adding..." : "Add Staff"}
-      </button>
+        <button
+          onClick={submit}
+          disabled={loading}
+          className="crm-btn-primary disabled:opacity-60"
+        >
+          {loading ? "Adding..." : "Add Staff"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -95,7 +95,8 @@ export default function EditCustomerPage() {
           alternateMobile: customer?.alternateMobile || "",
           profession: customer?.profession || "",
           latitude: customer?.latitude != null ? String(customer.latitude) : "",
-          longitude: customer?.longitude != null ? String(customer.longitude) : "",
+          longitude:
+            customer?.longitude != null ? String(customer.longitude) : "",
           address: customer?.address || "",
           email: customer?.email || "",
           remark: customer?.remark || "",
@@ -170,129 +171,195 @@ export default function EditCustomerPage() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="p-6 max-w-xl">
-      <h1 className="text-xl font-bold mb-4">Edit Customer</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Customer Profile</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Edit Customer
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Update contact details, service timing, and location assignments.
+        </p>
+      </div>
 
-      <form onSubmit={submitHandler} className="space-y-3">
-        <input
-          placeholder="Customer Name"
-          className="border p-2 w-full"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        {errors.name && (
-          <p className="text-red-600 text-sm">{errors.name}</p>
-        )}
+      <form onSubmit={submitHandler} className="crm-card space-y-5">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Customer name</span>
+            <input
+              placeholder="Customer Name"
+              className="crm-input mt-2"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            {errors.name && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.name}
+              </p>
+            )}
+          </label>
 
-        <input
-          placeholder="Mobile"
-          className="border p-2 w-full"
-          value={form.mobile}
-          onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-        />
-        {errors.mobile && (
-          <p className="text-red-600 text-sm">{errors.mobile}</p>
-        )}
+          <label className="block">
+            <span className="crm-label">Mobile</span>
+            <input
+              placeholder="Mobile"
+              className="crm-input mt-2"
+              value={form.mobile}
+              onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+            />
+            {errors.mobile && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.mobile}
+              </p>
+            )}
+          </label>
 
-        <input
-          placeholder="Alternate Number (optional)"
-          className="border p-2 w-full"
-          value={form.alternateMobile}
-          onChange={(e) =>
-            setForm({ ...form, alternateMobile: e.target.value })
-          }
-        />
+          <label className="block">
+            <span className="crm-label">Alternate number</span>
+            <input
+              placeholder="Alternate Number (optional)"
+              className="crm-input mt-2"
+              value={form.alternateMobile}
+              onChange={(e) =>
+                setForm({ ...form, alternateMobile: e.target.value })
+              }
+            />
+          </label>
 
-        <input
-          placeholder="Profession (optional)"
-          className="border p-2 w-full"
-          value={form.profession}
-          onChange={(e) => setForm({ ...form, profession: e.target.value })}
-        />
+          <label className="block">
+            <span className="crm-label">Profession</span>
+            <input
+              placeholder="Profession (optional)"
+              className="crm-input mt-2"
+              value={form.profession}
+              onChange={(e) =>
+                setForm({ ...form, profession: e.target.value })
+              }
+            />
+          </label>
+        </div>
 
-        <input
-          type="number"
-          step="any"
-          placeholder="Latitude"
-          className="border p-2 w-full"
-          value={form.latitude}
-          onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-        />
-        {errors.latitude && (
-          <p className="text-red-600 text-sm">{errors.latitude}</p>
-        )}
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Latitude</span>
+            <input
+              type="number"
+              step="any"
+              placeholder="Latitude"
+              className="crm-input mt-2"
+              value={form.latitude}
+              onChange={(e) =>
+                setForm({ ...form, latitude: e.target.value })
+              }
+            />
+            {errors.latitude && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.latitude}
+              </p>
+            )}
+          </label>
 
-        <input
-          type="number"
-          step="any"
-          placeholder="Longitude"
-          className="border p-2 w-full"
-          value={form.longitude}
-          onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-        />
-        {errors.longitude && (
-          <p className="text-red-600 text-sm">{errors.longitude}</p>
-        )}
+          <label className="block">
+            <span className="crm-label">Longitude</span>
+            <input
+              type="number"
+              step="any"
+              placeholder="Longitude"
+              className="crm-input mt-2"
+              value={form.longitude}
+              onChange={(e) =>
+                setForm({ ...form, longitude: e.target.value })
+              }
+            />
+            {errors.longitude && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.longitude}
+              </p>
+            )}
+          </label>
+        </div>
 
-        <input
-          placeholder="Address"
-          className="border p-2 w-full"
-          value={form.address}
-          onChange={(e) => setForm({ ...form, address: e.target.value })}
-        />
-        {errors.address && (
-          <p className="text-red-600 text-sm">{errors.address}</p>
-        )}
+        <label className="block">
+          <span className="crm-label">Address</span>
+          <input
+            placeholder="Address"
+            className="crm-input mt-2"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+          {errors.address && (
+            <p className="mt-2 text-xs font-semibold text-red-600">
+              {errors.address}
+            </p>
+          )}
+        </label>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 w-full"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
-        {errors.email && (
-          <p className="text-red-600 text-sm">{errors.email}</p>
-        )}
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Email</span>
+            <input
+              type="email"
+              placeholder="Email"
+              className="crm-input mt-2"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            {errors.email && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.email}
+              </p>
+            )}
+          </label>
 
-        <input
-          placeholder="Remark (optional)"
-          className="border p-2 w-full"
-          value={form.remark}
-          onChange={(e) => setForm({ ...form, remark: e.target.value })}
-        />
+          <label className="block">
+            <span className="crm-label">Location</span>
+            <select
+              className="crm-select mt-2"
+              value={form.locationId}
+              onChange={(e) =>
+                setForm({ ...form, locationId: e.target.value })
+              }
+            >
+              <option value="">Select Location</option>
+              {locations.map((loc) => (
+                <option key={loc._id} value={loc._id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+            {errors.locationId && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.locationId}
+              </p>
+            )}
+          </label>
+        </div>
 
-        <div className="rounded border bg-gray-50 p-3 text-sm">
+        <label className="block">
+          <span className="crm-label">Remark</span>
+          <input
+            placeholder="Remark (optional)"
+            className="crm-input mt-2"
+            value={form.remark}
+            onChange={(e) => setForm({ ...form, remark: e.target.value })}
+          />
+        </label>
+
+        <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 p-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-gray-600">Last climbed date</span>
-            <span className="font-semibold text-gray-900">
+            <span className="text-[color:var(--muted)]">
+              Last climbed date
+            </span>
+            <span className="font-semibold text-[color:var(--ink)]">
               {formatDate(lastClimbedDate)}
             </span>
           </div>
-          <div className="mt-1 text-gray-600">
+          <div className="mt-1 text-[color:var(--muted)]">
             Due days: {getDueDays(lastClimbedDate)}
           </div>
         </div>
 
-        <select
-          className="border p-2 w-full"
-          value={form.locationId}
-          onChange={(e) => setForm({ ...form, locationId: e.target.value })}
-        >
-          <option value="">Select Location</option>
-          {locations.map((loc) => (
-            <option key={loc._id} value={loc._id}>
-              {loc.name}
-            </option>
-          ))}
-        </select>
-        {errors.locationId && (
-          <p className="text-red-600 text-sm">{errors.locationId}</p>
-        )}
-
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">
-          Save Changes
-        </button>
+        <button className="crm-btn-primary">Save Changes</button>
       </form>
     </div>
   );

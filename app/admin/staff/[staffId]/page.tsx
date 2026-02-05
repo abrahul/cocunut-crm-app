@@ -142,160 +142,189 @@ export default function StaffTaskHistoryPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Staff Task History</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="crm-pill">Staff History</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+          Staff Task History
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Review completed work and update pending task details.
+        </p>
+      </div>
 
       {success && (
-        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           {success}
         </div>
       )}
 
       {notice && (
-        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {notice}
         </div>
       )}
 
-      {tasks.length === 0 && <p>No tasks found for this staff.</p>}
+      {tasks.length === 0 && (
+        <div className="crm-card">
+          <p className="text-sm text-[color:var(--muted)]">
+            No tasks found for this staff.
+          </p>
+        </div>
+      )}
 
-      {tasks.map((task) => (
-        <div
-          key={task._id}
-          className="border rounded p-4 mb-4 bg-white shadow"
-        >
-          <p>
-            <b>Customer:</b> {task.customer?.name}
-          </p>
-          <p>
-            <b>Location:</b> {task.location?.name}
-          </p>
-          <p>
-            <b>Trees:</b> {task.numberOfTrees}
-          </p>
-          <p>
-            <b>Rate:</b> Rs. {task.ratePerTree}
-          </p>
-          <p>
-            <b>Total:</b> Rs. {task.totalAmount}
-          </p>
-          <p>
-            <b>Status:</b>{" "}
-            <span
-              className={
-                task.status === "completed" ? "text-green-600" : "text-orange-600"
-              }
-            >
-              {task.status}
-            </span>
-          </p>
-          <p className="text-sm text-gray-500">
-            {new Date(task.createdAt).toLocaleString()}
-          </p>
-
-          <div className="mt-3 flex items-center gap-4">
-            <button
-              onClick={() => startEdit(task)}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDelete(task._id)}
-              className="text-red-600 hover:text-red-700 font-medium"
-            >
-              Delete
-            </button>
-          </div>
-
-          {editingId === task._id && editForm && (
-            <div className="mt-4 rounded border bg-slate-50 p-4">
-              <div className="grid gap-3 md:grid-cols-4">
-                <label className="text-xs font-semibold text-gray-600">
-                  Trees
-                  <input
-                    type="number"
-                    min={0}
-                    className="mt-1 w-full rounded border px-2 py-1"
-                    value={editForm.numberOfTrees}
-                    onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev
-                          ? { ...prev, numberOfTrees: event.target.value }
-                          : prev
-                      )
-                    }
-                  />
-                </label>
-
-                <label className="text-xs font-semibold text-gray-600">
-                  Rate
-                  <input
-                    type="number"
-                    min={0}
-                    className="mt-1 w-full rounded border px-2 py-1"
-                    value={editForm.ratePerTree}
-                    onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev
-                          ? { ...prev, ratePerTree: event.target.value }
-                          : prev
-                      )
-                    }
-                  />
-                </label>
-
-                <label className="text-xs font-semibold text-gray-600">
-                  Status
-                  <select
-                    className="mt-1 w-full rounded border px-2 py-1"
-                    value={editForm.status}
-                    onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              status:
-                                event.target.value === "completed"
-                                  ? "completed"
-                                  : "pending",
-                            }
-                          : prev
-                      )
-                    }
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </label>
-
-                <div className="text-xs font-semibold text-gray-600">
-                  Total
-                  <div className="mt-2 text-sm text-gray-900">
-                    Rs. {previewTotal}
-                  </div>
-                </div>
+      <div className="grid gap-4">
+        {tasks.map((task) => (
+          <div key={task._id} className="crm-card">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="crm-label">Customer</p>
+                <p className="mt-1 text-lg font-semibold text-[color:var(--ink)]">
+                  {task.customer?.name}
+                </p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {task.location?.name}
+                </p>
               </div>
+              <span
+                className={
+                  task.status === "completed"
+                    ? "crm-badge-success"
+                    : "crm-badge-warning"
+                }
+              >
+                {task.status}
+              </span>
+            </div>
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  onClick={handleSave}
-                  disabled={savingId === editingId}
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {savingId === editingId ? "Saving..." : "Save changes"}
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  className="rounded border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-white"
-                >
-                  Cancel
-                </button>
+            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <span className="crm-label">Trees</span>
+                <p className="mt-1 font-semibold text-[color:var(--ink)]">
+                  {task.numberOfTrees}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Rate</span>
+                <p className="mt-1 font-semibold text-[color:var(--ink)]">
+                  Rs. {task.ratePerTree}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Total</span>
+                <p className="mt-1 font-semibold text-[color:var(--ink)]">
+                  Rs. {task.totalAmount}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Created</span>
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {new Date(task.createdAt).toLocaleString()}
+                </p>
               </div>
             </div>
-          )}
-        </div>
-      ))}
+
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => startEdit(task)}
+                className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(task._id)}
+                className="text-red-600 hover:text-red-700 font-semibold"
+              >
+                Delete
+              </button>
+            </div>
+
+            {editingId === task._id && editForm && (
+              <div className="mt-5 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
+                <div className="grid gap-3 md:grid-cols-4">
+                  <label className="block">
+                    <span className="crm-label">Trees</span>
+                    <input
+                      type="number"
+                      min={0}
+                      className="crm-input mt-2"
+                      value={editForm.numberOfTrees}
+                      onChange={(event) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? { ...prev, numberOfTrees: event.target.value }
+                            : prev
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="crm-label">Rate</span>
+                    <input
+                      type="number"
+                      min={0}
+                      className="crm-input mt-2"
+                      value={editForm.ratePerTree}
+                      onChange={(event) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? { ...prev, ratePerTree: event.target.value }
+                            : prev
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="crm-label">Status</span>
+                    <select
+                      className="crm-select mt-2"
+                      value={editForm.status}
+                      onChange={(event) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                status:
+                                  event.target.value === "completed"
+                                    ? "completed"
+                                    : "pending",
+                              }
+                            : prev
+                        )
+                      }
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </label>
+
+                  <div>
+                    <span className="crm-label">Total</span>
+                    <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">
+                      Rs. {previewTotal}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    onClick={handleSave}
+                    disabled={savingId === editingId}
+                    className="crm-btn-primary disabled:opacity-60"
+                  >
+                    {savingId === editingId ? "Saving..." : "Save changes"}
+                  </button>
+                  <button onClick={cancelEdit} className="crm-btn-outline">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

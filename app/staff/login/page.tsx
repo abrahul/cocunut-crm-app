@@ -58,26 +58,22 @@ export default function StaffLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-emerald-50 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-amber-100 bg-white/90 shadow-xl shadow-amber-100/40 backdrop-blur px-6 py-8">
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-700/70">
-              Coconut CRM
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-              Staff login
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              We will send a one-time code to your phone.
-            </p>
-          </div>
+    <div className="min-h-screen px-5 py-10">
+      <div className="mx-auto w-full max-w-md">
+        <div className="crm-card">
+          <p className="crm-pill">Field Access</p>
+          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--ink)]">
+            Staff login
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            We will send a one-time code to your phone.
+          </p>
 
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-slate-700">
-              Mobile number
+          <div className="mt-6 space-y-4">
+            <label className="block">
+              <span className="crm-label">Mobile number</span>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+                className="crm-input mt-2"
                 placeholder="e.g. 5551234567"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
@@ -87,10 +83,10 @@ export default function StaffLoginPage() {
             </label>
 
             {otpSent && (
-              <label className="block text-sm font-medium text-slate-700">
-                One-time code
+              <label className="block">
+                <span className="crm-label">One-time code</span>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+                  className="crm-input mt-2"
                   placeholder="6-digit code"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
@@ -102,7 +98,7 @@ export default function StaffLoginPage() {
           </div>
 
           {error && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -112,7 +108,7 @@ export default function StaffLoginPage() {
               <button
                 onClick={sendOtp}
                 disabled={sending}
-                className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {sending ? "Sending..." : "Send OTP"}
               </button>
@@ -123,7 +119,7 @@ export default function StaffLoginPage() {
                 <button
                   onClick={verifyOtp}
                   disabled={verifying}
-                  className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {verifying ? "Verifying..." : "Verify and continue"}
                 </button>
@@ -134,7 +130,7 @@ export default function StaffLoginPage() {
                     setOtp("");
                     setError("");
                   }}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="crm-btn-outline w-full"
                 >
                   Use a different number
                 </button>
@@ -142,7 +138,7 @@ export default function StaffLoginPage() {
             )}
           </div>
 
-          <p className="mt-6 text-xs text-slate-500">
+          <p className="mt-6 text-xs text-[color:var(--muted)]">
             Trouble signing in? Ask an admin to confirm your staff profile is
             active.
           </p>
