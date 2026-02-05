@@ -28,7 +28,12 @@ export async function GET(req: Request) {
       ],
     }).sort({ createdAt: -1 });
 
-    return NextResponse.json(staff);
+    return NextResponse.json(
+      staff.map((s) => ({
+        ...s.toObject(),
+        isActive: s.isActive ?? true,
+      }))
+    );
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message },

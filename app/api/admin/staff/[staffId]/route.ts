@@ -51,33 +51,92 @@ export async function PATCH(
   }
 
   const { staffId } = await context.params;
-  const { name, mobile } = await req.json();
+  const { name, mobile, isActive } = await req.json();
 
-  if (!name || !mobile) {
+  const update: { name?: string; mobile?: string; isActive?: boolean } = {};
+
+  if (typeof isActive === "boolean") {
+    update.isActive = isActive;
+  }
+
+  if (name || mobile) {
+    if (!name || !mobile) {
+      return NextResponse.json(
+        { error: "Name and mobile are required" },
+        { status: 400 }
+      );
+    }
+
+    const exists = await Staff.findOne({
+      mobile,
+      _id: { $ne: staffId },
+    });
+
+    if (exists) {
+      return NextResponse.json(
+        { error: "Mobile already exists" },
+        { status: 409 }
+      );
+    }
+
+    update.name = name;
+    update.mobile = mobile;
+  }
+
+  if (Object.keys(update).length === 0) {
     return NextResponse.json(
-      { error: "Name and mobile are required" },
+      { error: "No valid fields to update" },
       { status: 400 }
     );
   }
 
-  const exists = await Staff.findOne({
-    mobile,
-    _id: { $ne: staffId },
+  const staff = await Staff.findByIdAndUpdate(staffId, update, {
+    new: true,
   });
 
-  if (exists) {
+  if (!staff) {
     return NextResponse.json(
-      { error: "Mobile already exists" },
+      { error: "Staff not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ success: true });
+}
+
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ staffId: string }> }
+) {
+  await connectDB();
+  const auth = await getAuthUser();
+  if (!auth || auth.role !== "admin") {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  const { staffId } = await context.params;
+
+  if (!staffId) {
+    return NextResponse.json(
+      { error: "Staff ID missing" },
+      { status: 400 }
+    );
+  }
+
+  const { default: Task } = await import("@/models/Task");
+  const taskCount = await Task.countDocuments({ staff: staffId });
+
+  if (taskCount > 0) {
+    return NextResponse.json(
+      { error: "Staff has tasks assigned. Reassign tasks before deleting." },
       { status: 409 }
     );
   }
 
-  const staff = await Staff.findByIdAndUpdate(
-    staffId,
-    { name, mobile },
-    { new: true }
-  );
-
+  const staff = await Staff.findByIdAndDelete(staffId);
   if (!staff) {
     return NextResponse.json(
       { error: "Staff not found" },

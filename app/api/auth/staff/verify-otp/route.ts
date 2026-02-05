@@ -29,6 +29,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (staff.isActive === false) {
+      return NextResponse.json(
+        { error: "Staff is inactive" },
+        { status: 403 }
+      );
+    }
+
     console.log("Verifying OTP for:", mobile);
     console.log("Session ID:", staff.otpSessionId);
 

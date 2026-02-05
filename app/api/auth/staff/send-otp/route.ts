@@ -24,6 +24,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (staff.isActive === false) {
+      return NextResponse.json(
+        { error: "Staff is inactive" },
+        { status: 403 }
+      );
+    }
+
     // 📲 SEND OTP
     const res = await fetch(
       `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${mobile}/AUTOGEN`

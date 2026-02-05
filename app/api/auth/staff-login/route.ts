@@ -33,6 +33,13 @@ export async function POST(req: Request) {
     );
   }
 
+  if (staff.isActive === false) {
+    return NextResponse.json(
+      { error: "Staff is inactive" },
+      { status: 403 }
+    );
+  }
+
   const token = jwt.sign(
     { staffId: staff._id, role: "staff" },
     JWT_SECRET,
