@@ -40,6 +40,11 @@ export default function AdminDashboard() {
       description: "Create a new location",
     },
     {
+      title: "Manage Locations",
+      href: "/admin/locations",
+      description: "Edit and maintain service areas",
+    },
+    {
       title: "Reports",
       href: "/admin/reports",
       description: "View summaries and insights",
