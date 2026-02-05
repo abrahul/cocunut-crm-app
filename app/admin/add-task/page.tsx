@@ -17,6 +17,7 @@ type Customer = {
 type Staff = {
   _id: string;
   name: string;
+  isActive?: boolean;
 };
 
 export default function AddTaskPage() {
@@ -59,7 +60,7 @@ export default function AddTaskPage() {
       .then((data) => {
         if (!data) return;
         if (Array.isArray(data)) {
-          setStaff(data);
+          setStaff(data.filter((s) => s.isActive !== false));
         } else {
           console.error("Staff API error:", data);
           setStaff([]);
