@@ -14,6 +14,7 @@ type Task = {
   customer?: Entity;
   location?: Entity;
   staff?: Entity;
+  serviceDate?: string;
   numberOfTrees: number;
   ratePerTree: number;
   totalAmount: number;
@@ -457,6 +458,9 @@ export default function AdminTasksPage() {
                 <th className="px-4 py-3 text-left font-semibold">Customer</th>
                 <th className="px-4 py-3 text-left font-semibold">Phone</th>
                 <th className="px-4 py-3 text-left font-semibold">Location</th>
+                <th className="px-4 py-3 text-left font-semibold">
+                  Service due
+                </th>
                 <th className="px-4 py-3 text-left font-semibold">Staff</th>
                 <th className="px-4 py-3 text-left font-semibold">Trees</th>
                 <th className="px-4 py-3 text-left font-semibold">Rate</th>
@@ -484,6 +488,9 @@ export default function AdminTasksPage() {
                       {task.customer?.mobile || "-"}
                     </td>
                     <td className="px-4 py-3">{task.location?.name || "-"}</td>
+                    <td className="px-4 py-3">
+                      {task.serviceDate || "-"}
+                    </td>
                     <td className="px-4 py-3">{task.staff?.name || "-"}</td>
                     <td className="px-4 py-3">{task.numberOfTrees}</td>
                     <td className="px-4 py-3">Rs. {task.ratePerTree}</td>
@@ -521,7 +528,7 @@ export default function AdminTasksPage() {
 
                   {editingId === task._id && editForm && (
                     <tr className="bg-slate-50">
-                      <td colSpan={10} className="px-4 py-4">
+                      <td colSpan={11} className="px-4 py-4">
                         <div className="grid gap-3 md:grid-cols-6">
                           <label className="text-xs font-semibold text-gray-600">
                             Staff
