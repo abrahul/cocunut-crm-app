@@ -82,9 +82,6 @@ export default function AdminTasksPage() {
           setStaffOptions(Array.isArray(staffData) ? staffData : []);
           setLocationOptions(Array.isArray(locationsData) ? locationsData : []);
           setSelectedIds(new Set());
-          if (editingId) {
-            cancelEdit();
-          }
         } catch (err) {
           console.error("Admin tasks fetch error", err);
           if (!active) return;
@@ -103,7 +100,7 @@ export default function AdminTasksPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [adminFetch, searchQuery, editingId]);
+  }, [adminFetch, searchQuery]);
 
   const startEdit = (task: Task) => {
     setEditingId(task._id);
