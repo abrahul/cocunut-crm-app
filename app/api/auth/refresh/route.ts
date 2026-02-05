@@ -22,7 +22,7 @@ export async function POST() {
 
     const { iat, exp, ...claims } = payload;
 
-    const newToken = jwt.sign(claims, JWT_SECRET, { expiresIn: "1m" });
+    const newToken = jwt.sign(claims, JWT_SECRET, { expiresIn: "10m" });
     const res = NextResponse.json({ success: true });
 
     res.cookies.set("auth_token", newToken, {
@@ -30,7 +30,7 @@ export async function POST() {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60,
+      maxAge: 600,
     });
 
     return res;
