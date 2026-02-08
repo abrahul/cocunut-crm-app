@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
 import { getAuthUser } from "@/lib/authServer";
+import { hashPassword } from "@/lib/password";
 
 function normalizeIsActive(value: unknown) {
   if (value === false || value === "false" || value === 0 || value === "0") {
@@ -64,9 +65,15 @@ export async function PATCH(
   }
 
   const { staffId } = await context.params;
-  const { name, mobile, isActive } = await req.json();
+  const { name, mobile, isActive, password } = await req.json();
 
-  const update: { name?: string; mobile?: string; isActive?: boolean } = {};
+  const update: {
+    name?: string;
+    mobile?: string;
+    isActive?: boolean;
+    passwordHash?: string;
+    passwordSalt?: string;
+  } = {};
 
   if (typeof isActive === "boolean") {
     update.isActive = isActive;
@@ -103,6 +110,18 @@ export async function PATCH(
 
     update.name = name;
     update.mobile = mobile;
+  }
+
+  if (typeof password === "string" && password.trim()) {
+    if (password.trim().length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 }
+      );
+    }
+    const { hash, salt } = hashPassword(password.trim());
+    update.passwordHash = hash;
+    update.passwordSalt = salt;
   }
 
   if (Object.keys(update).length === 0) {

@@ -2,30 +2,25 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
 import jwt from "jsonwebtoken";
+import { verifyPassword } from "@/lib/password";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
 export async function POST(req: Request) {
   await connectDB();
 
-  const { mobile, otp } = await req.json();
+  const { mobile, password } = await req.json();
 
-  if (!mobile || !otp) {
+  if (!mobile || !password) {
     return NextResponse.json(
-      { error: "Mobile and OTP required" },
+      { error: "Mobile and password required" },
       { status: 400 }
     );
   }
 
-  // ✅ DEV OTP BYPASS
-  if (otp !== "123456") {
-    return NextResponse.json(
-      { error: "Invalid OTP" },
-      { status: 401 }
-    );
-  }
-
-  const staff = await Staff.findOne({ mobile });
+  const staff = await Staff.findOne({ mobile }).select(
+    "+passwordHash +passwordSalt"
+  );
   if (!staff) {
     return NextResponse.json(
       { error: "Staff not found" },
@@ -40,11 +35,26 @@ export async function POST(req: Request) {
     );
   }
 
-  const token = jwt.sign(
-    { staffId: staff._id, role: "staff" },
-    JWT_SECRET,
-    { expiresIn: "10m" }
+  if (!staff.passwordHash || !staff.passwordSalt) {
+    return NextResponse.json(
+      { error: "Password not set. Ask an admin to reset it." },
+      { status: 400 }
+    );
+  }
+
+  const isValid = verifyPassword(
+    String(password),
+    staff.passwordSalt,
+    staff.passwordHash
   );
+  if (!isValid) {
+    return NextResponse.json(
+      { error: "Invalid credentials" },
+      { status: 401 }
+    );
+  }
+
+  const token = jwt.sign({ staffId: staff._id, role: "staff" }, JWT_SECRET);
 
   const res = NextResponse.json({
     success: true,
@@ -59,7 +69,7 @@ export async function POST(req: Request) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 600,
+    secure: process.env.NODE_ENV === "production",
   });
 
   return res;

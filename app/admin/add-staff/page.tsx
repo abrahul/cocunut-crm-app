@@ -9,6 +9,8 @@ export default function AddStaffPage() {
   const { adminFetch } = useAdminAuth();
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -16,10 +18,16 @@ export default function AddStaffPage() {
     setError("");
     setLoading(true);
 
+    if (password.trim() && password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
     const res = await adminFetch("/api/admin/add-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, mobile, isActive: true }),
+      body: JSON.stringify({ name, mobile, password, isActive: true }),
     });
 
     const data = await res.json();
@@ -63,6 +71,30 @@ export default function AddStaffPage() {
             placeholder="Mobile Number"
             value={mobile}
             onChange={(e) => setMobile(e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">Password</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Assign a password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">Confirm password</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Re-enter password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
           />
         </label>
 

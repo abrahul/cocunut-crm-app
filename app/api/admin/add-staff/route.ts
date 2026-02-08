@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
 import { getAuthUser } from "@/lib/authServer";
+import { hashPassword } from "@/lib/password";
 
 export async function POST(req: Request) {
   try {
@@ -15,11 +16,18 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
 
-    const { name, mobile, isActive } = body;
+    const { name, mobile, isActive, password } = body;
 
-    if (!name || !mobile) {
+    if (!name || !mobile || !password) {
       return NextResponse.json(
-        { error: "Name and mobile are required" },
+        { error: "Name, mobile, and password are required" },
+        { status: 400 }
+      );
+    }
+
+    if (String(password).length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
         { status: 400 }
       );
     }
@@ -33,10 +41,13 @@ export async function POST(req: Request) {
       );
     }
 
+    const { hash, salt } = hashPassword(String(password));
     const staff = await Staff.create({
       name,
       mobile,
       isActive: typeof isActive === "boolean" ? isActive : true,
+      passwordHash: hash,
+      passwordSalt: salt,
     });
 
     return NextResponse.json({ success: true, staff });

@@ -6,6 +6,9 @@ const StaffSchema = new Schema(
     mobile: { type: String, required: true, unique: true },
     isActive: { type: Boolean, default: true, required: true },
 
+    passwordHash: { type: String, select: false },
+    passwordSalt: { type: String, select: false },
+
     otpHash: String,
     otpExpiresAt: Date,
     otpSessionId: String,

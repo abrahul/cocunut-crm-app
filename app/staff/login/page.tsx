@@ -3,60 +3,34 @@ import { useState } from "react";
 
 export default function StaffLoginPage() {
   const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
 
-  async function sendOtp() {
+  async function login() {
     if (!mobile.trim()) {
       setError("Please enter your mobile number.");
       return;
     }
-    setError("");
-    setSending(true);
-    const res = await fetch("/api/auth/staff/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile }),
-    });
-
-    const data = await res.json();
-    setSending(false);
-
-    if (!res.ok) {
-      setError(data.error || "Unable to send OTP right now.");
-      return;
-    }
-
-    setOtpSent(true);
-  }
-
-  async function verifyOtp() {
-    if (!otp.trim()) {
-      setError("Please enter the OTP.");
+    if (!password.trim()) {
+      setError("Please enter your password.");
       return;
     }
     setError("");
-    setVerifying(true);
-    const res = await fetch("/api/auth/staff/verify-otp", {
+    setLoggingIn(true);
+    const res = await fetch("/api/auth/staff-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, otp }),
+      body: JSON.stringify({ mobile, password }),
     });
 
     const data = await res.json();
-    setVerifying(false);
+    setLoggingIn(false);
 
     if (!res.ok) {
-      setError(data.error || "OTP verification failed.");
+      setError(data.error || "Login failed.");
       return;
     }
-
-    try {
-      localStorage.setItem("staffLastActivityAt", Date.now().toString());
-    } catch {}
 
     window.location.href = "/staff/tasks";
   }
@@ -70,7 +44,7 @@ export default function StaffLoginPage() {
             Staff login
           </h1>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
-            We will send a one-time code to your phone.
+            Sign in using the mobile number registered by your admin.
           </p>
 
           <div className="mt-6 space-y-4">
@@ -86,19 +60,17 @@ export default function StaffLoginPage() {
               />
             </label>
 
-            {otpSent && (
-              <label className="block">
-                <span className="crm-label">One-time code</span>
-                <input
-                  className="crm-input mt-2"
-                  placeholder="6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                />
-              </label>
-            )}
+            <label className="block">
+              <span className="crm-label">Password</span>
+              <input
+                className="crm-input mt-2"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                autoComplete="current-password"
+              />
+            </label>
           </div>
 
           {error && (
@@ -108,38 +80,13 @@ export default function StaffLoginPage() {
           )}
 
           <div className="mt-6 space-y-3">
-            {!otpSent && (
-              <button
-                onClick={sendOtp}
-                disabled={sending}
-                className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {sending ? "Sending..." : "Send OTP"}
-              </button>
-            )}
-
-            {otpSent && (
-              <>
-                <button
-                  onClick={verifyOtp}
-                  disabled={verifying}
-                  className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {verifying ? "Verifying..." : "Verify and continue"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtp("");
-                    setError("");
-                  }}
-                  className="crm-btn-outline w-full"
-                >
-                  Use a different number
-                </button>
-              </>
-            )}
+            <button
+              onClick={login}
+              disabled={loggingIn}
+              className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loggingIn ? "Signing in..." : "Sign in"}
+            </button>
           </div>
 
           <p className="mt-6 text-xs text-[color:var(--muted)]">

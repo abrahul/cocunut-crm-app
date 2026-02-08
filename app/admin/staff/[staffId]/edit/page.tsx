@@ -12,6 +12,8 @@ export default function EditStaffPage() {
 
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,10 +38,19 @@ export default function EditStaffPage() {
   }, [staffId]);
 
   async function handleUpdate() {
+    if (password.trim() && password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     const res = await adminFetch(`/api/admin/staff/${staffId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, mobile }),
+      body: JSON.stringify({
+        name,
+        mobile,
+        password: password.trim() ? password : undefined,
+      }),
     });
 
     const data = await res.json();
@@ -85,6 +96,30 @@ export default function EditStaffPage() {
             placeholder="Mobile"
             value={mobile}
             onChange={(e) => setMobile(e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">New password</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Leave blank to keep current password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+          />
+        </label>
+
+        <label className="block">
+          <span className="crm-label">Confirm password</span>
+          <input
+            className="crm-input mt-2"
+            placeholder="Re-enter new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
           />
         </label>
 
