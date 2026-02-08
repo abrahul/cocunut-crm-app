@@ -6,6 +6,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 type Customer = {
   _id: string;
   name: string;
+  mobile?: string;
   address?: string;
   remark?: string;
   location?: {
@@ -37,6 +38,7 @@ export default function AddTaskPage() {
     remark: "",
   });
   const [previousRemark, setPreviousRemark] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
   const [updatingRemark, setUpdatingRemark] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -168,6 +170,78 @@ export default function AddTaskPage() {
     }
   };
 
+  const handleCustomerSelect = (customerId: string) => {
+    const selected = customers.find((c) => c._id === customerId);
+    const defaultRate = selected?.location?.defaultRate;
+    const nextPreviousRemark = selected?.remark || "";
+    const nextExactAddress = selected?.address || "";
+    setForm({
+      ...form,
+      customerId,
+      rate:
+        typeof defaultRate === "number"
+          ? String(defaultRate)
+          : "",
+      exactAddress: nextExactAddress,
+      remark: "",
+    });
+    setPreviousRemark(nextPreviousRemark);
+
+    if (customerId) {
+      adminFetch(`/api/admin/customers/${customerId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data || data?.error) return;
+          setPreviousRemark(
+            typeof data.remark === "string" ? data.remark : ""
+          );
+          setForm((prev) => ({
+            ...prev,
+            exactAddress:
+              typeof data.address === "string"
+                ? data.address
+                : prev.exactAddress,
+            rate:
+              typeof data?.location?.defaultRate === "number"
+                ? String(data.location.defaultRate)
+                : prev.rate,
+          }));
+        })
+        .catch(() => {});
+    }
+  };
+
+  const clearSelectedCustomer = () => {
+    setForm((prev) => ({
+      ...prev,
+      customerId: "",
+      rate: "",
+      exactAddress: "",
+      remark: "",
+    }));
+    setPreviousRemark("");
+  };
+
+  const normalizedCustomerSearch = customerSearch.trim().toLowerCase();
+  const searchDigits = customerSearch.replace(/\D/g, "");
+  const filteredCustomers = customers.filter((customer) => {
+    if (!normalizedCustomerSearch && !searchDigits) return true;
+    const nameMatch = customer.name
+      .toLowerCase()
+      .includes(normalizedCustomerSearch);
+    const mobileMatch = searchDigits
+      ? (customer.mobile || "").replace(/\D/g, "").includes(searchDigits)
+      : false;
+    return nameMatch || mobileMatch;
+  });
+  const selectedCustomer = customers.find(
+    (customer) => customer._id === form.customerId
+  );
+  const visibleCustomers =
+    normalizedCustomerSearch || searchDigits
+      ? filteredCustomers
+      : customers.slice(0, 8);
+
   return (
     <div className="space-y-6">
       <div>
@@ -184,60 +258,77 @@ export default function AddTaskPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="crm-label">Customer</span>
-            <select
-              className="crm-select mt-2"
-              value={form.customerId}
-              onChange={(e) => {
-                const customerId = e.target.value;
-                const selectedCustomer = customers.find(
-                  (c) => c._id === customerId
-                );
-                const defaultRate = selectedCustomer?.location?.defaultRate;
-                const nextPreviousRemark = selectedCustomer?.remark || "";
-                const nextExactAddress = selectedCustomer?.address || "";
-                setForm({
-                  ...form,
-                  customerId,
-                  rate:
-                    typeof defaultRate === "number"
-                      ? String(defaultRate)
-                      : "",
-                  exactAddress: nextExactAddress,
-                  remark: "",
-                });
-                setPreviousRemark(nextPreviousRemark);
+            <div className="mt-2 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  className="crm-input flex-1"
+                  placeholder="Search by name or mobile number"
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+                {customerSearch && (
+                  <button
+                    type="button"
+                    className="crm-btn-outline"
+                    onClick={() => setCustomerSearch("")}
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
 
-                if (customerId) {
-                  adminFetch(`/api/admin/customers/${customerId}`)
-                    .then((res) => res.json())
-                    .then((data) => {
-                      if (!data || data?.error) return;
-                      setPreviousRemark(
-                        typeof data.remark === "string" ? data.remark : ""
-                      );
-                      setForm((prev) => ({
-                        ...prev,
-                        exactAddress:
-                          typeof data.address === "string"
-                            ? data.address
-                            : prev.exactAddress,
-                        rate:
-                          typeof data?.location?.defaultRate === "number"
-                            ? String(data.location.defaultRate)
-                            : prev.rate,
-                      }));
-                    })
-                    .catch(() => {});
-                }
-              }}
-            >
-              <option value="">Select Customer</option>
-              {customers.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name} ({c.location?.name || "No location"})
-                </option>
-              ))}
-            </select>
+              {selectedCustomer ? (
+                <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 p-3 text-sm text-[color:var(--ink)]">
+                  <div className="font-semibold">
+                    {selectedCustomer.name}
+                  </div>
+                  <div className="text-[color:var(--muted)]">
+                    {selectedCustomer.mobile || "No mobile"} ·{" "}
+                    {selectedCustomer.location?.name || "No location"}
+                  </div>
+                  <button
+                    type="button"
+                    className="crm-btn-outline mt-3"
+                    onClick={clearSelectedCustomer}
+                  >
+                    Change customer
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-[color:var(--muted)]">
+                  Start typing to find a customer, then click the correct
+                  match.
+                </div>
+              )}
+
+              {!selectedCustomer && (
+                <div className="max-h-56 overflow-auto rounded-2xl border border-[color:var(--border)] bg-white/70">
+                  {visibleCustomers.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-[color:var(--muted)]">
+                      No customers match this search.
+                    </div>
+                  ) : (
+                    visibleCustomers.map((c) => (
+                      <button
+                        key={c._id}
+                        type="button"
+                        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left text-sm transition hover:bg-[color:var(--soft)]"
+                        onClick={() => handleCustomerSelect(c._id)}
+                      >
+                        <span className="font-semibold text-[color:var(--ink)]">
+                          {c.name}
+                        </span>
+                        <span className="text-xs text-[color:var(--muted)]">
+                          {c.mobile || "No mobile"} ·{" "}
+                          {c.location?.name || "No location"}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </label>
 
           <label className="block">
