@@ -224,6 +224,12 @@ export default function AdminCustomersPage() {
                   <td className="crm-td">
                     <div className="flex items-center gap-3">
                       <Link
+                        href={`/admin/add-task?customerId=${customer._id}`}
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                      >
+                        Add Task
+                      </Link>
+                      <Link
                         href={`/admin/customers/${customer._id}/edit`}
                         className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
                       >

@@ -25,6 +25,8 @@ const TaskSchema = new Schema(
     medicine: { type: Boolean, required: true },
     exactAddress: { type: String, required: true },
     remark: { type: String },
+    latitude: { type: Number, min: -90, max: 90 },
+    longitude: { type: Number, min: -180, max: 180 },
 
     status: {
       type: String,

@@ -24,6 +24,8 @@ export async function POST(req: Request) {
       staffId,
       treesCount,
       rate,
+      latitude,
+      longitude,
       serviceDate,
       serviceTime,
       medicine,
@@ -92,6 +94,25 @@ export async function POST(req: Request) {
       );
     }
 
+    const latCandidate =
+      latitude !== undefined && latitude !== null && String(latitude).trim() !== ""
+        ? Number(latitude)
+        : Number(customer.latitude);
+    const lngCandidate =
+      longitude !== undefined && longitude !== null && String(longitude).trim() !== ""
+        ? Number(longitude)
+        : Number(customer.longitude);
+
+    if (
+      !Number.isFinite(latCandidate) ||
+      !Number.isFinite(lngCandidate)
+    ) {
+      return NextResponse.json(
+        { error: "Valid latitude and longitude required" },
+        { status: 400 }
+      );
+    }
+
     const locationDefaultRate = Number(
       (customer.location as any).defaultRate
     );
@@ -126,6 +147,8 @@ export async function POST(req: Request) {
       serviceTime,
       medicine,
       exactAddress,
+      latitude: latCandidate,
+      longitude: lngCandidate,
     });
 
     let parsedServiceDate: Date | null = null;

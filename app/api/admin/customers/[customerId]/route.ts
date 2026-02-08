@@ -48,6 +48,12 @@ export async function GET(
     ]);
 
     const lastServiceDate = lastService?.[0]?.serviceDateAsDate;
+    const lastTask = await Task.findOne({
+      customer: new mongoose.Types.ObjectId(customerId),
+    })
+      .sort({ createdAt: -1 })
+      .select("numberOfTrees ratePerTree")
+      .lean();
 
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
@@ -57,6 +63,12 @@ export async function GET(
       {
         ...customer,
         lastDateOfService: lastServiceDate || customer?.lastDateOfService,
+        lastTask: lastTask
+          ? {
+              numberOfTrees: lastTask.numberOfTrees,
+              ratePerTree: lastTask.ratePerTree,
+            }
+          : undefined,
       },
       { status: 200 }
     );

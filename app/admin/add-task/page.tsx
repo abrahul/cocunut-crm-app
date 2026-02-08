@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type Customer = {
   _id: string;
   name: string;
   mobile?: string;
+  latitude?: number;
+  longitude?: number;
   address?: string;
   remark?: string;
   location?: {
     name: string;
     defaultRate?: number;
+  };
+  lastTask?: {
+    numberOfTrees?: number;
+    ratePerTree?: number;
   };
 };
 
@@ -25,12 +32,17 @@ export default function AddTaskPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const { adminFetch } = useAdminAuth();
+  const searchParams = useSearchParams();
+  const prefillCustomerId = searchParams.get("customerId") || "";
+  const prefillAppliedRef = useRef(false);
 
   const [form, setForm] = useState({
     customerId: "",
     staffId: "",
     treesCount: "",
     rate: "",
+    latitude: "",
+    longitude: "",
     serviceDate: "",
     serviceTime: "",
     medicine: "",
@@ -78,6 +90,8 @@ export default function AddTaskPage() {
       !form.staffId ||
       !form.treesCount ||
       !form.rate ||
+      !form.latitude ||
+      !form.longitude ||
       !form.serviceDate ||
       !form.serviceTime ||
       !form.medicine ||
@@ -99,6 +113,8 @@ export default function AddTaskPage() {
         staffId: form.staffId,
         treesCount: Number(form.treesCount),
         rate: Number(form.rate),
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude),
         serviceDate: form.serviceDate,
         serviceTime: form.serviceTime,
         medicine: form.medicine === "yes",
@@ -117,6 +133,8 @@ export default function AddTaskPage() {
         staffId: "",
         treesCount: "",
         rate: "",
+        latitude: "",
+        longitude: "",
         serviceDate: "",
         serviceTime: "",
         medicine: "",
@@ -175,16 +193,25 @@ export default function AddTaskPage() {
     const defaultRate = selected?.location?.defaultRate;
     const nextPreviousRemark = selected?.remark || "";
     const nextExactAddress = selected?.address || "";
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       customerId,
+      treesCount: "",
       rate:
         typeof defaultRate === "number"
           ? String(defaultRate)
           : "",
+      latitude:
+        typeof selected?.latitude === "number"
+          ? String(selected.latitude)
+          : "",
+      longitude:
+        typeof selected?.longitude === "number"
+          ? String(selected.longitude)
+          : "",
       exactAddress: nextExactAddress,
       remark: "",
-    });
+    }));
     setPreviousRemark(nextPreviousRemark);
 
     if (customerId) {
@@ -202,20 +229,47 @@ export default function AddTaskPage() {
                 ? data.address
                 : prev.exactAddress,
             rate:
-              typeof data?.location?.defaultRate === "number"
-                ? String(data.location.defaultRate)
-                : prev.rate,
+              typeof data?.lastTask?.ratePerTree === "number"
+                ? String(data.lastTask.ratePerTree)
+                : typeof data?.location?.defaultRate === "number"
+                  ? String(data.location.defaultRate)
+                  : prev.rate,
+            treesCount:
+              typeof data?.lastTask?.numberOfTrees === "number"
+                ? String(data.lastTask.numberOfTrees)
+                : prev.treesCount,
+            latitude:
+              typeof data?.latitude === "number"
+                ? String(data.latitude)
+                : prev.latitude,
+            longitude:
+              typeof data?.longitude === "number"
+                ? String(data.longitude)
+                : prev.longitude,
           }));
         })
         .catch(() => {});
     }
   };
 
+  useEffect(() => {
+    if (!prefillCustomerId) return;
+    if (!customers.length) return;
+    if (prefillAppliedRef.current) return;
+    const exists = customers.some((c) => c._id === prefillCustomerId);
+    if (!exists) return;
+    handleCustomerSelect(prefillCustomerId);
+    prefillAppliedRef.current = true;
+  }, [customers, handleCustomerSelect, prefillCustomerId]);
+
   const clearSelectedCustomer = () => {
     setForm((prev) => ({
       ...prev,
       customerId: "",
+      treesCount: "",
       rate: "",
+      latitude: "",
+      longitude: "",
       exactAddress: "",
       remark: "",
     }));
@@ -379,6 +433,40 @@ export default function AddTaskPage() {
                 setForm({
                   ...form,
                   rate: e.target.value,
+                })
+              }
+            />
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="crm-label">Latitude</span>
+            <input
+              type="number"
+              step="any"
+              className="crm-input mt-2"
+              value={form.latitude}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  latitude: e.target.value,
+                })
+              }
+            />
+          </label>
+
+          <label className="block">
+            <span className="crm-label">Longitude</span>
+            <input
+              type="number"
+              step="any"
+              className="crm-input mt-2"
+              value={form.longitude}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  longitude: e.target.value,
                 })
               }
             />
