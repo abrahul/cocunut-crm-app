@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+const STAFF_SESSION_SECONDS = 10 * 60;
+const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -22,7 +24,9 @@ export async function POST() {
 
     const { iat, exp, ...claims } = payload;
 
-    const newToken = jwt.sign(claims, JWT_SECRET, { expiresIn: "10m" });
+    const sessionSeconds = payload.role === "admin" ? ADMIN_SESSION_SECONDS : STAFF_SESSION_SECONDS;
+
+    const newToken = jwt.sign(claims, JWT_SECRET, { expiresIn: sessionSeconds });
     const res = NextResponse.json({ success: true });
 
     res.cookies.set("auth_token", newToken, {
@@ -30,7 +34,7 @@ export async function POST() {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 600,
+      maxAge: sessionSeconds,
     });
 
     return res;
@@ -38,3 +42,5 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
+
+

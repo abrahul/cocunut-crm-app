@@ -4,6 +4,7 @@ import Admin from "@/models/Admin";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
 
 export async function POST(req: Request) {
   try {
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
         role: "admin",
       },
       JWT_SECRET,
-      { expiresIn: "10m" }
+      { expiresIn: ADMIN_SESSION_SECONDS }
     );
 
     const response = NextResponse.json({ success: true });
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 600,
+      maxAge: ADMIN_SESSION_SECONDS,
     });
 
     return response;
@@ -79,3 +80,4 @@ export async function POST(req: Request) {
     );
   }
 }
+
