@@ -4,7 +4,7 @@ import Task from "@/models/Task";
 import Customer from "@/models/Customer";
 import { getAuthUser } from "@/lib/authServer";
 
-// ✅ FORCE schema registration
+// FORCE schema registration
 import "@/models/Staff";
 import "@/models/Customer";
 import "@/models/Location";
@@ -22,26 +22,62 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim();
+    const staffId = searchParams.get("staffId")?.trim();
+    const locationId = searchParams.get("locationId")?.trim();
+    const status = searchParams.get("status")?.trim();
 
-    let taskFilter = {};
+    const pageParam = Number(searchParams.get("page") || 1);
+    const pageSizeParam = Number(searchParams.get("pageSize") || 25);
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const pageSizeRaw =
+      Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? pageSizeParam : 25;
+    const pageSize = Math.min(pageSizeRaw, 100);
+
+    const taskFilter: Record<string, any> = {};
+
     if (q) {
       const customers = await Customer.find({
         $or: [
           { name: { $regex: q, $options: "i" } },
           { mobile: { $regex: q, $options: "i" } },
         ],
-      }).select("_id");
+      })
+        .select("_id")
+        .lean();
       const ids = customers.map((c: any) => c._id);
-      taskFilter = { customer: { $in: ids } };
+      if (ids.length === 0) {
+        return NextResponse.json({
+          tasks: [],
+          total: 0,
+          page,
+          pageSize,
+        });
+      }
+      taskFilter.customer = { $in: ids };
     }
 
-    const tasks = await Task.find(taskFilter)
-      .populate("customer", "name mobile")
-      .populate("location", "name")
-      .populate("staff", "name phone")
-      .sort({ createdAt: -1 });
+    if (staffId && staffId !== "all") taskFilter.staff = staffId;
+    if (locationId && locationId !== "all") taskFilter.location = locationId;
+    if (status && status !== "all") taskFilter.status = status;
 
-    return NextResponse.json(tasks);
+    const [tasks, total] = await Promise.all([
+      Task.find(taskFilter)
+        .populate("customer", "name mobile")
+        .populate("location", "name")
+        .populate("staff", "name phone")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      Task.countDocuments(taskFilter),
+    ]);
+
+    return NextResponse.json({
+      tasks,
+      total,
+      page,
+      pageSize,
+    });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message },

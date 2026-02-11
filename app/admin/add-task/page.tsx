@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
@@ -55,31 +55,49 @@ export default function AddTaskPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    adminFetch("/api/admin/customers")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data) return;
-        if (Array.isArray(data)) {
-          setCustomers(data);
-        } else {
-          console.error("Customer API error:", data);
-          setCustomers([]);
-        }
-      })
-      .catch(() => setCustomers([]));
+    let cancelled = false;
+    const controller = new AbortController();
 
-    adminFetch("/api/admin/staff")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data) return;
-        if (Array.isArray(data)) {
-          setStaff(data.filter((s) => s.isActive !== false));
-        } else {
-          console.error("Staff API error:", data);
-          setStaff([]);
-        }
-      })
-      .catch(() => setStaff([]));
+    const loadLists = async () => {
+      const [customersResult, staffResult] = await Promise.allSettled([
+        adminFetch("/api/admin/customers", { signal: controller.signal })
+          .then((res) => res.json()),
+        adminFetch("/api/admin/staff", { signal: controller.signal })
+          .then((res) => res.json()),
+      ]);
+
+      if (cancelled) return;
+
+      if (customersResult.status === "fulfilled" && Array.isArray(customersResult.value)) {
+        setCustomers(customersResult.value);
+      } else if (customersResult.status === "fulfilled") {
+        console.error("Customer API error:", customersResult.value);
+        setCustomers([]);
+      } else {
+        setCustomers([]);
+      }
+
+      if (staffResult.status === "fulfilled" && Array.isArray(staffResult.value)) {
+        setStaff(staffResult.value.filter((s) => s.isActive !== false));
+      } else if (staffResult.status === "fulfilled") {
+        console.error("Staff API error:", staffResult.value);
+        setStaff([]);
+      } else {
+        setStaff([]);
+      }
+    };
+
+    loadLists().catch(() => {
+      if (!cancelled) {
+        setCustomers([]);
+        setStaff([]);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [adminFetch]);
 
   const submitHandler = async (e: FormEvent) => {
@@ -178,17 +196,17 @@ export default function AddTaskPage() {
             : c
         )
       );
-      setForm({
-        ...form,
+      setForm((prev) => ({
+        ...prev,
         remark: "",
-      });
+      }));
       alert("Remark updated");
     } else {
       alert(data?.error || "Failed to update remark");
     }
   };
 
-  const handleCustomerSelect = (customerId: string) => {
+  const handleCustomerSelect = useCallback((customerId: string) => {
     const selected = customers.find((c) => c._id === customerId);
     const defaultRate = selected?.location?.defaultRate;
     const nextPreviousRemark = selected?.remark || "";
@@ -250,7 +268,7 @@ export default function AddTaskPage() {
         })
         .catch(() => {});
     }
-  };
+  }, [adminFetch, customers]);
 
   useEffect(() => {
     if (!prefillCustomerId) return;
@@ -278,23 +296,30 @@ export default function AddTaskPage() {
 
   const normalizedCustomerSearch = customerSearch.trim().toLowerCase();
   const searchDigits = customerSearch.replace(/\D/g, "");
-  const filteredCustomers = customers.filter((customer) => {
-    if (!normalizedCustomerSearch && !searchDigits) return true;
-    const nameMatch = customer.name
-      .toLowerCase()
-      .includes(normalizedCustomerSearch);
-    const mobileMatch = searchDigits
-      ? (customer.mobile || "").replace(/\D/g, "").includes(searchDigits)
-      : false;
-    return nameMatch || mobileMatch;
-  });
-  const selectedCustomer = customers.find(
-    (customer) => customer._id === form.customerId
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((customer) => {
+      if (!normalizedCustomerSearch && !searchDigits) return true;
+      const nameMatch = customer.name
+        .toLowerCase()
+        .includes(normalizedCustomerSearch);
+      const mobileMatch = searchDigits
+        ? (customer.mobile || "").replace(/\D/g, "").includes(searchDigits)
+        : false;
+      return nameMatch || mobileMatch;
+    });
+  }, [customers, normalizedCustomerSearch, searchDigits]);
+
+  const selectedCustomer = useMemo(
+    () => customers.find((customer) => customer._id === form.customerId),
+    [customers, form.customerId]
   );
-  const visibleCustomers =
-    normalizedCustomerSearch || searchDigits
+
+  const visibleCustomers = useMemo(() => {
+    return normalizedCustomerSearch || searchDigits
       ? filteredCustomers
       : customers.slice(0, 8);
+  }, [customers, filteredCustomers, normalizedCustomerSearch, searchDigits]);
 
   return (
     <div className="space-y-6">
@@ -338,7 +363,7 @@ export default function AddTaskPage() {
                     {selectedCustomer.name}
                   </div>
                   <div className="text-[color:var(--muted)]">
-                    {selectedCustomer.mobile || "No mobile"} ·{" "}
+                    {selectedCustomer.mobile || "No mobile"} -{" "}
                     {selectedCustomer.location?.name || "No location"}
                   </div>
                   <button
@@ -374,7 +399,7 @@ export default function AddTaskPage() {
                           {c.name}
                         </span>
                         <span className="text-xs text-[color:var(--muted)]">
-                          {c.mobile || "No mobile"} ·{" "}
+                          {c.mobile || "No mobile"} -{" "}
                           {c.location?.name || "No location"}
                         </span>
                       </button>

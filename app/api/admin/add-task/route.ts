@@ -17,8 +17,6 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
 
-    console.log("TASK BODY RECEIVED:", body);
-
     const {
       customerId,
       staffId,

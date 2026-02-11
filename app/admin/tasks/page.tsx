@@ -41,6 +41,9 @@ export default function AdminTasksPage() {
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<"pending" | "completed">(
     "pending"
@@ -60,51 +63,99 @@ export default function AdminTasksPage() {
   }, [success]);
 
   useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const loadLists = async () => {
+      const [staffResult, locationsResult] = await Promise.allSettled([
+        adminFetch("/api/admin/staff", { signal: controller.signal })
+          .then((res) => res.json()),
+        adminFetch("/api/admin/locations", { signal: controller.signal })
+          .then((res) => res.json()),
+      ]);
+
+      if (cancelled) return;
+
+      if (staffResult.status === "fulfilled" && Array.isArray(staffResult.value)) {
+        setStaffOptions(staffResult.value);
+      } else if (staffResult.status === "fulfilled") {
+        console.error("Admin staff fetch error", staffResult.value);
+        setStaffOptions([]);
+      } else {
+        setStaffOptions([]);
+      }
+
+      if (locationsResult.status === "fulfilled" && Array.isArray(locationsResult.value)) {
+        setLocationOptions(locationsResult.value);
+      } else if (locationsResult.status === "fulfilled") {
+        console.error("Admin locations fetch error", locationsResult.value);
+        setLocationOptions([]);
+      } else {
+        setLocationOptions([]);
+      }
+    };
+
+    loadLists().catch(() => {
+      if (!cancelled) {
+        setStaffOptions([]);
+        setLocationOptions([]);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [adminFetch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, staffFilter, locationFilter, statusFilter, pageSize]);
+
+  useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const timer = setTimeout(() => {
-      const loadData = async () => {
+      const loadTasks = async () => {
         setLoading(true);
         try {
-          const searchParam = searchQuery.trim()
-            ? `?q=${encodeURIComponent(searchQuery.trim())}`
-            : "";
-          const [tasksRes, staffRes, locationsRes] = await Promise.all([
-            adminFetch(`/api/admin/tasks${searchParam}`),
-            adminFetch("/api/admin/staff"),
-            adminFetch("/api/admin/locations"),
-          ]);
+          const params = new URLSearchParams();
+          if (searchQuery.trim()) params.set("q", searchQuery.trim());
+          if (staffFilter !== "all") params.set("staffId", staffFilter);
+          if (locationFilter !== "all") params.set("locationId", locationFilter);
+          if (statusFilter !== "all") params.set("status", statusFilter);
+          params.set("page", String(page));
+          params.set("pageSize", String(pageSize));
 
-          const [tasksData, staffData, locationsData] = await Promise.all([
-            tasksRes.json(),
-            staffRes.json(),
-            locationsRes.json(),
-          ]);
-
+          const res = await adminFetch(`/api/admin/tasks?${params.toString()}`, {
+            signal: controller.signal,
+          });
+          const data = await res.json();
           if (!active) return;
 
-          setTasks(Array.isArray(tasksData) ? tasksData : []);
-          setStaffOptions(Array.isArray(staffData) ? staffData : []);
-          setLocationOptions(Array.isArray(locationsData) ? locationsData : []);
+          const nextTasks = Array.isArray(data?.tasks) ? data.tasks : [];
+          setTasks(nextTasks);
+          setTotal(Number.isFinite(data?.total) ? data.total : nextTasks.length);
           setSelectedIds(new Set());
         } catch (err) {
           console.error("Admin tasks fetch error", err);
           if (!active) return;
           setTasks([]);
-          setStaffOptions([]);
-          setLocationOptions([]);
+          setTotal(0);
         } finally {
           if (active) setLoading(false);
         }
       };
 
-      loadData();
+      loadTasks();
     }, 300);
 
     return () => {
       active = false;
       clearTimeout(timer);
+      controller.abort();
     };
-  }, [adminFetch, searchQuery]);
+  }, [adminFetch, searchQuery, staffFilter, locationFilter, statusFilter, page, pageSize]);
 
   const startEdit = (task: Task) => {
     setEditingId(task._id);
@@ -137,32 +188,26 @@ export default function AdminTasksPage() {
     return trees * rate;
   }, [editForm]);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      if (staffFilter !== "all" && task.staff?._id !== staffFilter) {
-        return false;
-      }
-      if (locationFilter !== "all" && task.location?._id !== locationFilter) {
-        return false;
-      }
-      if (statusFilter !== "all" && task.status !== statusFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [tasks, staffFilter, locationFilter, statusFilter]);
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(total / pageSize));
+  }, [total, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const allVisibleSelected =
-    filteredTasks.length > 0 &&
-    filteredTasks.every((task) => selectedIds.has(task._id));
+    tasks.length > 0 && tasks.every((task) => selectedIds.has(task._id));
 
   const toggleSelectAllVisible = () => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (allVisibleSelected) {
-        filteredTasks.forEach((task) => next.delete(task._id));
+        tasks.forEach((task) => next.delete(task._id));
       } else {
-        filteredTasks.forEach((task) => next.add(task._id));
+        tasks.forEach((task) => next.add(task._id));
       }
       return next;
     });
@@ -239,6 +284,7 @@ export default function AdminTasksPage() {
         body: JSON.stringify({ taskId }),
       });
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
+      setTotal((prev) => Math.max(0, prev - 1));
       setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(taskId);
@@ -339,8 +385,8 @@ export default function AdminTasksPage() {
             All Tasks
           </h1>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            {filteredTasks.length}{" "}
-            {filteredTasks.length === 1 ? "task" : "tasks"}
+      {total}{" "}
+      {total === 1 ? "task" : "tasks"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -468,15 +514,15 @@ export default function AdminTasksPage() {
           <p className="text-sm text-[color:var(--muted)]">No tasks found</p>
         </div>
       )}
-      {tasks.length > 0 && filteredTasks.length === 0 && (
+      {tasks.length === 0 && total > 0 && (
         <div className="crm-card">
           <p className="text-sm text-[color:var(--muted)]">
-            No tasks match the filters.
+            No tasks match the filters on this page.
           </p>
         </div>
       )}
 
-      {filteredTasks.length > 0 && (
+      {tasks.length > 0 && (
         <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
           <table className="crm-table">
             <thead className="bg-white/70">
@@ -503,7 +549,7 @@ export default function AdminTasksPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--border)]">
-              {filteredTasks.map((task, index) => (
+              {tasks.map((task, index) => (
                 <Fragment key={task._id}>
                   <tr className="hover:bg-white/70">
                     <td className="crm-td">
@@ -514,7 +560,7 @@ export default function AdminTasksPage() {
                       />
                     </td>
                     <td className="crm-td text-[color:var(--muted)]">
-                      {index + 1}
+                      {(page - 1) * pageSize + index + 1}
                     </td>
                     <td className="crm-td font-semibold text-[color:var(--ink)]">
                       {task.customer?.name || "-"}
@@ -748,6 +794,41 @@ export default function AdminTasksPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {total > 0 && (
+        <div className="crm-toolbar">
+          <span className="text-xs font-semibold text-[color:var(--muted)]">
+            Page {page} of {totalPages}
+          </span>
+          <label className="block w-full max-w-[140px]">
+            <span className="crm-label">Page size</span>
+            <select
+              className="crm-select mt-2"
+              value={pageSize}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
+          <button
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={page <= 1}
+            className="crm-btn-outline disabled:opacity-60"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={page >= totalPages}
+            className="crm-btn-outline disabled:opacity-60"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
