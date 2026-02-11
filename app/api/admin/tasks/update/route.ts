@@ -33,8 +33,44 @@ export async function PATCH(req: Request) {
       task.ratePerTree = body.ratePerTree;
     }
 
-    if (body.status === "pending" || body.status === "completed") {
-      task.status = body.status;
+    const wasCompleted = task.status === "completed";
+    const nextStatus =
+      body.status === "pending" || body.status === "completed"
+        ? body.status
+        : null;
+    const completedDateInput =
+      typeof body.completedDate === "string"
+        ? body.completedDate.trim()
+        : null;
+
+    if (nextStatus) {
+      task.status = nextStatus;
+      if (nextStatus === "completed") {
+        if (!wasCompleted || !task.completedDate) {
+          task.completedDate = new Date();
+        }
+      } else {
+        task.completedDate = undefined;
+      }
+    }
+
+    if (typeof body.serviceDate === "string" && body.serviceDate) {
+      task.serviceDate = body.serviceDate;
+    }
+
+    if (completedDateInput !== null) {
+      if (nextStatus === "pending") {
+        task.completedDate = undefined;
+      } else if (nextStatus === "completed" || task.status === "completed") {
+        if (!completedDateInput) {
+          task.completedDate = undefined;
+        } else {
+          const parsedCompleted = new Date(completedDateInput);
+          if (!Number.isNaN(parsedCompleted.getTime())) {
+            task.completedDate = parsedCompleted;
+          }
+        }
+      }
     }
 
     if (

@@ -15,6 +15,7 @@ type Task = {
   location?: Entity;
   staff?: Entity;
   serviceDate?: string;
+  completedDate?: string;
   numberOfTrees: number;
   ratePerTree: number;
   totalAmount: number;
@@ -24,6 +25,8 @@ type Task = {
 type EditForm = {
   staffId: string;
   locationId: string;
+  serviceDate: string;
+  completedDate: string;
   numberOfTrees: string;
   ratePerTree: string;
   status: "pending" | "completed";
@@ -106,9 +109,14 @@ export default function AdminTasksPage() {
   const startEdit = (task: Task) => {
     setEditingId(task._id);
     setNotice(null);
+    const completedDateValue = task.completedDate
+      ? new Date(task.completedDate).toISOString().slice(0, 10)
+      : "";
     setEditForm({
       staffId: task.staff?._id || "",
       locationId: task.location?._id || "",
+      serviceDate: task.serviceDate || "",
+      completedDate: completedDateValue,
       numberOfTrees: String(task.numberOfTrees ?? ""),
       ratePerTree: String(task.ratePerTree ?? ""),
       status: task.status === "completed" ? "completed" : "pending",
@@ -199,7 +207,14 @@ export default function AdminTasksPage() {
       setTasks((prev) =>
         prev.map((task) =>
           selectedIds.has(task._id)
-            ? { ...task, status: bulkStatus }
+            ? {
+                ...task,
+                status: bulkStatus,
+                completedDate:
+                  bulkStatus === "completed"
+                    ? task.completedDate || new Date().toISOString()
+                    : undefined,
+              }
             : task
         )
       );
@@ -248,6 +263,7 @@ export default function AdminTasksPage() {
     if (
       !editForm.staffId ||
       !editForm.locationId ||
+      !editForm.serviceDate ||
       !Number.isFinite(trees) ||
       !Number.isFinite(rate)
     ) {
@@ -270,6 +286,8 @@ export default function AdminTasksPage() {
           numberOfTrees: trees,
           ratePerTree: rate,
           status: editForm.status,
+          serviceDate: editForm.serviceDate,
+          completedDate: editForm.completedDate,
         }),
       });
 
@@ -282,12 +300,18 @@ export default function AdminTasksPage() {
       setTasks((prev) =>
         prev.map((task) => {
           if (task._id !== editingId) return task;
+          const nextCompletedDate =
+            editForm.status === "completed"
+              ? editForm.completedDate || task.completedDate || new Date().toISOString()
+              : undefined;
           return {
             ...task,
             numberOfTrees: trees,
             ratePerTree: rate,
             totalAmount: trees * rate,
             status: editForm.status,
+            serviceDate: editForm.serviceDate,
+            completedDate: nextCompletedDate,
             staff: nextStaff || task.staff,
             location: nextLocation || task.location,
           };
@@ -469,6 +493,7 @@ export default function AdminTasksPage() {
                 <th className="crm-th">Phone</th>
                 <th className="crm-th">Location</th>
                 <th className="crm-th">Service due</th>
+                <th className="crm-th">Completed on</th>
                 <th className="crm-th">Staff</th>
                 <th className="crm-th">Trees</th>
                 <th className="crm-th">Rate</th>
@@ -497,6 +522,11 @@ export default function AdminTasksPage() {
                     <td className="crm-td">{task.customer?.mobile || "-"}</td>
                     <td className="crm-td">{task.location?.name || "-"}</td>
                     <td className="crm-td">{task.serviceDate || "-"}</td>
+                    <td className="crm-td">
+                      {task.completedDate
+                        ? new Date(task.completedDate).toLocaleDateString()
+                        : "-"}
+                    </td>
                     <td className="crm-td">{task.staff?.name || "-"}</td>
                     <td className="crm-td">{task.numberOfTrees}</td>
                     <td className="crm-td">Rs. {task.ratePerTree}</td>
@@ -534,8 +564,8 @@ export default function AdminTasksPage() {
 
                   {editingId === task._id && editForm && (
                     <tr className="bg-white/70">
-                      <td colSpan={12} className="px-4 py-4">
-                        <div className="grid gap-3 md:grid-cols-6">
+                      <td colSpan={13} className="px-4 py-4">
+                        <div className="grid gap-3 md:grid-cols-7">
                           <label className="block">
                             <span className="crm-label">Staff</span>
                             <select
@@ -581,6 +611,45 @@ export default function AdminTasksPage() {
                                 </option>
                               ))}
                             </select>
+                          </label>
+
+                          <label className="block">
+                            <span className="crm-label">Service due</span>
+                            <input
+                              type="date"
+                              className="crm-input mt-2"
+                              value={editForm.serviceDate}
+                              onChange={(event) =>
+                                setEditForm((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        serviceDate: event.target.value,
+                                      }
+                                    : prev
+                                )
+                              }
+                            />
+                          </label>
+
+                          <label className="block">
+                            <span className="crm-label">Completed on</span>
+                            <input
+                              type="date"
+                              className="crm-input mt-2"
+                              value={editForm.completedDate}
+                              onChange={(event) =>
+                                setEditForm((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        completedDate: event.target.value,
+                                      }
+                                    : prev
+                                )
+                              }
+                              disabled={editForm.status !== "completed"}
+                            />
                           </label>
 
                           <label className="block">

@@ -34,6 +34,7 @@ export async function PATCH(req: Request) {
     }
 
     task.status = "completed";
+    task.completedDate = new Date();
     await task.save();
 
     return NextResponse.json({ success: true });

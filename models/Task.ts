@@ -33,6 +33,9 @@ const TaskSchema = new Schema(
       enum: ["pending", "completed"],
       default: "pending",
     },
+    completedDate: {
+      type: Date,
+    },
 
     // Optional but useful
     adminEdited: {

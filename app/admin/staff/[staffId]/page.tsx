@@ -8,6 +8,8 @@ type Task = {
   _id: string;
   customer: { name: string };
   location: { name: string };
+  serviceDate?: string;
+  completedDate?: string;
   numberOfTrees: number;
   ratePerTree: number;
   totalAmount: number;
@@ -16,6 +18,8 @@ type Task = {
 };
 
 type EditForm = {
+  serviceDate: string;
+  completedDate: string;
   numberOfTrees: string;
   ratePerTree: string;
   status: "pending" | "completed";
@@ -49,7 +53,12 @@ export default function StaffTaskHistoryPage() {
   const startEdit = (task: Task) => {
     setEditingId(task._id);
     setNotice(null);
+    const completedDateValue = task.completedDate
+      ? new Date(task.completedDate).toISOString().slice(0, 10)
+      : "";
     setEditForm({
+      serviceDate: task.serviceDate || "",
+      completedDate: completedDateValue,
       numberOfTrees: String(task.numberOfTrees ?? ""),
       ratePerTree: String(task.ratePerTree ?? ""),
       status: task.status === "completed" ? "completed" : "pending",
@@ -97,7 +106,7 @@ export default function StaffTaskHistoryPage() {
     const trees = Number(editForm.numberOfTrees);
     const rate = Number(editForm.ratePerTree);
 
-    if (!Number.isFinite(trees) || !Number.isFinite(rate)) {
+    if (!editForm.serviceDate || !Number.isFinite(trees) || !Number.isFinite(rate)) {
       setNotice("Please fill all fields with valid values.");
       return;
     }
@@ -115,18 +124,26 @@ export default function StaffTaskHistoryPage() {
           numberOfTrees: trees,
           ratePerTree: rate,
           status: editForm.status,
+          serviceDate: editForm.serviceDate,
+          completedDate: editForm.completedDate,
         }),
       });
 
       setTasks((prev) =>
         prev.map((task) => {
           if (task._id !== editingId) return task;
+          const nextCompletedDate =
+            editForm.status === "completed"
+              ? editForm.completedDate || task.completedDate || new Date().toISOString()
+              : undefined;
           return {
             ...task,
             numberOfTrees: trees,
             ratePerTree: rate,
             totalAmount: trees * rate,
             status: editForm.status,
+            serviceDate: editForm.serviceDate,
+            completedDate: nextCompletedDate,
           };
         })
       );
@@ -222,6 +239,20 @@ export default function StaffTaskHistoryPage() {
                   {new Date(task.createdAt).toLocaleString()}
                 </p>
               </div>
+              <div>
+                <span className="crm-label">Service due</span>
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {task.serviceDate || "-"}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Completed on</span>
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {task.completedDate
+                    ? new Date(task.completedDate).toLocaleDateString()
+                    : "-"}
+                </p>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -241,10 +272,43 @@ export default function StaffTaskHistoryPage() {
 
             {editingId === task._id && editForm && (
               <div className="mt-5 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
-                <div className="grid gap-3 md:grid-cols-4">
-                  <label className="block">
-                    <span className="crm-label">Trees</span>
-                    <input
+              <div className="grid gap-3 md:grid-cols-6">
+                <label className="block">
+                  <span className="crm-label">Service due</span>
+                  <input
+                    type="date"
+                    className="crm-input mt-2"
+                    value={editForm.serviceDate}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev
+                          ? { ...prev, serviceDate: event.target.value }
+                          : prev
+                      )
+                    }
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="crm-label">Completed on</span>
+                  <input
+                    type="date"
+                    className="crm-input mt-2"
+                    value={editForm.completedDate}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev
+                          ? { ...prev, completedDate: event.target.value }
+                          : prev
+                      )
+                    }
+                    disabled={editForm.status !== "completed"}
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="crm-label">Trees</span>
+                  <input
                       type="number"
                       min={0}
                       className="crm-input mt-2"

@@ -56,6 +56,7 @@ export async function PATCH(req: Request) {
   task.ratePerTree = ratePerTree;
   task.totalAmount = numberOfTrees * ratePerTree;
   task.status = "completed";
+  task.completedDate = new Date();
 
   // Admin edit tracking
   if (auth.role === "admin") {
