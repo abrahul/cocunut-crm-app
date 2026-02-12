@@ -16,7 +16,10 @@ export async function GET() {
     );
   }
 
-  const tasks = await Task.find({ staff: auth.staffId })
+  const tasks = await Task.find({
+    staff: auth.staffId,
+    status: { $ne: "completed" },
+  })
     .populate("customer")
     .populate("location")
     .sort({ createdAt: -1 });

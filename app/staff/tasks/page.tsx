@@ -51,7 +51,7 @@ export default function StaffTasksPage() {
     }
 
     alert("Task completed");
-    location.reload();
+    setTasks((prev) => prev.filter((item) => item._id !== task._id));
   }
 
   return (
