@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const SESSION_TIMEOUT_MS = 600_000;
+const SESSION_TIMEOUT_MS = 86_400_000;
 const REFRESH_THROTTLE_MS = 20_000;
 
 const navItems = [
