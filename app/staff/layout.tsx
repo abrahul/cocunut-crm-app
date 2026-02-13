@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +11,11 @@ export default function StaffLayout({
 }) {
   const pathname = usePathname();
   const isLogin = pathname?.startsWith("/staff/login");
+  const [staffName, setStaffName] = useState("");
+
+  useEffect(() => {
+    setStaffName(localStorage.getItem("staffName") || "");
+  }, []);
 
   if (isLogin) {
     return <>{children}</>;
@@ -26,6 +32,11 @@ export default function StaffLayout({
             <h1 className="text-xl font-semibold text-[color:var(--ink)]">
               Field Staff
             </h1>
+            {staffName && (
+              <p className="mt-1 text-sm text-[color:var(--muted)]">
+                {staffName}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Link href="/staff/tasks" className="crm-btn-outline">

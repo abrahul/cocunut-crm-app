@@ -74,6 +74,7 @@ export default function StaffTasksPage() {
         <button
           onClick={async () => {
             await fetch("/api/auth/logout", { method: "POST" });
+            localStorage.removeItem("staffName");
             window.location.href = "/staff/login";
           }}
           className="crm-btn-outline"

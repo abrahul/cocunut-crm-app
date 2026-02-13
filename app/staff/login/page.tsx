@@ -32,6 +32,10 @@ export default function StaffLoginPage() {
       return;
     }
 
+    if (data?.staff?.name) {
+      localStorage.setItem("staffName", String(data.staff.name));
+    }
+
     window.location.href = "/staff/tasks";
   }
 
