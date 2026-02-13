@@ -53,9 +53,10 @@ export default function LoginPage() {
 
           <div className="mt-6 space-y-4">
             <label className="block">
-              <span className="crm-label">Phone</span>
+              <span className="crm-label crm-label-required">Phone</span>
               <input
                 placeholder="Phone"
+                required
                 onChange={(e) => setPhone(e.target.value)}
                 className="crm-input mt-2"
               />
@@ -68,9 +69,10 @@ export default function LoginPage() {
             {sessionId && (
               <>
                 <label className="block">
-                  <span className="crm-label">OTP</span>
+                  <span className="crm-label crm-label-required">OTP</span>
                   <input
                     placeholder="OTP"
+                    required
                     onChange={(e) => setOtp(e.target.value)}
                     className="crm-input mt-2"
                   />

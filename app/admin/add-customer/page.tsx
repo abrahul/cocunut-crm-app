@@ -90,10 +90,11 @@ export default function AddCustomerPage() {
       <form onSubmit={submitHandler} className="crm-card space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Customer name</span>
+            <span className="crm-label crm-label-required">Customer name</span>
             <input
               placeholder="Customer Name"
               className="crm-input mt-2"
+              required
               value={form.name}
               onChange={(e) =>
                 setForm({ ...form, name: e.target.value })
@@ -107,10 +108,11 @@ export default function AddCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Primary mobile</span>
+            <span className="crm-label crm-label-required">Primary mobile</span>
             <input
               placeholder="Mobile"
               className="crm-input mt-2"
+              required
               value={form.mobile}
               onChange={(e) =>
                 setForm({ ...form, mobile: e.target.value })
@@ -156,12 +158,13 @@ export default function AddCustomerPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Latitude</span>
+            <span className="crm-label crm-label-required">Latitude</span>
             <input
               type="number"
               step="any"
               placeholder="Latitude"
               className="crm-input mt-2"
+              required
               value={form.latitude}
               onChange={(e) =>
                 setForm({
@@ -178,12 +181,13 @@ export default function AddCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Longitude</span>
+            <span className="crm-label crm-label-required">Longitude</span>
             <input
               type="number"
               step="any"
               placeholder="Longitude"
               className="crm-input mt-2"
+              required
               value={form.longitude}
               onChange={(e) =>
                 setForm({
@@ -201,10 +205,11 @@ export default function AddCustomerPage() {
         </div>
 
         <label className="block">
-          <span className="crm-label">Address</span>
+          <span className="crm-label crm-label-required">Address</span>
           <input
             placeholder="Address"
             className="crm-input mt-2"
+            required
             value={form.address}
             onChange={(e) =>
               setForm({ ...form, address: e.target.value })
@@ -219,11 +224,12 @@ export default function AddCustomerPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Email</span>
+            <span className="crm-label crm-label-required">Email</span>
             <input
               type="email"
               placeholder="Email"
               className="crm-input mt-2"
+              required
               value={form.email}
               onChange={(e) =>
                 setForm({ ...form, email: e.target.value })
@@ -237,9 +243,10 @@ export default function AddCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Location</span>
+            <span className="crm-label crm-label-required">Location</span>
             <select
               className="crm-select mt-2"
+              required
               value={form.locationId}
               onChange={(e) =>
                 setForm({
@@ -278,7 +285,7 @@ export default function AddCustomerPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button className="crm-btn-primary">Add Customer</button>
           <p className="text-xs text-[color:var(--muted)]">
-            Required fields are marked in validation messaging.
+            Required fields are marked with an asterisk (*).
           </p>
         </div>
       </form>

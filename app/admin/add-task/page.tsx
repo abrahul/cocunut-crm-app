@@ -335,7 +335,8 @@ export default function AddTaskPage() {
       <form onSubmit={submitHandler} className="crm-card space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Customer</span>
+            <span className="crm-label crm-label-required">Customer</span>
+            <input type="hidden" value={form.customerId} required readOnly />
             <div className="mt-2 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <input
@@ -410,9 +411,10 @@ export default function AddTaskPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Staff</span>
+            <span className="crm-label crm-label-required">Staff</span>
             <select
               className="crm-select mt-2"
+              required
               value={form.staffId}
               onChange={(e) =>
                 setForm({
@@ -433,10 +435,11 @@ export default function AddTaskPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Number of trees</span>
+            <span className="crm-label crm-label-required">Number of trees</span>
             <input
               type="number"
               className="crm-input mt-2"
+              required
               value={form.treesCount}
               onChange={(e) =>
                 setForm({
@@ -448,10 +451,11 @@ export default function AddTaskPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Rate per tree</span>
+            <span className="crm-label crm-label-required">Rate per tree</span>
             <input
               type="number"
               className="crm-input mt-2"
+              required
               value={form.rate}
               onChange={(e) =>
                 setForm({
@@ -465,11 +469,12 @@ export default function AddTaskPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Latitude</span>
+            <span className="crm-label crm-label-required">Latitude</span>
             <input
               type="number"
               step="any"
               className="crm-input mt-2"
+              required
               value={form.latitude}
               onChange={(e) =>
                 setForm({
@@ -481,11 +486,12 @@ export default function AddTaskPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Longitude</span>
+            <span className="crm-label crm-label-required">Longitude</span>
             <input
               type="number"
               step="any"
               className="crm-input mt-2"
+              required
               value={form.longitude}
               onChange={(e) =>
                 setForm({
@@ -499,10 +505,11 @@ export default function AddTaskPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Date of service</span>
+            <span className="crm-label crm-label-required">Date of service</span>
             <input
               type="date"
               className="crm-input mt-2"
+              required
               value={form.serviceDate}
               onChange={(e) =>
                 setForm({
@@ -530,13 +537,14 @@ export default function AddTaskPage() {
         </div>
 
         <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
-          <p className="crm-label">Medicine required?</p>
+          <p className="crm-label crm-label-required">Medicine required?</p>
           <div className="mt-3 flex flex-wrap gap-4 text-sm font-semibold text-[color:var(--ink)]">
             <label className="flex items-center gap-2">
               <input
                 type="radio"
                 name="medicine"
                 value="yes"
+                required
                 checked={form.medicine === "yes"}
                 onChange={(e) =>
                   setForm({
@@ -552,6 +560,7 @@ export default function AddTaskPage() {
                 type="radio"
                 name="medicine"
                 value="no"
+                required
                 checked={form.medicine === "no"}
                 onChange={(e) =>
                   setForm({
@@ -566,10 +575,11 @@ export default function AddTaskPage() {
         </div>
 
         <label className="block">
-          <span className="crm-label">Exact address</span>
+          <span className="crm-label crm-label-required">Exact address</span>
           <input
             type="text"
             className="crm-input mt-2"
+            required
             value={form.exactAddress}
             onChange={(e) =>
               setForm({

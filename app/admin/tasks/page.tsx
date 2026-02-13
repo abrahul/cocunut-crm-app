@@ -613,9 +613,10 @@ export default function AdminTasksPage() {
                       <td colSpan={13} className="px-4 py-4">
                         <div className="grid gap-3 md:grid-cols-7">
                           <label className="block">
-                            <span className="crm-label">Staff</span>
+                            <span className="crm-label crm-label-required">Staff</span>
                             <select
                               className="crm-select mt-2"
+                              required
                               value={editForm.staffId}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -635,9 +636,10 @@ export default function AdminTasksPage() {
                           </label>
 
                           <label className="block">
-                            <span className="crm-label">Location</span>
+                            <span className="crm-label crm-label-required">Location</span>
                             <select
                               className="crm-select mt-2"
+                              required
                               value={editForm.locationId}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -660,10 +662,11 @@ export default function AdminTasksPage() {
                           </label>
 
                           <label className="block">
-                            <span className="crm-label">Service due</span>
+                            <span className="crm-label crm-label-required">Service due</span>
                             <input
                               type="date"
                               className="crm-input mt-2"
+                              required
                               value={editForm.serviceDate}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -699,11 +702,12 @@ export default function AdminTasksPage() {
                           </label>
 
                           <label className="block">
-                            <span className="crm-label">Trees</span>
+                            <span className="crm-label crm-label-required">Trees</span>
                             <input
                               type="number"
                               min={0}
                               className="crm-input mt-2"
+                              required
                               value={editForm.numberOfTrees}
                               onChange={(event) =>
                                 setEditForm((prev) =>
@@ -719,11 +723,12 @@ export default function AdminTasksPage() {
                           </label>
 
                           <label className="block">
-                            <span className="crm-label">Rate</span>
+                            <span className="crm-label crm-label-required">Rate</span>
                             <input
                               type="number"
                               min={0}
                               className="crm-input mt-2"
+                              required
                               value={editForm.ratePerTree}
                               onChange={(event) =>
                                 setEditForm((prev) =>

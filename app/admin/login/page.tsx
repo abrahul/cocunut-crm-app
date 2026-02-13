@@ -85,10 +85,11 @@ export default function AdminLoginPage() {
 
           <div className="mt-6 space-y-4">
             <label className="block">
-              <span className="crm-label">Mobile number</span>
+              <span className="crm-label crm-label-required">Mobile number</span>
               <input
                 placeholder="Enter mobile"
                 value={mobile}
+                required
                 onChange={(e) => setMobile(e.target.value)}
                 className="crm-input mt-2"
               />
@@ -107,10 +108,11 @@ export default function AdminLoginPage() {
             {otpSent && (
               <>
                 <label className="block">
-                  <span className="crm-label">OTP</span>
+                  <span className="crm-label crm-label-required">OTP</span>
                   <input
                     placeholder="Enter OTP"
                     value={otp}
+                    required
                     onChange={(e) => setOtp(e.target.value)}
                     className="crm-input mt-2"
                   />

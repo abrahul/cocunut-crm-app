@@ -283,7 +283,7 @@ export default function ReportsPage() {
             }}
           >
             <label className="block">
-              <span className="crm-label">Reports Password</span>
+              <span className="crm-label crm-label-required">Reports Password</span>
               <input
                 type="password"
                 className="crm-input mt-2"

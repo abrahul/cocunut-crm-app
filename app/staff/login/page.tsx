@@ -49,10 +49,11 @@ export default function StaffLoginPage() {
 
           <div className="mt-6 space-y-4">
             <label className="block">
-              <span className="crm-label">Mobile number</span>
+              <span className="crm-label crm-label-required">Mobile number</span>
               <input
                 className="crm-input mt-2"
                 placeholder="e.g. 5551234567"
+                required
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 inputMode="numeric"
@@ -61,10 +62,11 @@ export default function StaffLoginPage() {
             </label>
 
             <label className="block">
-              <span className="crm-label">Password</span>
+              <span className="crm-label crm-label-required">Password</span>
               <input
                 className="crm-input mt-2"
                 placeholder="Enter password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"

@@ -80,20 +80,22 @@ export default function EditStaffPage() {
 
       <div className="crm-card space-y-4">
         <label className="block">
-          <span className="crm-label">Name</span>
+          <span className="crm-label crm-label-required">Name</span>
           <input
             className="crm-input mt-2"
             placeholder="Name"
+            required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
 
         <label className="block">
-          <span className="crm-label">Mobile</span>
+          <span className="crm-label crm-label-required">Mobile</span>
           <input
             className="crm-input mt-2"
             placeholder="Mobile"
+            required
             value={mobile}
             onChange={(e) => setMobile(e.target.value)}
           />

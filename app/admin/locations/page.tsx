@@ -233,9 +233,10 @@ export default function LocationsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="crm-label">Location name</span>
+              <span className="crm-label crm-label-required">Location name</span>
               <input
                 className="crm-input mt-2"
+                required
                 value={form.name}
                 onChange={(e) =>
                   setForm({ ...form, name: e.target.value })
@@ -243,11 +244,12 @@ export default function LocationsPage() {
               />
             </label>
             <label className="block">
-              <span className="crm-label">Default rate</span>
+              <span className="crm-label crm-label-required">Default rate</span>
               <input
                 type="number"
                 step="any"
                 className="crm-input mt-2"
+                required
                 value={form.defaultRate}
                 onChange={(e) =>
                   setForm({ ...form, defaultRate: e.target.value })
@@ -258,11 +260,12 @@ export default function LocationsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="crm-label">Latitude</span>
+              <span className="crm-label crm-label-required">Latitude</span>
               <input
                 type="number"
                 step="any"
                 className="crm-input mt-2"
+                required
                 value={form.latitude}
                 onChange={(e) =>
                   setForm({ ...form, latitude: e.target.value })
@@ -270,11 +273,12 @@ export default function LocationsPage() {
               />
             </label>
             <label className="block">
-              <span className="crm-label">Longitude</span>
+              <span className="crm-label crm-label-required">Longitude</span>
               <input
                 type="number"
                 step="any"
                 className="crm-input mt-2"
+                required
                 value={form.longitude}
                 onChange={(e) =>
                   setForm({ ...form, longitude: e.target.value })

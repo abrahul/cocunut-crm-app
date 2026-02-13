@@ -55,30 +55,33 @@ export default function AddStaffPage() {
 
       <div className="crm-card space-y-4">
         <label className="block">
-          <span className="crm-label">Staff name</span>
+          <span className="crm-label crm-label-required">Staff name</span>
           <input
             className="crm-input mt-2"
             placeholder="Staff Name"
+            required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
 
         <label className="block">
-          <span className="crm-label">Mobile number</span>
+          <span className="crm-label crm-label-required">Mobile number</span>
           <input
             className="crm-input mt-2"
             placeholder="Mobile Number"
+            required
             value={mobile}
             onChange={(e) => setMobile(e.target.value)}
           />
         </label>
 
         <label className="block">
-          <span className="crm-label">Password</span>
+          <span className="crm-label crm-label-required">Password</span>
           <input
             className="crm-input mt-2"
             placeholder="Assign a password"
+            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type="password"
@@ -87,10 +90,11 @@ export default function AddStaffPage() {
         </label>
 
         <label className="block">
-          <span className="crm-label">Confirm password</span>
+          <span className="crm-label crm-label-required">Confirm password</span>
           <input
             className="crm-input mt-2"
             placeholder="Re-enter password"
+            required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             type="password"

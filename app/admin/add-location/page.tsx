@@ -56,46 +56,50 @@ export default function AddLocationPage() {
 
       <form onSubmit={submitHandler} className="crm-card space-y-4">
         <label className="block">
-          <span className="crm-label">Location name</span>
+          <span className="crm-label crm-label-required">Location name</span>
           <input
             type="text"
             placeholder="Location name"
             value={name}
+            required
             onChange={(e) => setName(e.target.value)}
             className="crm-input mt-2"
           />
         </label>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Latitude</span>
+            <span className="crm-label crm-label-required">Latitude</span>
             <input
               type="number"
               step="any"
               placeholder="Latitude (-90 to 90)"
               value={latitude}
+              required
               onChange={(e) => setLatitude(e.target.value)}
               className="crm-input mt-2"
             />
           </label>
           <label className="block">
-            <span className="crm-label">Longitude</span>
+            <span className="crm-label crm-label-required">Longitude</span>
             <input
               type="number"
               step="any"
               placeholder="Longitude (-180 to 180)"
               value={longitude}
+              required
               onChange={(e) => setLongitude(e.target.value)}
               className="crm-input mt-2"
             />
           </label>
         </div>
         <label className="block">
-          <span className="crm-label">Default rate</span>
+          <span className="crm-label crm-label-required">Default rate</span>
           <input
             type="number"
             step="any"
             placeholder="Default rate"
             value={defaultRate}
+            required
             onChange={(e) => setDefaultRate(e.target.value)}
             className="crm-input mt-2"
           />

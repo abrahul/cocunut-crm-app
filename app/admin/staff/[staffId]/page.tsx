@@ -274,10 +274,11 @@ export default function StaffTaskHistoryPage() {
               <div className="mt-5 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
               <div className="grid gap-3 md:grid-cols-6">
                 <label className="block">
-                  <span className="crm-label">Service due</span>
+                  <span className="crm-label crm-label-required">Service due</span>
                   <input
                     type="date"
                     className="crm-input mt-2"
+                    required
                     value={editForm.serviceDate}
                     onChange={(event) =>
                       setEditForm((prev) =>
@@ -307,38 +308,40 @@ export default function StaffTaskHistoryPage() {
                 </label>
 
                 <label className="block">
-                  <span className="crm-label">Trees</span>
+                  <span className="crm-label crm-label-required">Trees</span>
                   <input
-                      type="number"
-                      min={0}
-                      className="crm-input mt-2"
-                      value={editForm.numberOfTrees}
-                      onChange={(event) =>
-                        setEditForm((prev) =>
-                          prev
-                            ? { ...prev, numberOfTrees: event.target.value }
-                            : prev
-                        )
-                      }
-                    />
-                  </label>
+                    type="number"
+                    min={0}
+                    className="crm-input mt-2"
+                    required
+                    value={editForm.numberOfTrees}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev
+                          ? { ...prev, numberOfTrees: event.target.value }
+                          : prev
+                      )
+                    }
+                  />
+                </label>
 
-                  <label className="block">
-                    <span className="crm-label">Rate</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="crm-input mt-2"
-                      value={editForm.ratePerTree}
-                      onChange={(event) =>
-                        setEditForm((prev) =>
-                          prev
-                            ? { ...prev, ratePerTree: event.target.value }
-                            : prev
-                        )
-                      }
-                    />
-                  </label>
+                <label className="block">
+                  <span className="crm-label crm-label-required">Rate</span>
+                  <input
+                    type="number"
+                    min={0}
+                    className="crm-input mt-2"
+                    required
+                    value={editForm.ratePerTree}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev
+                          ? { ...prev, ratePerTree: event.target.value }
+                          : prev
+                      )
+                    }
+                  />
+                </label>
 
                   <label className="block">
                     <span className="crm-label">Status</span>

@@ -111,9 +111,10 @@ export default function StaffTasksPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="crm-label">Trees</span>
+                <span className="crm-label crm-label-required">Trees</span>
                 <input
                   type="number"
+                  required
                   value={task.numberOfTrees}
                   disabled={task.status === "completed"}
                   onChange={(e) => {
@@ -126,9 +127,10 @@ export default function StaffTasksPage() {
               </label>
 
               <label className="block">
-                <span className="crm-label">Rate per tree</span>
+                <span className="crm-label crm-label-required">Rate per tree</span>
                 <input
                   type="number"
+                  required
                   value={task.ratePerTree}
                   disabled={task.status === "completed"}
                   onChange={(e) => {

@@ -131,4 +131,16 @@ body {
   .crm-toolbar {
     @apply flex flex-wrap items-center gap-3 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4;
   }
+
+  .crm-label-required::after {
+    content: " *";
+    color: #dc2626;
+  }
+
+  label:has(> input:required) > .crm-label::after,
+  label:has(> select:required) > .crm-label::after,
+  label:has(> textarea:required) > .crm-label::after {
+    content: " *";
+    color: #dc2626;
+  }
 }

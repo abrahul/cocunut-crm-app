@@ -185,10 +185,11 @@ export default function EditCustomerPage() {
       <form onSubmit={submitHandler} className="crm-card space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Customer name</span>
+            <span className="crm-label crm-label-required">Customer name</span>
             <input
               placeholder="Customer Name"
               className="crm-input mt-2"
+              required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
@@ -200,10 +201,11 @@ export default function EditCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Mobile</span>
+            <span className="crm-label crm-label-required">Mobile</span>
             <input
               placeholder="Mobile"
               className="crm-input mt-2"
+              required
               value={form.mobile}
               onChange={(e) => setForm({ ...form, mobile: e.target.value })}
             />
@@ -241,12 +243,13 @@ export default function EditCustomerPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Latitude</span>
+            <span className="crm-label crm-label-required">Latitude</span>
             <input
               type="number"
               step="any"
               placeholder="Latitude"
               className="crm-input mt-2"
+              required
               value={form.latitude}
               onChange={(e) =>
                 setForm({ ...form, latitude: e.target.value })
@@ -260,12 +263,13 @@ export default function EditCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Longitude</span>
+            <span className="crm-label crm-label-required">Longitude</span>
             <input
               type="number"
               step="any"
               placeholder="Longitude"
               className="crm-input mt-2"
+              required
               value={form.longitude}
               onChange={(e) =>
                 setForm({ ...form, longitude: e.target.value })
@@ -280,10 +284,11 @@ export default function EditCustomerPage() {
         </div>
 
         <label className="block">
-          <span className="crm-label">Address</span>
+          <span className="crm-label crm-label-required">Address</span>
           <input
             placeholder="Address"
             className="crm-input mt-2"
+            required
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
           />
@@ -296,11 +301,12 @@ export default function EditCustomerPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label">Email</span>
+            <span className="crm-label crm-label-required">Email</span>
             <input
               type="email"
               placeholder="Email"
               className="crm-input mt-2"
+              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
@@ -312,9 +318,10 @@ export default function EditCustomerPage() {
           </label>
 
           <label className="block">
-            <span className="crm-label">Location</span>
+            <span className="crm-label crm-label-required">Location</span>
             <select
               className="crm-select mt-2"
+              required
               value={form.locationId}
               onChange={(e) =>
                 setForm({ ...form, locationId: e.target.value })
