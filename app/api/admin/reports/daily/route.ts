@@ -26,13 +26,27 @@ export async function GET(request: Request) {
     const staffId = searchParams.get("staffId")?.trim();
     const locationId = searchParams.get("locationId")?.trim();
 
-    const match: Record<string, any> = {};
-    if (from && to) {
-      match.serviceDate = { $gte: from, $lte: to };
-    } else if (from) {
-      match.serviceDate = { $gte: from };
-    } else if (to) {
-      match.serviceDate = { $lte: to };
+    const match: Record<string, any> = {
+      completedDate: { $ne: null },
+    };
+    const completedDateRange: Record<string, Date> = {};
+    if (from) {
+      const fromDate = new Date(`${from}T00:00:00.000Z`);
+      if (!Number.isNaN(fromDate.getTime())) {
+        completedDateRange.$gte = fromDate;
+      }
+    }
+    if (to) {
+      const toDate = new Date(`${to}T23:59:59.999Z`);
+      if (!Number.isNaN(toDate.getTime())) {
+        completedDateRange.$lte = toDate;
+      }
+    }
+    if (Object.keys(completedDateRange).length > 0) {
+      match.completedDate = {
+        ...match.completedDate,
+        ...completedDateRange,
+      };
     }
 
     if (staffId && mongoose.Types.ObjectId.isValid(staffId)) {
@@ -50,7 +64,12 @@ export async function GET(request: Request) {
           daily: [
             {
               $group: {
-                _id: "$serviceDate",
+                _id: {
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$completedDate",
+                  },
+                },
                 totalTasks: { $sum: 1 },
                 completedTasks: {
                   $sum: {

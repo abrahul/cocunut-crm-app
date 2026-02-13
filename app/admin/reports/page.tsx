@@ -34,7 +34,7 @@ type StaffPerformance = {
   pendingTasks: number;
   totalTrees: number;
   totalEarnings: number;
-  lastServiceDate: string;
+  lastCompletedDate: string;
 };
 
 const toLocalInputDate = (date: Date) => {
@@ -230,7 +230,7 @@ export default function ReportsPage() {
         Reports
       </h1>
       <p className="mt-1 text-sm text-[color:var(--muted)]">
-        Daily stats grouped by service date
+        Daily stats grouped by completed date
       </p>
     </div>
   );
@@ -541,7 +541,7 @@ export default function ReportsPage() {
                       <th className="crm-th">Pending</th>
                       <th className="crm-th">Trees</th>
                       <th className="crm-th">Earnings</th>
-                      <th className="crm-th">Last Service</th>
+                      <th className="crm-th">Last Completed</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--border)]">
@@ -565,8 +565,8 @@ export default function ReportsPage() {
                         <td className="crm-td">{row.totalTrees}</td>
                         <td className="crm-td">Rs. {row.totalEarnings}</td>
                         <td className="crm-td">
-                          {row.lastServiceDate
-                            ? new Date(row.lastServiceDate).toLocaleDateString()
+                          {row.lastCompletedDate
+                            ? new Date(row.lastCompletedDate).toLocaleDateString()
                             : "-"}
                         </td>
                       </tr>
