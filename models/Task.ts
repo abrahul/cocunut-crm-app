@@ -21,7 +21,7 @@ const TaskSchema = new Schema(
     ratePerTree: Number,
     totalAmount: Number,
     serviceDate: { type: String, required: true },
-    serviceTime: { type: String },
+    serviceTime: { type: String, required: false, default: undefined },
     medicine: { type: Boolean, required: true },
     exactAddress: { type: String, required: true },
     remark: { type: String },
@@ -46,4 +46,16 @@ const TaskSchema = new Schema(
   { timestamps: true }
 );
 
-export default models.Task || mongoose.model("Task", TaskSchema);
+const TaskModel = models.Task || mongoose.model("Task", TaskSchema);
+
+// In dev/hot-reload, an already-compiled model can retain old required flags.
+const serviceTimePath = TaskModel.schema.path("serviceTime");
+type RequiredToggler = { required: (isRequired: boolean) => unknown };
+if (
+  serviceTimePath &&
+  typeof (serviceTimePath as RequiredToggler).required === "function"
+) {
+  (serviceTimePath as RequiredToggler).required(false);
+}
+
+export default TaskModel;
