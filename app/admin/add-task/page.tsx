@@ -111,7 +111,6 @@ export default function AddTaskPage() {
       !form.latitude ||
       !form.longitude ||
       !form.serviceDate ||
-      !form.serviceTime ||
       !form.medicine ||
       !form.exactAddress
     ) {

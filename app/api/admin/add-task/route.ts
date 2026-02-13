@@ -59,12 +59,13 @@ export async function POST(req: Request) {
 
     if (
       !serviceDate ||
-      !serviceTime ||
       typeof serviceDate !== "string" ||
-      typeof serviceTime !== "string"
+      (serviceTime !== undefined &&
+        serviceTime !== null &&
+        typeof serviceTime !== "string")
     ) {
       return NextResponse.json(
-        { error: "Service date and time are required" },
+        { error: "Service date is required" },
         { status: 400 }
       );
     }

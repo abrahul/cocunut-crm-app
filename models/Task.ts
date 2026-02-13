@@ -21,7 +21,7 @@ const TaskSchema = new Schema(
     ratePerTree: Number,
     totalAmount: Number,
     serviceDate: { type: String, required: true },
-    serviceTime: { type: String, required: true },
+    serviceTime: { type: String },
     medicine: { type: Boolean, required: true },
     exactAddress: { type: String, required: true },
     remark: { type: String },
