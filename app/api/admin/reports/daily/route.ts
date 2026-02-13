@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
 import { getAuthUser } from "@/lib/authServer";
+import { getReportUnlock } from "@/lib/reportAuth";
 import mongoose from "mongoose";
 
 export async function GET(request: Request) {
@@ -10,6 +11,13 @@ export async function GET(request: Request) {
     const auth = await getAuthUser();
     if (!auth || auth.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const reportUnlock = await getReportUnlock(auth.adminId);
+    if (!reportUnlock || reportUnlock.scope !== "reports") {
+      return NextResponse.json(
+        { error: "Reports locked" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);

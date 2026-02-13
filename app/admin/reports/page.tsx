@@ -87,11 +87,44 @@ export default function ReportsPage() {
   >("week");
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
+  const [reportUnlocked, setReportUnlocked] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [submittingAccess, setSubmittingAccess] = useState(false);
+  const [reportPassword, setReportPassword] = useState("");
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [lockingReports, setLockingReports] = useState(false);
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
     let active = true;
+    const checkAccess = async () => {
+      setCheckingAccess(true);
+      try {
+        const res = await adminFetch("/api/admin/reports/unlock");
+        const data = await res.json();
+        if (!active) return;
+        setReportUnlocked(!!data?.unlocked);
+      } catch {
+        if (!active) return;
+        setReportUnlocked(false);
+      } finally {
+        if (active) setCheckingAccess(false);
+      }
+    };
+
+    checkAccess();
+    return () => {
+      active = false;
+    };
+  }, [adminFetch]);
+
+  useEffect(() => {
+    let active = true;
     const load = async () => {
+      if (checkingAccess || !reportUnlocked) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setNotice(null);
       try {
@@ -152,7 +185,15 @@ export default function ReportsPage() {
     return () => {
       active = false;
     };
-  }, [adminFetch, fromDate, toDate, staffFilter, locationFilter]);
+  }, [
+    adminFetch,
+    checkingAccess,
+    reportUnlocked,
+    fromDate,
+    toDate,
+    staffFilter,
+    locationFilter,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -182,20 +223,123 @@ export default function ReportsPage() {
     };
   }, [adminFetch]);
 
+  const intro = (
+    <div>
+      <p className="crm-pill">Insights</p>
+      <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
+        Reports
+      </h1>
+      <p className="mt-1 text-sm text-[color:var(--muted)]">
+        Daily stats grouped by service date
+      </p>
+    </div>
+  );
+
+  if (checkingAccess) {
+    return (
+      <div className="space-y-6">
+        {intro}
+        <p className="text-sm text-[color:var(--muted)]">
+          Checking report access...
+        </p>
+      </div>
+    );
+  }
+
+  if (!reportUnlocked) {
+    return (
+      <div className="space-y-6">
+        {intro}
+        <div className="crm-card max-w-xl">
+          <h2 className="text-lg font-semibold text-[color:var(--ink)]">
+            Reports Password Required
+          </h2>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Enter the reports password to view analytics.
+          </p>
+          <form
+            className="mt-5 space-y-3"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setAccessError(null);
+              setSubmittingAccess(true);
+              try {
+                const res = await adminFetch("/api/admin/reports/unlock", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: reportPassword }),
+                });
+                if (!res.ok) {
+                  const data = await res.json();
+                  throw new Error(data?.error || "Invalid password");
+                }
+                setReportUnlocked(true);
+                setReportPassword("");
+              } catch (err: any) {
+                setAccessError(err?.message || "Unlock failed");
+              } finally {
+                setSubmittingAccess(false);
+              }
+            }}
+          >
+            <label className="block">
+              <span className="crm-label">Reports Password</span>
+              <input
+                type="password"
+                className="crm-input mt-2"
+                value={reportPassword}
+                autoComplete="current-password"
+                onChange={(event) => setReportPassword(event.target.value)}
+                placeholder="Enter reports password"
+                required
+              />
+            </label>
+            {accessError && (
+              <p className="text-sm text-red-600">{accessError}</p>
+            )}
+            <button
+              type="submit"
+              className="crm-btn-primary"
+              disabled={submittingAccess}
+            >
+              {submittingAccess ? "Unlocking..." : "Unlock Reports"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="crm-pill">Insights</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[color:var(--ink)]">
-            Reports
-          </h1>
-          <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Daily stats grouped by service date
-          </p>
-        </div>
+        {intro}
 
         <div className="flex flex-wrap items-end gap-3">
+          <button
+            type="button"
+            className="crm-btn-outline"
+            disabled={lockingReports}
+            onClick={async () => {
+              setLockingReports(true);
+              try {
+                const res = await adminFetch("/api/admin/reports/unlock", {
+                  method: "DELETE",
+                });
+                if (!res.ok) {
+                  const data = await res.json();
+                  throw new Error(data?.error || "Failed to lock reports");
+                }
+                setReportUnlocked(false);
+              } catch (err: any) {
+                setNotice(err?.message || "Failed to lock reports");
+              } finally {
+                setLockingReports(false);
+              }
+            }}
+          >
+            {lockingReports ? "Locking..." : "Lock Reports"}
+          </button>
           <div className="flex flex-wrap items-end gap-2">
             <button
               type="button"
