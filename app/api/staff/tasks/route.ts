@@ -28,6 +28,15 @@ export async function GET() {
     tasks.map((t) => ({
       _id: t._id,
       customerName: t.customer.name,
+      customerMobile: t.customer.mobile || "",
+      customerAlternateMobile: t.customer.alternateMobile || "",
+      address: t.exactAddress || t.customer.address || "",
+      latitude:
+        typeof t.latitude === "number" ? t.latitude : t.customer.latitude ?? null,
+      longitude:
+        typeof t.longitude === "number"
+          ? t.longitude
+          : t.customer.longitude ?? null,
       location: t.location.name,
       numberOfTrees: t.numberOfTrees,
       ratePerTree: t.ratePerTree,

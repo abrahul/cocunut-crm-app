@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 type Task = {
   _id: string;
   customerName: string;
+  customerMobile: string;
+  customerAlternateMobile?: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   location: string;
   numberOfTrees: number;
   ratePerTree: number;
@@ -97,6 +102,28 @@ export default function StaffTasksPage() {
                 <p className="mt-1 text-sm text-[color:var(--muted)]">
                   {task.location}
                 </p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  Phone: {task.customerMobile || "-"}
+                </p>
+                {task.customerAlternateMobile && (
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    Alt Phone: {task.customerAlternateMobile}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  Address: {task.address || "-"}
+                </p>
+                {typeof task.latitude === "number" &&
+                  typeof task.longitude === "number" && (
+                    <a
+                      href={`https://www.google.com/maps?q=${task.latitude},${task.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-sm text-blue-600 underline"
+                    >
+                      {task.latitude}, {task.longitude}
+                    </a>
+                  )}
               </div>
               <span
                 className={
