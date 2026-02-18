@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type DailyRow = {
@@ -58,15 +58,8 @@ const startOfMonth = (date: Date) => {
 };
 
 export default function ReportsPage() {
-  const today = useMemo(() => new Date(), []);
-  const initialFrom = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    return toLocalInputDate(d);
-  }, []);
-  const initialTo = useMemo(() => toLocalInputDate(today), [today]);
-  const [fromDate, setFromDate] = useState(() => initialFrom);
-  const [toDate, setToDate] = useState(() => initialTo);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [days, setDays] = useState<DailyRow[]>([]);
   const [summary, setSummary] = useState<Summary>({
     totalTasks: 0,
@@ -96,6 +89,14 @@ export default function ReportsPage() {
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - 6);
+    setFromDate(toLocalInputDate(weekStart));
+    setToDate(toLocalInputDate(now));
+  }, []);
+
+  useEffect(() => {
     let active = true;
     const checkAccess = async () => {
       setCheckingAccess(true);
@@ -121,7 +122,7 @@ export default function ReportsPage() {
   useEffect(() => {
     let active = true;
     const load = async () => {
-      if (checkingAccess || !reportUnlocked) {
+      if (checkingAccess || !reportUnlocked || !fromDate || !toDate) {
         setLoading(false);
         return;
       }

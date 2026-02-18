@@ -7,12 +7,17 @@ type DeferredInstallPromptEvent = Event & {
 };
 
 export default function StaffLoginPage() {
+  const [mounted, setMounted] = useState(false);
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [installPrompt, setInstallPrompt] =
     useState<DeferredInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -24,6 +29,10 @@ export default function StaffLoginPage() {
     return () =>
       window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   async function login() {
     if (!mobile.trim()) {
