@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Coconut Staff</string>
+    <string name="title_activity_main">Coconut Staff</string>
+    <string name="package_name">com.coconutcrm.staff</string>
+    <string name="custom_url_scheme">com.coconutcrm.staff</string>
+</resources>

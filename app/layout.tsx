@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,16 @@ const coconutMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Coconut CRM",
   description: "Operations dashboard for customer, staff, and task management.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Coconut Staff",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f5f6f1",
 };
 
 export default function RootLayout({

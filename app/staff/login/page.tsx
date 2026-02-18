@@ -1,11 +1,29 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type DeferredInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 export default function StaffLoginPage() {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
+  const [installPrompt, setInstallPrompt] =
+    useState<DeferredInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as DeferredInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    return () =>
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+  }, []);
 
   async function login() {
     if (!mobile.trim()) {
@@ -37,6 +55,18 @@ export default function StaffLoginPage() {
     }
 
     window.location.href = "/staff/tasks";
+  }
+
+  async function installApp() {
+    if (!installPrompt) {
+      return;
+    }
+
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setInstallPrompt(null);
+    }
   }
 
   return (
@@ -93,6 +123,16 @@ export default function StaffLoginPage() {
             >
               {loggingIn ? "Signing in..." : "Sign in"}
             </button>
+
+            {installPrompt && (
+              <button
+                onClick={installApp}
+                className="crm-btn-outline w-full"
+                type="button"
+              >
+                Install Staff App
+              </button>
+            )}
           </div>
 
           <p className="mt-6 text-xs text-[color:var(--muted)]">

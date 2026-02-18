@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+function subscribeToStorage(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
 
 export default function StaffLayout({
   children,
@@ -11,10 +20,20 @@ export default function StaffLayout({
 }) {
   const pathname = usePathname();
   const isLogin = pathname?.startsWith("/staff/login");
-  const [staffName, setStaffName] = useState("");
+  const staffName = useSyncExternalStore(
+    subscribeToStorage,
+    () => localStorage.getItem("staffName") || "",
+    () => ""
+  );
 
   useEffect(() => {
-    setStaffName(localStorage.getItem("staffName") || "");
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch((error) => console.error("Service worker registration failed", error));
   }, []);
 
   if (isLogin) {
