@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
 import { getAuthUser } from "@/lib/authServer";
+import "@/models/Customer";
+import "@/models/Location";
 
 export async function GET(
   req: Request,
@@ -20,6 +22,7 @@ export async function GET(
 
   const tasks = await Task.find({ staff: staffId })
     .populate("customer", "name phone location")
+    .populate("location", "name")
     .sort({ createdAt: -1 });
 
   return NextResponse.json(tasks);

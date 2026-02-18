@@ -36,11 +36,43 @@ export default function StaffTaskHistoryPage() {
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
-    adminFetch(`/api/admin/staff/${staffId}/tasks`)
-      .then((res) => res.json())
+    const normalizedStaffId = Array.isArray(staffId) ? staffId[0] : staffId;
+    if (!normalizedStaffId) return;
+
+    adminFetch(`/api/admin/staff/${normalizedStaffId}/tasks`)
+      .then(async (res) => {
+        const raw = await res.text();
+        let data: unknown = null;
+        if (raw.trim()) {
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            throw new Error("Server returned an invalid response.");
+          }
+        }
+        if (!res.ok) {
+          const errorMessage =
+            data &&
+            typeof data === "object" &&
+            "error" in data &&
+            typeof data.error === "string"
+              ? data.error
+              : "Failed to load tasks.";
+          throw new Error(errorMessage);
+        }
+        return data;
+      })
       .then((data) => {
-        if (!data) return;
+        if (!Array.isArray(data)) {
+          setTasks([]);
+          return;
+        }
         setTasks(data);
+      })
+      .catch((err) => {
+        console.error("Load staff tasks error", err);
+        setNotice(err instanceof Error ? err.message : "Failed to load tasks.");
+        setTasks([]);
       });
   }, [adminFetch, staffId]);
 
