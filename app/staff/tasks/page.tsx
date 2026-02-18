@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Task = {
@@ -22,21 +22,43 @@ export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    async function loadTasks() {
-      const res = await fetch("/api/staff/tasks");
+  const loadTasks = useCallback(async () => {
+    const res = await fetch("/api/staff/tasks", { cache: "no-store" });
 
-      if (res.status === 401) {
-        router.push("/staff/login");
-        return;
-      }
-
-      const data = await res.json();
-      setTasks(Array.isArray(data) ? data : []);
+    if (res.status === 401) {
+      router.push("/staff/login");
+      return;
     }
 
-    loadTasks();
+    const data = await res.json();
+    setTasks(Array.isArray(data) ? data : []);
   }, [router]);
+
+  useEffect(() => {
+    const initialLoadTimeout = window.setTimeout(() => {
+      void loadTasks();
+    }, 0);
+
+    const intervalId = window.setInterval(() => {
+      void loadTasks();
+    }, 15000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void loadTasks();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(initialLoadTimeout);
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [loadTasks]);
 
   async function submitTask(task: Task) {
     const res = await fetch("/api/tasks/update", {
@@ -56,7 +78,7 @@ export default function StaffTasksPage() {
     }
 
     alert("Task completed");
-    setTasks((prev) => prev.filter((item) => item._id !== task._id));
+    await loadTasks();
   }
 
   return (

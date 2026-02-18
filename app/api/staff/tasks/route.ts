@@ -5,6 +5,9 @@ import { getAuthUser } from "@/lib/authServer";
 import "@/models/Customer";
 import "@/models/Location";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   await connectDB();
 
@@ -42,6 +45,13 @@ export async function GET() {
       ratePerTree: t.ratePerTree,
       totalAmount: t.totalAmount,
       status: t.status,
-    }))
+    })),
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
   );
 }
