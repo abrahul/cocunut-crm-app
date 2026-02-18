@@ -225,7 +225,7 @@ export default function LocationsPage() {
             <button
               type="button"
               className="crm-btn-outline"
-              onClick={cancelEdit}
+              onClick={() => cancelEdit()}
             >
               Cancel
             </button>
