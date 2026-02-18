@@ -7,7 +7,6 @@ const config: CapacitorConfig = {
   appId: "com.coconutcrm.staff",
   appName: "Coconut Staff",
   webDir: "out",
-  bundledWebRuntime: false,
   server: {
     url: serverUrl,
     cleartext: serverUrl.startsWith("http://"),

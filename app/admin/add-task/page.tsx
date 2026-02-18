@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
@@ -28,7 +28,7 @@ type Staff = {
   isActive?: boolean;
 };
 
-export default function AddTaskPage() {
+function AddTaskPageContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const { adminFetch } = useAdminAuth();
@@ -637,5 +637,13 @@ export default function AddTaskPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function AddTaskPage() {
+  return (
+    <Suspense fallback={<div className="space-y-6">Loading...</div>}>
+      <AddTaskPageContent />
+    </Suspense>
   );
 }

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     if (!auth || auth.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const reportUnlock = await getReportUnlock(auth.adminId);
+    const reportUnlock = await getReportUnlock(auth.staffId);
     if (!reportUnlock || reportUnlock.scope !== "reports") {
       return NextResponse.json(
         { error: "Reports locked" },

@@ -17,9 +17,18 @@ export async function getAuthUser() {
   if (!token) return null;
 
   try {
-    return jwt.verify(token, getJwtSecret()) as {
-      staffId: string;
+    const payload = jwt.verify(token, getJwtSecret()) as {
+      staffId?: string;
+      adminId?: string;
       role: "staff" | "admin";
+    };
+
+    const staffId = payload.staffId ?? payload.adminId;
+    if (!staffId) return null;
+
+    return {
+      staffId,
+      role: payload.role,
     };
   } catch {
     return null;

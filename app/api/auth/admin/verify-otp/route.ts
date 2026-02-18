@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
     const token = jwt.sign(
       {
-        adminId: admin._id,
+        staffId: admin._id,
         role: "admin",
       },
       JWT_SECRET,

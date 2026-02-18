@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const reportUnlock = await getReportUnlock(auth.adminId);
+  const reportUnlock = await getReportUnlock(auth.staffId);
   return NextResponse.json({ unlocked: !!reportUnlock });
 }
 
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const maxAge = getReportsUnlockSeconds();
     const token = jwt.sign(
       {
-        adminId: auth.adminId,
+        adminId: auth.staffId,
         role: "admin",
         scope: "reports",
       },
