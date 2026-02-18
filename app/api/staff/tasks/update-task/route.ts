@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Task from "@/models/Task";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/authServer";
 
 export async function PATCH(req: Request) {
   try {
     await connectDB();
 
-    const session = await getServerSession(authOptions);
+    const auth = await getAuthUser();
 
-    if (!session || !session.user) {
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -22,8 +21,8 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    const isAdmin = session.user.role === "admin";
-    const isStaffOwner = task.staff.toString() === session.user.id;
+    const isAdmin = auth.role === "admin";
+    const isStaffOwner = task.staff.toString() === auth.staffId;
 
     // ❌ Staff cannot edit others' tasks
     if (!isAdmin && !isStaffOwner) {
