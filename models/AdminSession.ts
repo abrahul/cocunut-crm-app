@@ -1,4 +1,5 @@
 import mongoose, { Schema, models } from "mongoose";
+import "./Admin";
 
 const AdminSessionSchema = new Schema(
   {
