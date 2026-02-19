@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { getJwtSecret } from "@/lib/authServer";
 const STAFF_SESSION_SECONDS = 10 * 60;
-const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
+const ADMIN_SESSION_SECONDS = 10 * 60;
 
 export async function POST() {
   const cookieStore = await cookies();

@@ -4,7 +4,7 @@ import Admin from "@/models/Admin";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
+const ADMIN_SESSION_SECONDS = 10 * 60;
 
 export async function POST(req: Request) {
   try {

@@ -5,7 +5,7 @@ import Admin from "@/models/Admin";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
+const ADMIN_SESSION_SECONDS = 10 * 60;
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
