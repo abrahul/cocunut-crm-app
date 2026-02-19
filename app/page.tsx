@@ -18,9 +18,6 @@ export default function Home() {
                 <a href="/admin/login" className="crm-btn-primary">
                   Admin Login
                 </a>
-                <a href="/staff/login" className="crm-btn-outline">
-                  Staff Login
-                </a>
               </div>
             </div>
 

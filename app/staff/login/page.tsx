@@ -1,23 +1,50 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+function subscribeToAppMode(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const media = window.matchMedia("(display-mode: standalone)");
+  const listener = () => onStoreChange();
+  media.addEventListener("change", listener);
+
+  return () => media.removeEventListener("change", listener);
+}
+
+function getAppModeSnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+  };
+  const standalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ((navigator as Navigator & { standalone?: boolean }).standalone ?? false);
+
+  return (w.Capacitor?.isNativePlatform?.() ?? false) || standalone;
+}
+
 export default function StaffLoginPage() {
-  const [mounted, setMounted] = useState(false);
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [installPrompt, setInstallPrompt] =
     useState<DeferredInstallPromptEvent | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isMobileApp = useSyncExternalStore(
+    subscribeToAppMode,
+    getAppModeSnapshot,
+    () => false
+  );
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -29,10 +56,6 @@ export default function StaffLoginPage() {
     return () =>
       window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
   }, []);
-
-  if (!mounted) {
-    return null;
-  }
 
   async function login() {
     if (!mobile.trim()) {
@@ -90,6 +113,12 @@ export default function StaffLoginPage() {
             Sign in using the mobile number registered by your admin.
           </p>
 
+          {!isMobileApp && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              Staff login is available only in the Coconut Staff mobile app.
+            </div>
+          )}
+
           <div className="mt-6 space-y-4">
             <label className="block">
               <span className="crm-label crm-label-required">Mobile number</span>
@@ -97,6 +126,7 @@ export default function StaffLoginPage() {
                 className="crm-input mt-2"
                 placeholder="e.g. 5551234567"
                 required
+                disabled={!isMobileApp}
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 inputMode="numeric"
@@ -110,6 +140,7 @@ export default function StaffLoginPage() {
                 className="crm-input mt-2"
                 placeholder="Enter password"
                 required
+                disabled={!isMobileApp}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
@@ -127,7 +158,7 @@ export default function StaffLoginPage() {
           <div className="mt-6 space-y-3">
             <button
               onClick={login}
-              disabled={loggingIn}
+              disabled={loggingIn || !isMobileApp}
               className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loggingIn ? "Signing in..." : "Sign in"}
