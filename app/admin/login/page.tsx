@@ -7,6 +7,9 @@ export default function AdminLoginPage() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordLoginLoading, setPasswordLoginLoading] = useState(false);
   const [error, setError] = useState("");
 
   function startCooldown(seconds: number) {
@@ -63,6 +66,40 @@ export default function AdminLoginPage() {
     } catch {}
 
     window.location.href = "/admin/";
+  }
+
+  async function loginWithoutOtp() {
+    setError("");
+
+    if (!username.trim() || !password.trim()) {
+      setError("Username and password are required");
+      return;
+    }
+
+    setPasswordLoginLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/admin/password-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+        return;
+      }
+
+      try {
+        localStorage.setItem("adminLastActivityAt", Date.now().toString());
+      } catch {}
+
+      window.location.href = "/admin/";
+    } finally {
+      setPasswordLoginLoading(false);
+    }
   }
 
   return (
@@ -132,6 +169,47 @@ export default function AdminLoginPage() {
                 </button>
               </>
             )}
+          </div>
+
+          <div className="my-7 h-px w-full bg-[color:var(--border)]" />
+
+          <div className="space-y-4">
+            <p className="text-sm font-semibold text-[color:var(--ink)]">
+              Login without OTP
+            </p>
+
+            <label className="block">
+              <span className="crm-label crm-label-required">Username</span>
+              <input
+                placeholder="Enter username"
+                value={username}
+                required
+                onChange={(e) => setUsername(e.target.value)}
+                className="crm-input mt-2"
+                autoComplete="username"
+              />
+            </label>
+
+            <label className="block">
+              <span className="crm-label crm-label-required">Password</span>
+              <input
+                placeholder="Enter password"
+                value={password}
+                required
+                onChange={(e) => setPassword(e.target.value)}
+                className="crm-input mt-2"
+                type="password"
+                autoComplete="current-password"
+              />
+            </label>
+
+            <button
+              onClick={loginWithoutOtp}
+              disabled={passwordLoginLoading}
+              className="crm-btn-outline w-full disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {passwordLoginLoading ? "Signing in..." : "Login without OTP"}
+            </button>
           </div>
         </div>
       </div>
