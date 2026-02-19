@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { getAuthUser, getJwtSecret } from "@/lib/authServer";
 import {
   getReportUnlock,
-  getReportsUnlockSeconds,
   REPORTS_UNLOCK_COOKIE,
 } from "@/lib/reportAuth";
 
@@ -41,24 +40,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const maxAge = getReportsUnlockSeconds();
     const token = jwt.sign(
       {
         adminId: auth.staffId,
         role: "admin",
         scope: "reports",
       },
-      getJwtSecret(),
-      { expiresIn: maxAge }
+      getJwtSecret()
     );
 
-    const response = NextResponse.json({ success: true, expiresIn: maxAge });
+    const response = NextResponse.json({ success: true });
     response.cookies.set(REPORTS_UNLOCK_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge,
     });
 
     return response;
