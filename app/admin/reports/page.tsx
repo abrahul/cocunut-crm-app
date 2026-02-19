@@ -99,6 +99,21 @@ export default function ReportsPage() {
   const [lockingReports, setLockingReports] = useState(false);
   const { adminFetch } = useAdminAuth();
 
+  const readErrorMessage = async (
+    response: Response,
+    fallback: string
+  ): Promise<string> => {
+    try {
+      const data = await response.json();
+      if (typeof data?.error === "string" && data.error.trim()) {
+        return data.error;
+      }
+    } catch {
+      // Ignore parse errors and use fallback.
+    }
+    return fallback;
+  };
+
   useEffect(() => {
     const now = new Date();
     const weekStart = new Date(now);
@@ -156,7 +171,20 @@ export default function ReportsPage() {
         ]);
 
         if (!dailyRes.ok || !staffRes.ok) {
-          throw new Error("Failed to load report");
+          const firstFailed = !dailyRes.ok ? dailyRes : staffRes;
+          if (firstFailed.status === 403) {
+            setReportUnlocked(false);
+            setAccessError("Reports access expired. Enter password again.");
+            return;
+          }
+          if (firstFailed.status === 401) {
+            throw new Error("Admin session expired. Please log in again.");
+          }
+          const message = await readErrorMessage(
+            firstFailed,
+            "Failed to load report"
+          );
+          throw new Error(message);
         }
 
         const [dailyResult, staffResult] = await Promise.all([
