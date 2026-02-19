@@ -47,11 +47,16 @@ export default function AdminLoginPage() {
 
   async function verifyOtp() {
     setError("");
+    const sessionName = window.prompt("Enter session name");
+    if (!sessionName || !sessionName.trim()) {
+      setError("Session name is required");
+      return;
+    }
 
     const res = await fetch("/api/auth/admin/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, otp }),
+      body: JSON.stringify({ mobile, otp, sessionName: sessionName.trim() }),
     });
 
     const data = await res.json();
@@ -79,10 +84,20 @@ export default function AdminLoginPage() {
     setPasswordLoginLoading(true);
 
     try {
+      const sessionName = window.prompt("Enter session name");
+      if (!sessionName || !sessionName.trim()) {
+        setError("Session name is required");
+        return;
+      }
+
       const res = await fetch("/api/auth/admin/password-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username,
+          password,
+          sessionName: sessionName.trim(),
+        }),
       });
 
       const data = await res.json();

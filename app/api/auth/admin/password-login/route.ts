@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectDB } from "@/lib/db";
 import Admin from "@/models/Admin";
+import AdminSession from "@/models/AdminSession";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
@@ -13,11 +14,17 @@ function escapeRegex(value: string) {
 
 export async function POST(req: Request) {
   try {
-    const { username, password } = await req.json();
+    const { username, password, sessionName } = await req.json();
 
     if (!username || !password) {
       return NextResponse.json(
         { error: "Username and password required" },
+        { status: 400 }
+      );
+    }
+    if (!sessionName || !String(sessionName).trim()) {
+      return NextResponse.json(
+        { error: "Session name is required" },
         { status: 400 }
       );
     }
@@ -58,10 +65,17 @@ export async function POST(req: Request) {
     }
 
     const adminId = String(admin._id);
+    const session = await AdminSession.create({
+      admin: admin._id,
+      sessionName: String(sessionName).trim(),
+      loginAt: new Date(),
+      lastActivityAt: new Date(),
+    });
     const token = jwt.sign(
       {
         staffId: adminId,
         adminId,
+        sessionId: String(session._id),
         role: "admin",
       },
       JWT_SECRET,

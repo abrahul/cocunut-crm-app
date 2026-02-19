@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Admin from "@/models/Admin";
+import AdminSession from "@/models/AdminSession";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
@@ -8,11 +9,17 @@ const ADMIN_SESSION_SECONDS = 10 * 60;
 
 export async function POST(req: Request) {
   try {
-    const { mobile, otp } = await req.json();
+    const { mobile, otp, sessionName } = await req.json();
 
     if (!mobile || !otp) {
       return NextResponse.json(
         { error: "Mobile and OTP required" },
+        { status: 400 }
+      );
+    }
+    if (!sessionName || !String(sessionName).trim()) {
+      return NextResponse.json(
+        { error: "Session name is required" },
         { status: 400 }
       );
     }
@@ -52,9 +59,18 @@ export async function POST(req: Request) {
     admin.otpAttempts = 0;
     await admin.save();
 
+    const session = await AdminSession.create({
+      admin: admin._id,
+      sessionName: String(sessionName).trim(),
+      loginAt: new Date(),
+      lastActivityAt: new Date(),
+    });
+
     const token = jwt.sign(
       {
         staffId: admin._id,
+        adminId: admin._id,
+        sessionId: String(session._id),
         role: "admin",
       },
       JWT_SECRET,

@@ -20,6 +20,16 @@ type Summary = {
   totalRevenue: number;
 };
 
+type AdminSessionRow = {
+  id: string;
+  sessionName: string;
+  adminName: string;
+  date: string | null;
+  loginAt: string | null;
+  logoutAt: string | null;
+  logoutReason: "manual" | "timeout" | null;
+};
+
 type Option = {
   _id: string;
   name: string;
@@ -71,6 +81,7 @@ export default function ReportsPage() {
   const [staffPerformance, setStaffPerformance] = useState<StaffPerformance[]>(
     []
   );
+  const [adminSessions, setAdminSessions] = useState<AdminSessionRow[]>([]);
   const [staffOptions, setStaffOptions] = useState<Option[]>([]);
   const [locationOptions, setLocationOptions] = useState<Option[]>([]);
   const [staffFilter, setStaffFilter] = useState<string>("all");
@@ -165,6 +176,11 @@ export default function ReportsPage() {
           }
         );
         setStaffPerformance(Array.isArray(staffResult) ? staffResult : []);
+        setAdminSessions(
+          Array.isArray(dailyResult?.adminSessions)
+            ? dailyResult.adminSessions
+            : []
+        );
       } catch (err: any) {
         if (!active) return;
         setNotice(err?.message || "Report load failed.");
@@ -177,6 +193,7 @@ export default function ReportsPage() {
           totalRevenue: 0,
         });
         setStaffPerformance([]);
+        setAdminSessions([]);
       } finally {
         if (active) setLoading(false);
       }
@@ -516,6 +533,66 @@ export default function ReportsPage() {
               </table>
             </div>
           )}
+
+          <div className="mt-8 space-y-4">
+            <div>
+              <p className="crm-pill">Sessions</p>
+              <h2 className="mt-3 text-2xl font-semibold text-[color:var(--ink)]">
+                Admin Login Sessions
+              </h2>
+            </div>
+
+            {adminSessions.length === 0 ? (
+              <div className="crm-card">
+                <p className="text-sm text-[color:var(--muted)]">
+                  No admin sessions for this range.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+                <table className="crm-table">
+                  <thead className="bg-white/70">
+                    <tr>
+                      <th className="crm-th">Date</th>
+                      <th className="crm-th">Admin</th>
+                      <th className="crm-th">Session Name</th>
+                      <th className="crm-th">Login</th>
+                      <th className="crm-th">Logout</th>
+                      <th className="crm-th">Type</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--border)]">
+                    {adminSessions.map((row) => (
+                      <tr key={row.id} className="hover:bg-white/70">
+                        <td className="crm-td">
+                          {row.date ? new Date(row.date).toLocaleDateString() : "-"}
+                        </td>
+                        <td className="crm-td">{row.adminName || "-"}</td>
+                        <td className="crm-td">{row.sessionName || "-"}</td>
+                        <td className="crm-td">
+                          {row.loginAt
+                            ? new Date(row.loginAt).toLocaleString()
+                            : "-"}
+                        </td>
+                        <td className="crm-td">
+                          {row.logoutAt
+                            ? new Date(row.logoutAt).toLocaleString()
+                            : "Active"}
+                        </td>
+                        <td className="crm-td">
+                          {row.logoutReason === "timeout"
+                            ? "Timeout"
+                            : row.logoutReason === "manual"
+                            ? "Manual"
+                            : "Active"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           <div className="mt-8 space-y-4">
             <div>
