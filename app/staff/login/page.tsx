@@ -6,6 +6,13 @@ type DeferredInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+type NavigatorWithUAData = Navigator & {
+  userAgentData?: {
+    mobile?: boolean;
+  };
+  standalone?: boolean;
+};
+
 function subscribeToAppMode(onStoreChange: () => void) {
   if (typeof window === "undefined") {
     return () => {};
@@ -26,11 +33,20 @@ function getAppModeSnapshot() {
   const w = window as Window & {
     Capacitor?: { isNativePlatform?: () => boolean };
   };
-  const standalone =
+  const nav = navigator as NavigatorWithUAData;
+  const ua = nav.userAgent || "";
+  const isStandalone =
     window.matchMedia("(display-mode: standalone)").matches ||
-    ((navigator as Navigator & { standalone?: boolean }).standalone ?? false);
+    (nav.standalone ?? false);
 
-  return (w.Capacitor?.isNativePlatform?.() ?? false) || standalone;
+  const isCapacitorNative = w.Capacitor?.isNativePlatform?.() ?? false;
+  const isIpadDesktopUA = /Macintosh/i.test(ua) && nav.maxTouchPoints > 1;
+  const isMobileUA =
+    /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || isIpadDesktopUA;
+  const isMobileByUAData = nav.userAgentData?.mobile === true;
+  const isLikelyMobileDevice = isMobileByUAData || isMobileUA;
+
+  return isCapacitorNative || (isStandalone && isLikelyMobileDevice);
 }
 
 export default function StaffLoginPage() {
