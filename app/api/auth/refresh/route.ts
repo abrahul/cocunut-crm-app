@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { getJwtSecret } from "@/lib/authServer";
+import { connectDB } from "@/lib/db";
+import AdminSession from "@/models/AdminSession";
 const STAFF_SESSION_SECONDS = 10 * 60;
-const ADMIN_SESSION_SECONDS = 60 * 60 * 24;
+const ADMIN_SESSION_SECONDS = 10 * 60;
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -16,6 +18,7 @@ export async function POST() {
     const payload = jwt.verify(token, getJwtSecret()) as {
       staffId?: string;
       adminId?: string;
+      sessionId?: string;
       role: "staff" | "admin";
       iat?: number;
       exp?: number;
@@ -27,6 +30,14 @@ export async function POST() {
 
     const newToken = jwt.sign(claims, getJwtSecret(), { expiresIn: sessionSeconds });
     const res = NextResponse.json({ success: true });
+
+    if (payload.role === "admin" && payload.sessionId) {
+      await connectDB();
+      await AdminSession.updateOne(
+        { _id: payload.sessionId, logoutAt: null },
+        { $set: { lastActivityAt: new Date() } }
+      );
+    }
 
     res.cookies.set("auth_token", newToken, {
       httpOnly: true,

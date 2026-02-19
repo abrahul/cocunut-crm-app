@@ -20,6 +20,7 @@ export async function getAuthUser() {
     const payload = jwt.verify(token, getJwtSecret()) as {
       staffId?: string;
       adminId?: string;
+      sessionId?: string;
       role: "staff" | "admin";
     };
 
@@ -28,6 +29,7 @@ export async function getAuthUser() {
 
     return {
       staffId,
+      sessionId: payload.sessionId,
       role: payload.role,
     };
   } catch {

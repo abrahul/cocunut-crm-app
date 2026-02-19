@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const SESSION_TIMEOUT_MS = 86_400_000;
+const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 const REFRESH_THROTTLE_MS = 20_000;
 
 const navItems = [
@@ -37,13 +37,17 @@ export default function AdminLayout({
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let lastRefreshAt = 0;
 
-    const logout = async () => {
+    const logout = async (reason: "manual" | "timeout") => {
       try {
         localStorage.removeItem("adminLastActivityAt");
       } catch {}
 
       try {
-        await fetch("/api/auth/logout", { method: "POST" });
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason }),
+        });
       } catch {}
 
       window.location.href = "/admin/login";
@@ -54,11 +58,11 @@ export default function AdminLayout({
       const lastActivity = Number(localStorage.getItem("adminLastActivityAt"));
       const remaining = SESSION_TIMEOUT_MS - (Date.now() - lastActivity);
       if (remaining <= 0) {
-        void logout();
+        void logout("timeout");
         return;
       }
       timeoutId = setTimeout(() => {
-        void logout();
+        void logout("timeout");
       }, remaining);
     };
 
@@ -98,6 +102,22 @@ export default function AdminLayout({
       document.removeEventListener("visibilitychange", touchActivity);
     };
   }, [isAuthRoute]);
+
+  async function logoutAdmin() {
+    try {
+      localStorage.removeItem("adminLastActivityAt");
+    } catch {}
+
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "manual" }),
+      });
+    } catch {}
+
+    window.location.href = "/admin/login";
+  }
 
   if (isAuthRoute) {
     return <>{children}</>;
@@ -170,6 +190,9 @@ export default function AdminLayout({
                     {item.label}
                   </Link>
                 ))}
+                <button onClick={logoutAdmin} className="crm-btn-outline">
+                  Logout
+                </button>
               </div>
             </div>
             <div className="lg:hidden">
@@ -190,6 +213,9 @@ export default function AdminLayout({
                     </Link>
                   );
                 })}
+                <button onClick={logoutAdmin} className="crm-btn-outline whitespace-nowrap">
+                  Logout
+                </button>
               </div>
             </div>
           </header>
