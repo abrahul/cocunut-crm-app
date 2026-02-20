@@ -14,6 +14,11 @@ export class EmailDeliveryError extends Error {
   }
 }
 
+function parseBool(value: string | undefined, defaultValue: boolean) {
+  if (!value) return defaultValue;
+  return value.toLowerCase() === "true";
+}
+
 export async function sendOtpEmail({ to, otp }: SendOtpEmailParams) {
   const user = process.env.GMAIL_SMTP_USER;
   const pass = process.env.GMAIL_SMTP_APP_PASSWORD;
@@ -28,14 +33,38 @@ export async function sendOtpEmail({ to, otp }: SendOtpEmailParams) {
   const senderName = process.env.GMAIL_SMTP_SENDER_NAME || "Coconut CRM";
   const fromEmail = process.env.GMAIL_SMTP_FROM_EMAIL || user;
   const appName = process.env.APP_NAME || "Coconut CRM";
+  const host = process.env.GMAIL_SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.GMAIL_SMTP_PORT || 465);
+  const secure = parseBool(process.env.GMAIL_SMTP_SECURE, true);
+  const rejectUnauthorized = parseBool(
+    process.env.GMAIL_SMTP_TLS_REJECT_UNAUTHORIZED,
+    true
+  );
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!user.includes("@")) {
+    throw new EmailDeliveryError("GMAIL_SMTP_USER must be a valid email address", 500);
+  }
+  if (!fromEmail.includes("@")) {
+    throw new EmailDeliveryError("GMAIL_SMTP_FROM_EMAIL must be a valid email address", 500);
+  }
+  if (isProduction && !rejectUnauthorized) {
+    throw new EmailDeliveryError(
+      "In production, GMAIL_SMTP_TLS_REJECT_UNAUTHORIZED must be true",
+      500
+    );
+  }
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    host,
+    port,
+    secure,
     auth: {
       user,
       pass,
+    },
+    tls: {
+      rejectUnauthorized,
     },
   });
 
