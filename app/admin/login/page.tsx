@@ -15,6 +15,9 @@ export default function AdminLoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [resetOtpSent, setResetOtpSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetNotice, setResetNotice] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
   const [error, setError] = useState("");
 
   function startCooldown(seconds: number) {
@@ -123,9 +126,11 @@ export default function AdminLoginPage() {
   }
 
   async function sendPasswordResetOtp() {
-    setError("");
+    setResetError("");
+    setResetSuccess("");
+    setResetNotice("");
     if (!resetIdentifier.trim()) {
-      setError("Enter username or mobile for password reset");
+      setResetError("Enter username or mobile for password reset");
       return;
     }
 
@@ -138,19 +143,23 @@ export default function AdminLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to send reset OTP");
+        setResetError(data.error || "Failed to send reset OTP");
         return;
       }
       setResetOtpSent(true);
+      setResetNotice(data.message || "Reset OTP sent to your recovery email");
+    } catch {
+      setResetError("Unable to send OTP right now. Please try again.");
     } finally {
       setResetLoading(false);
     }
   }
 
   async function confirmPasswordReset() {
-    setError("");
+    setResetError("");
+    setResetSuccess("");
     if (!resetIdentifier.trim() || !resetOtp.trim() || !newPassword.trim()) {
-      setError("Username/mobile, OTP and new password are required");
+      setResetError("Username/mobile, OTP and new password are required");
       return;
     }
 
@@ -167,13 +176,17 @@ export default function AdminLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Password reset failed");
+        setResetError(data.error || "Password reset failed");
         return;
       }
 
+      setResetSuccess(data.message || "Password reset successful. You can log in with your new password.");
+      setResetNotice("");
       setResetOtp("");
       setNewPassword("");
       setResetOtpSent(false);
+    } catch {
+      setResetError("Unable to reset password right now. Please try again.");
     } finally {
       setResetLoading(false);
     }
@@ -291,17 +304,41 @@ export default function AdminLoginPage() {
 
           <div className="my-7 h-px w-full bg-[color:var(--border)]" />
 
-          <div className="space-y-4">
+          <div className="space-y-4 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
             <p className="text-sm font-semibold text-[color:var(--ink)]">
               Forgot password (Email OTP)
             </p>
+            <p className="text-xs text-[color:var(--muted)]">
+              Step 1: send OTP to your registered recovery email. Step 2: enter OTP and set a new password.
+            </p>
+
+            {resetError && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {resetError}
+              </div>
+            )}
+
+            {resetNotice && !resetSuccess && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                {resetNotice}
+              </div>
+            )}
+
+            {resetSuccess && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {resetSuccess}
+              </div>
+            )}
 
             <label className="block">
               <span className="crm-label crm-label-required">Username or mobile</span>
               <input
                 placeholder="Enter username or mobile"
                 value={resetIdentifier}
-                onChange={(e) => setResetIdentifier(e.target.value)}
+                onChange={(e) => {
+                  setResetIdentifier(e.target.value);
+                  setResetError("");
+                }}
                 className="crm-input mt-2"
               />
             </label>
@@ -323,7 +360,10 @@ export default function AdminLoginPage() {
                   <input
                     placeholder="Enter OTP"
                     value={resetOtp}
-                    onChange={(e) => setResetOtp(e.target.value)}
+                    onChange={(e) => {
+                      setResetOtp(e.target.value);
+                      setResetError("");
+                    }}
                     className="crm-input mt-2"
                   />
                 </label>
@@ -333,7 +373,10 @@ export default function AdminLoginPage() {
                   <input
                     placeholder="Enter new password"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setResetError("");
+                    }}
                     className="crm-input mt-2"
                     type="password"
                   />
