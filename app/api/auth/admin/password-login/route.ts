@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { connectDB } from "@/lib/db";
 import Admin from "@/models/Admin";
 import AdminSession from "@/models/AdminSession";
-import { hashPassword, verifyPassword } from "@/lib/password";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 const ADMIN_SESSION_SECONDS = 10 * 60;
@@ -39,29 +38,17 @@ export async function POST(req: Request) {
         { username: { $regex: `^${escapeRegex(normalizedUsername)}$`, $options: "i" } },
         { mobile: normalizedUsername },
       ],
-    }).select("+password +passwordHash +passwordSalt");
+    }).select("+password");
 
     if (!admin) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const hashedOk = verifyPassword(
-      normalizedPassword,
-      admin.passwordSalt,
-      admin.passwordHash
-    );
-
-    // Backward-compatible path: allow existing plain-text admins once, then migrate to hash+salt.
-    if (!hashedOk) {
-      if (!admin.password || String(admin.password) !== normalizedPassword) {
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-      }
-
-      const { hash, salt } = hashPassword(normalizedPassword);
-      admin.passwordHash = hash;
-      admin.passwordSalt = salt;
-      admin.password = undefined;
-      await admin.save();
+    if (
+      typeof admin.password !== "string" ||
+      admin.password !== normalizedPassword
+    ) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     const adminId = String(admin._id);
@@ -92,8 +79,9 @@ export async function POST(req: Request) {
     });
 
     return response;
-  } catch (err: any) {
-    console.error("Admin password login error:", err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Admin password login error:", message);
     return NextResponse.json(
       { error: "Password login failed" },
       { status: 500 }
