@@ -10,6 +10,10 @@ const AdminSchema = new Schema(
     otpSessionId: String,
     otpAttempts: { type: Number, default: 0 },
     otpLastSentAt: Date,
+    passwordResetOtpHash: { type: String, select: false },
+    passwordResetOtpExpiresAt: Date,
+    passwordResetOtpAttempts: { type: Number, default: 0 },
+    passwordResetOtpLastSentAt: Date,
   },
   { timestamps: true }
 );
