@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const { username } = await req.json();
     if (!username || !String(username).trim()) {
       return NextResponse.json(
-        { error: "Username or mobile is required" },
+        { error: "Username is required" },
         { status: 400 }
       );
     }
@@ -29,10 +29,7 @@ export async function POST(req: Request) {
 
     const normalized = String(username).trim();
     const admin = await Admin.findOne({
-      $or: [
-        { username: { $regex: `^${escapeRegex(normalized)}$`, $options: "i" } },
-        { mobile: normalized },
-      ],
+      username: { $regex: `^${escapeRegex(normalized)}$`, $options: "i" },
     }).select(
       "+passwordResetOtpHash passwordResetOtpLastSentAt passwordResetOtpAttempts"
     );

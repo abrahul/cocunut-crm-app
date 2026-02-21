@@ -3,14 +3,10 @@
 import { useState } from "react";
 
 export default function AdminLoginPage() {
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordLoginLoading, setPasswordLoginLoading] = useState(false);
-  const [resetIdentifier, setResetIdentifier] = useState("");
+  const [resetUsername, setResetUsername] = useState("");
   const [resetOtp, setResetOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [resetOtpSent, setResetOtpSent] = useState(false);
@@ -20,68 +16,7 @@ export default function AdminLoginPage() {
   const [resetSuccess, setResetSuccess] = useState("");
   const [error, setError] = useState("");
 
-  function startCooldown(seconds: number) {
-    setCooldown(seconds);
-    const interval = setInterval(() => {
-      setCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }
-
-  async function sendOtp() {
-    setError("");
-
-    const res = await fetch("/api/auth/admin/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Login failed");
-      return;
-    }
-
-    setOtpSent(true);
-    startCooldown(60);
-  }
-
-  async function verifyOtp() {
-    setError("");
-    const sessionName = window.prompt("Enter session name");
-    if (!sessionName || !sessionName.trim()) {
-      setError("Session name is required");
-      return;
-    }
-
-    const res = await fetch("/api/auth/admin/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, otp, sessionName: sessionName.trim() }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "OTP verification failed");
-      return;
-    }
-
-    try {
-      localStorage.setItem("adminLastActivityAt", Date.now().toString());
-    } catch {}
-
-    window.location.href = "/admin/";
-  }
-
-  async function loginWithoutOtp() {
+  async function login() {
     setError("");
 
     if (!username.trim() || !password.trim()) {
@@ -129,8 +64,8 @@ export default function AdminLoginPage() {
     setResetError("");
     setResetSuccess("");
     setResetNotice("");
-    if (!resetIdentifier.trim()) {
-      setResetError("Enter username or mobile for password reset");
+    if (!resetUsername.trim()) {
+      setResetError("Enter username for password reset");
       return;
     }
 
@@ -139,7 +74,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/admin/password-reset/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: resetIdentifier.trim() }),
+        body: JSON.stringify({ username: resetUsername.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -158,8 +93,8 @@ export default function AdminLoginPage() {
   async function confirmPasswordReset() {
     setResetError("");
     setResetSuccess("");
-    if (!resetIdentifier.trim() || !resetOtp.trim() || !newPassword.trim()) {
-      setResetError("Username/mobile, OTP and new password are required");
+    if (!resetUsername.trim() || !resetOtp.trim() || !newPassword.trim()) {
+      setResetError("Username, OTP and new password are required");
       return;
     }
 
@@ -169,7 +104,7 @@ export default function AdminLoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: resetIdentifier.trim(),
+          username: resetUsername.trim(),
           otp: resetOtp.trim(),
           newPassword: newPassword.trim(),
         }),
@@ -201,7 +136,7 @@ export default function AdminLoginPage() {
             Admin Login
           </h1>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Enter your mobile number to receive a one-time password.
+            Sign in with your username and password.
           </p>
 
           {error && (
@@ -211,63 +146,6 @@ export default function AdminLoginPage() {
           )}
 
           <div className="mt-6 space-y-4">
-            <label className="block">
-              <span className="crm-label crm-label-required">Mobile number</span>
-              <input
-                placeholder="Enter mobile"
-                value={mobile}
-                required
-                onChange={(e) => setMobile(e.target.value)}
-                className="crm-input mt-2"
-              />
-            </label>
-
-            {!otpSent && (
-              <button
-                onClick={sendOtp}
-                disabled={cooldown > 0}
-                className="crm-btn-primary w-full disabled:opacity-60"
-              >
-                {cooldown > 0 ? `Resend in ${cooldown}s` : "Send OTP"}
-              </button>
-            )}
-
-            {otpSent && (
-              <>
-                <label className="block">
-                  <span className="crm-label crm-label-required">OTP</span>
-                  <input
-                    placeholder="Enter OTP"
-                    value={otp}
-                    required
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="crm-input mt-2"
-                  />
-                </label>
-                <button
-                  onClick={verifyOtp}
-                  className="crm-btn-primary w-full"
-                >
-                  Verify OTP
-                </button>
-                <button
-                  onClick={sendOtp}
-                  disabled={cooldown > 0}
-                  className="crm-btn-ghost w-full text-sm disabled:opacity-60"
-                >
-                  {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="my-7 h-px w-full bg-[color:var(--border)]" />
-
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-[color:var(--ink)]">
-              Login without OTP
-            </p>
-
             <label className="block">
               <span className="crm-label crm-label-required">Username</span>
               <input
@@ -294,11 +172,11 @@ export default function AdminLoginPage() {
             </label>
 
             <button
-              onClick={loginWithoutOtp}
+              onClick={login}
               disabled={passwordLoginLoading}
               className="crm-btn-outline w-full disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {passwordLoginLoading ? "Signing in..." : "Login without OTP"}
+              {passwordLoginLoading ? "Signing in..." : "Login"}
             </button>
           </div>
 
@@ -331,12 +209,12 @@ export default function AdminLoginPage() {
             )}
 
             <label className="block">
-              <span className="crm-label crm-label-required">Username or mobile</span>
+              <span className="crm-label crm-label-required">Username</span>
               <input
-                placeholder="Enter username or mobile"
-                value={resetIdentifier}
+                placeholder="Enter username"
+                value={resetUsername}
                 onChange={(e) => {
-                  setResetIdentifier(e.target.value);
+                  setResetUsername(e.target.value);
                   setResetError("");
                 }}
                 className="crm-input mt-2"
