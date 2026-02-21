@@ -8,7 +8,7 @@ import {
 } from "@/lib/adminPasswordReset";
 import { EmailDeliveryError, sendOtpEmail } from "@/lib/emailOtp";
 
-const RESET_EMAIL = process.env.ADMIN_PASSWORD_RESET_EMAIL || "abrahul100@gmail.com";
+const RESET_EMAIL = process.env.ADMIN_PASSWORD_RESET_EMAIL;
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 
 function escapeRegex(value: string) {
