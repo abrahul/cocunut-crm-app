@@ -8,15 +8,23 @@ import {
 } from "@/lib/adminPasswordReset";
 import { EmailDeliveryError, sendOtpEmail } from "@/lib/emailOtp";
 
-const RESET_EMAIL = process.env.ADMIN_PASSWORD_RESET_EMAIL;
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function getResetEmail() {
+  const email = process.env.ADMIN_PASSWORD_RESET_EMAIL?.trim();
+  if (!email) {
+    throw new Error("ADMIN_PASSWORD_RESET_EMAIL is not configured");
+  }
+  return email;
+}
+
 export async function POST(req: Request) {
   try {
+    const resetEmail = getResetEmail();
     const { username } = await req.json();
     if (!username || !String(username).trim()) {
       return NextResponse.json(
@@ -49,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     const otp = generateNumericOtp();
-    await sendOtpEmail({ to: RESET_EMAIL, otp });
+    await sendOtpEmail({ to: resetEmail, otp });
 
     admin.passwordResetOtpHash = hashOtp(otp);
     admin.passwordResetOtpExpiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MS);
@@ -59,7 +67,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `OTP sent to ${RESET_EMAIL}`,
+      message: `OTP sent to ${resetEmail}`,
     });
   } catch (err: unknown) {
     if (err instanceof EmailDeliveryError) {
