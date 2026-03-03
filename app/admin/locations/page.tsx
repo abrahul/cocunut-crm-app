@@ -26,6 +26,16 @@ const emptyForm: EditForm = {
   defaultRate: "",
 };
 
+const formatCoordinate = (
+  value: number,
+  positiveLabel: "N" | "E",
+  negativeLabel: "S" | "W"
+) => {
+  if (!Number.isFinite(value)) return "-";
+  const direction = value < 0 ? negativeLabel : positiveLabel;
+  return `${Math.abs(value)} ${direction}`;
+};
+
 export default function LocationsPage() {
   const { adminFetch } = useAdminAuth();
   const [locations, setLocations] = useState<Location[]>([]);
@@ -33,6 +43,8 @@ export default function LocationsPage() {
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<EditForm>(emptyForm);
+  const [latitudeDirection, setLatitudeDirection] = useState("N");
+  const [longitudeDirection, setLongitudeDirection] = useState("E");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -66,14 +78,23 @@ export default function LocationsPage() {
   }, [locations, query]);
 
   const startEdit = (loc: Location) => {
+    const rawLatitude = Number(loc.latitude);
+    const rawLongitude = Number(loc.longitude);
+    const hasLatitude = Number.isFinite(rawLatitude);
+    const hasLongitude = Number.isFinite(rawLongitude);
+
     setEditId(loc._id);
+    setLatitudeDirection(
+      hasLatitude && rawLatitude < 0 ? "S" : "N"
+    );
+    setLongitudeDirection(
+      hasLongitude && rawLongitude < 0 ? "W" : "E"
+    );
     setForm({
       name: loc.name ?? "",
-      latitude: Number.isFinite(loc.latitude)
-        ? String(loc.latitude)
-        : "",
-      longitude: Number.isFinite(loc.longitude)
-        ? String(loc.longitude)
+      latitude: hasLatitude ? String(Math.abs(rawLatitude)) : "",
+      longitude: hasLongitude
+        ? String(Math.abs(rawLongitude))
         : "",
       defaultRate: Number.isFinite(loc.defaultRate)
         ? String(loc.defaultRate)
@@ -85,6 +106,8 @@ export default function LocationsPage() {
   const cancelEdit = (clearMessage = true) => {
     setEditId(null);
     setForm(emptyForm);
+    setLatitudeDirection("N");
+    setLongitudeDirection("E");
     if (clearMessage) setMessage("");
   };
 
@@ -98,15 +121,23 @@ export default function LocationsPage() {
       nextErrors.push("Location name is required.");
     }
 
-    const lat = Number(form.latitude);
-    const lng = Number(form.longitude);
+    const latInput = Number(form.latitude);
+    const lngInput = Number(form.longitude);
+    const lat =
+      latitudeDirection === "S"
+        ? -Math.abs(latInput)
+        : Math.abs(latInput);
+    const lng =
+      longitudeDirection === "W"
+        ? -Math.abs(lngInput)
+        : Math.abs(lngInput);
     const rate = Number(form.defaultRate);
 
-    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
-      nextErrors.push("Latitude must be between -90 and 90.");
+    if (!Number.isFinite(latInput) || Math.abs(latInput) > 90) {
+      nextErrors.push("Latitude must be between 0 and 90.");
     }
-    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
-      nextErrors.push("Longitude must be between -180 and 180.");
+    if (!Number.isFinite(lngInput) || Math.abs(lngInput) > 180) {
+      nextErrors.push("Longitude must be between 0 and 180.");
     }
     if (!Number.isFinite(rate) || rate < 0) {
       nextErrors.push("Default rate must be 0 or higher.");
@@ -261,29 +292,53 @@ export default function LocationsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
               <span className="crm-label crm-label-required">Latitude</span>
-              <input
-                type="number"
-                step="any"
-                className="crm-input mt-2"
-                required
-                value={form.latitude}
-                onChange={(e) =>
-                  setForm({ ...form, latitude: e.target.value })
-                }
-              />
+              <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  max="90"
+                  className="crm-input"
+                  required
+                  value={form.latitude}
+                  onChange={(e) =>
+                    setForm({ ...form, latitude: e.target.value })
+                  }
+                />
+                <select
+                  className="crm-select"
+                  value={latitudeDirection}
+                  onChange={(e) => setLatitudeDirection(e.target.value)}
+                >
+                  <option value="N">North</option>
+                  <option value="S">South</option>
+                </select>
+              </div>
             </label>
             <label className="block">
               <span className="crm-label crm-label-required">Longitude</span>
-              <input
-                type="number"
-                step="any"
-                className="crm-input mt-2"
-                required
-                value={form.longitude}
-                onChange={(e) =>
-                  setForm({ ...form, longitude: e.target.value })
-                }
-              />
+              <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  max="180"
+                  className="crm-input"
+                  required
+                  value={form.longitude}
+                  onChange={(e) =>
+                    setForm({ ...form, longitude: e.target.value })
+                  }
+                />
+                <select
+                  className="crm-select"
+                  value={longitudeDirection}
+                  onChange={(e) => setLongitudeDirection(e.target.value)}
+                >
+                  <option value="E">East</option>
+                  <option value="W">West</option>
+                </select>
+              </div>
             </label>
           </div>
 
@@ -317,8 +372,12 @@ export default function LocationsPage() {
                   <td className="crm-td font-semibold text-[color:var(--ink)]">
                     {loc.name}
                   </td>
-                  <td className="crm-td">{loc.latitude}</td>
-                  <td className="crm-td">{loc.longitude}</td>
+                  <td className="crm-td">
+                    {formatCoordinate(loc.latitude, "N", "S")}
+                  </td>
+                  <td className="crm-td">
+                    {formatCoordinate(loc.longitude, "E", "W")}
+                  </td>
                   <td className="crm-td">{loc.defaultRate}</td>
                   <td className="crm-td">
                     <div className="flex flex-wrap items-center gap-3">

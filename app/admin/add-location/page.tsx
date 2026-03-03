@@ -7,6 +7,8 @@ export default function AddLocationPage() {
   const [name, setName] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [latitudeDirection, setLatitudeDirection] = useState("N");
+  const [longitudeDirection, setLongitudeDirection] = useState("E");
   const [defaultRate, setDefaultRate] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -17,13 +19,20 @@ export default function AddLocationPage() {
     setLoading(true);
     setMessage("");
 
+    const latInput = Number(latitude);
+    const lngInput = Number(longitude);
+    const signedLatitude =
+      latitudeDirection === "S" ? -Math.abs(latInput) : Math.abs(latInput);
+    const signedLongitude =
+      longitudeDirection === "W" ? -Math.abs(lngInput) : Math.abs(lngInput);
+
     const res = await adminFetch("/api/admin/add-location", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        latitude,
-        longitude,
+        latitude: signedLatitude,
+        longitude: signedLongitude,
         defaultRate,
       }),
     });
@@ -69,27 +78,51 @@ export default function AddLocationPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="crm-label crm-label-required">Latitude</span>
-            <input
-              type="number"
-              step="any"
-              placeholder="Latitude (-90 to 90)"
-              value={latitude}
-              required
-              onChange={(e) => setLatitude(e.target.value)}
-              className="crm-input mt-2"
-            />
+            <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                max="90"
+                placeholder="Latitude (0 to 90)"
+                value={latitude}
+                required
+                onChange={(e) => setLatitude(e.target.value)}
+                className="crm-input"
+              />
+              <select
+                className="crm-select"
+                value={latitudeDirection}
+                onChange={(e) => setLatitudeDirection(e.target.value)}
+              >
+                <option value="N">North</option>
+                <option value="S">South</option>
+              </select>
+            </div>
           </label>
           <label className="block">
             <span className="crm-label crm-label-required">Longitude</span>
-            <input
-              type="number"
-              step="any"
-              placeholder="Longitude (-180 to 180)"
-              value={longitude}
-              required
-              onChange={(e) => setLongitude(e.target.value)}
-              className="crm-input mt-2"
-            />
+            <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                max="180"
+                placeholder="Longitude (0 to 180)"
+                value={longitude}
+                required
+                onChange={(e) => setLongitude(e.target.value)}
+                className="crm-input"
+              />
+              <select
+                className="crm-select"
+                value={longitudeDirection}
+                onChange={(e) => setLongitudeDirection(e.target.value)}
+              >
+                <option value="E">East</option>
+                <option value="W">West</option>
+              </select>
+            </div>
           </label>
         </div>
         <label className="block">
