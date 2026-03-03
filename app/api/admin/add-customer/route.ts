@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       !mobile ||
       !locationId ||
       !address ||
-      !email ||
       Number.isNaN(latNumber) ||
       Number.isNaN(lngNumber)
     ) {
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
       latitude: latNumber,
       longitude: lngNumber,
       address,
-      email,
+      email: email?.trim() || undefined,
       remark,
       lastDateOfService: lastDateOfService
         ? new Date(lastDateOfService)

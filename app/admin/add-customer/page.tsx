@@ -44,9 +44,6 @@ export default function AddCustomerPage() {
     if (!form.address.trim()) {
       nextErrors.address = "Address is required";
     }
-    if (!form.email.trim()) {
-      nextErrors.email = "Email is required";
-    }
     if (!form.locationId) {
       nextErrors.locationId = "Location is required";
     }
@@ -224,12 +221,11 @@ export default function AddCustomerPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label crm-label-required">Email</span>
+            <span className="crm-label">Email</span>
             <input
               type="email"
               placeholder="Email"
               className="crm-input mt-2"
-              required
               value={form.email}
               onChange={(e) =>
                 setForm({ ...form, email: e.target.value })

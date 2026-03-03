@@ -9,7 +9,7 @@ const CustomerSchema = new Schema(
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
     address: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String },
     remark: { type: String },
     lastDateOfService: { type: Date },
     location: {
