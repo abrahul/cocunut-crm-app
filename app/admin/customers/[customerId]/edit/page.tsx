@@ -14,6 +14,7 @@ type FormState = {
   mobile: string;
   alternateMobile: string;
   profession: string;
+  numberOfTrees: string;
   latitude: string;
   longitude: string;
   address: string;
@@ -28,6 +29,7 @@ const emptyForm: FormState = {
   mobile: "",
   alternateMobile: "",
   profession: "",
+  numberOfTrees: "",
   latitude: "",
   longitude: "",
   address: "",
@@ -108,6 +110,10 @@ export default function EditCustomerPage() {
           mobile: customer?.mobile || "",
           alternateMobile: customer?.alternateMobile || "",
           profession: customer?.profession || "",
+          numberOfTrees:
+            typeof customer?.numberOfTrees === "number"
+              ? String(customer.numberOfTrees)
+              : "",
           latitude: hasLatitude ? String(Math.abs(rawLatitude)) : "",
           longitude: hasLongitude
             ? String(Math.abs(rawLongitude))
@@ -152,6 +158,13 @@ export default function EditCustomerPage() {
     if (!form.locationId) {
       nextErrors.locationId = "Location is required";
     }
+    const treesInput = form.numberOfTrees.trim();
+    if (treesInput) {
+      const treesNumber = Number(treesInput);
+      if (!Number.isFinite(treesNumber) || treesNumber < 0) {
+        nextErrors.numberOfTrees = "Number of trees must be 0 or more";
+      }
+    }
     const latInput = Number(form.latitude);
     const lngInput = Number(form.longitude);
     const latNumber =
@@ -181,6 +194,7 @@ export default function EditCustomerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...payload,
+        numberOfTrees: treesInput ? Number(treesInput) : undefined,
         latitude: latNumber,
         longitude: lngNumber,
       }),
@@ -266,6 +280,25 @@ export default function EditCustomerPage() {
                 setForm({ ...form, profession: e.target.value })
               }
             />
+          </label>
+
+          <label className="block">
+            <span className="crm-label">Number of trees</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Number of trees (optional)"
+              className="crm-input mt-2"
+              value={form.numberOfTrees}
+              onChange={(e) =>
+                setForm({ ...form, numberOfTrees: e.target.value })
+              }
+            />
+            {errors.numberOfTrees && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.numberOfTrees}
+              </p>
+            )}
           </label>
         </div>
 

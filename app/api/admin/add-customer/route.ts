@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       mobile,
       alternateMobile,
       profession,
+      numberOfTrees,
       latitude,
       longitude,
       address,
@@ -30,6 +31,11 @@ export async function POST(req: Request) {
 
     const latNumber = Number(latitude);
     const lngNumber = Number(longitude);
+    const treesProvided =
+      numberOfTrees !== undefined &&
+      numberOfTrees !== null &&
+      String(numberOfTrees).trim() !== "";
+    const treesNumber = treesProvided ? Number(numberOfTrees) : undefined;
 
     if (
       !name ||
@@ -44,12 +50,24 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    if (
+      treesProvided &&
+      (treesNumber === undefined ||
+        !Number.isFinite(treesNumber) ||
+        treesNumber < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid number of trees" },
+        { status: 400 }
+      );
+    }
 
     const customer = await Customer.create({
       name,
       mobile,
       alternateMobile,
       profession,
+      numberOfTrees: treesProvided ? treesNumber : undefined,
       latitude: latNumber,
       longitude: lngNumber,
       address,

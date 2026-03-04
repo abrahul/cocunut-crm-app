@@ -12,6 +12,7 @@ export default function AddCustomerPage() {
     mobile: "",
     alternateMobile: "",
     profession: "",
+    numberOfTrees: "",
     latitude: "",
     longitude: "",
     address: "",
@@ -49,6 +50,13 @@ export default function AddCustomerPage() {
     if (!form.locationId) {
       nextErrors.locationId = "Location is required";
     }
+    const treesInput = form.numberOfTrees.trim();
+    if (treesInput) {
+      const treesNumber = Number(treesInput);
+      if (!Number.isFinite(treesNumber) || treesNumber < 0) {
+        nextErrors.numberOfTrees = "Number of trees must be 0 or more";
+      }
+    }
     const latInput = Number(form.latitude);
     const lngInput = Number(form.longitude);
     const latNumber =
@@ -77,6 +85,7 @@ export default function AddCustomerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        numberOfTrees: treesInput ? Number(treesInput) : undefined,
         latitude: latNumber,
         longitude: lngNumber,
       }),
@@ -165,6 +174,28 @@ export default function AddCustomerPage() {
                 })
               }
             />
+          </label>
+
+          <label className="block">
+            <span className="crm-label">Number of trees</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Number of trees (optional)"
+              className="crm-input mt-2"
+              value={form.numberOfTrees}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  numberOfTrees: e.target.value,
+                })
+              }
+            />
+            {errors.numberOfTrees && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.numberOfTrees}
+              </p>
+            )}
           </label>
         </div>
 
