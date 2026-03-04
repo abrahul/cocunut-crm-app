@@ -43,7 +43,8 @@ export async function POST(req: Request) {
       !locationId ||
       !address ||
       Number.isNaN(latNumber) ||
-      Number.isNaN(lngNumber)
+      Number.isNaN(lngNumber) ||
+      !treesProvided
     ) {
       return NextResponse.json(
         { error: "Missing fields" },

@@ -158,22 +158,21 @@ export async function POST(req: Request) {
       }
     }
 
+    const customerUpdate: Record<string, unknown> = {
+      numberOfTrees: trees,
+    };
     if (parsedServiceDate) {
       const existingLast = customer.lastDateOfService
         ? new Date(customer.lastDateOfService)
         : null;
       if (!existingLast || parsedServiceDate > existingLast) {
-        await Customer.findByIdAndUpdate(customerId, {
-          lastDateOfService: parsedServiceDate,
-        });
+        customerUpdate.lastDateOfService = parsedServiceDate;
       }
     }
-
     if (typeof remark === "string" && remark.trim()) {
-      await Customer.findByIdAndUpdate(customerId, {
-        remark: remark.trim(),
-      });
+      customerUpdate.remark = remark.trim();
     }
+    await Customer.findByIdAndUpdate(customerId, customerUpdate);
 
     return NextResponse.json({ success: true, task });
   } catch (err: any) {

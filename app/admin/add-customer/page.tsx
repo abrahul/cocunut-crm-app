@@ -47,15 +47,17 @@ export default function AddCustomerPage() {
     if (!form.address.trim()) {
       nextErrors.address = "Address is required";
     }
-    if (!form.locationId) {
-      nextErrors.locationId = "Location is required";
-    }
     const treesInput = form.numberOfTrees.trim();
-    if (treesInput) {
+    if (!treesInput) {
+      nextErrors.numberOfTrees = "Number of trees is required";
+    } else {
       const treesNumber = Number(treesInput);
       if (!Number.isFinite(treesNumber) || treesNumber < 0) {
         nextErrors.numberOfTrees = "Number of trees must be 0 or more";
       }
+    }
+    if (!form.locationId) {
+      nextErrors.locationId = "Location is required";
     }
     const latInput = Number(form.latitude);
     const lngInput = Number(form.longitude);
@@ -85,7 +87,7 @@ export default function AddCustomerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
-        numberOfTrees: treesInput ? Number(treesInput) : undefined,
+        numberOfTrees: Number(treesInput),
         latitude: latNumber,
         longitude: lngNumber,
       }),
@@ -181,8 +183,9 @@ export default function AddCustomerPage() {
             <input
               type="number"
               min="0"
-              placeholder="Number of trees (optional)"
+              placeholder="Number of trees"
               className="crm-input mt-2"
+              required
               value={form.numberOfTrees}
               onChange={(e) =>
                 setForm({

@@ -214,6 +214,8 @@ function AddTaskPageContent() {
     const nextTreesCount =
       typeof selected?.numberOfTrees === "number"
         ? String(selected.numberOfTrees)
+        : typeof selected?.lastTask?.numberOfTrees === "number"
+          ? String(selected.lastTask.numberOfTrees)
         : "";
     setForm((prev) => ({
       ...prev,
