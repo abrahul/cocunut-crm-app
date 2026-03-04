@@ -102,24 +102,6 @@ export default function AddCustomerPage() {
       <form onSubmit={submitHandler} className="crm-card space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="crm-label crm-label-required">Customer name</span>
-            <input
-              placeholder="Customer Name"
-              className="crm-input mt-2"
-              required
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-            />
-            {errors.name && (
-              <p className="mt-2 text-xs font-semibold text-red-600">
-                {errors.name}
-              </p>
-            )}
-          </label>
-
-          <label className="block">
             <span className="crm-label crm-label-required">Primary mobile</span>
             <input
               placeholder="Mobile"
@@ -150,6 +132,24 @@ export default function AddCustomerPage() {
                 })
               }
             />
+          </label>
+
+          <label className="block">
+            <span className="crm-label crm-label-required">Customer name</span>
+            <input
+              placeholder="Customer Name"
+              className="crm-input mt-2"
+              required
+              value={form.name}
+              onChange={(e) =>
+                setForm({ ...form, name: e.target.value })
+              }
+            />
+            {errors.name && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {errors.name}
+              </p>
+            )}
           </label>
 
           <label className="block">
