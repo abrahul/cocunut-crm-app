@@ -37,6 +37,16 @@ export async function GET() {
         },
       },
     ]);
+    const lastTasks = await Task.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$customer",
+          numberOfTrees: { $first: "$numberOfTrees" },
+          ratePerTree: { $first: "$ratePerTree" },
+        },
+      },
+    ]);
 
     const lastServiceMap = new Map(
       lastServiceDates.map((item: any) => [
@@ -44,13 +54,30 @@ export async function GET() {
         item.lastServiceDate,
       ])
     );
+    const lastTaskMap = new Map(
+      lastTasks.map((item: any) => [
+        String(item._id),
+        {
+          numberOfTrees: item.numberOfTrees,
+          ratePerTree: item.ratePerTree,
+        },
+      ])
+    );
 
     const customersWithLastService = customers.map((customer: any) => {
       const lastServiceDate = lastServiceMap.get(String(customer._id));
+      const lastTask = lastTaskMap.get(String(customer._id));
       if (lastServiceDate) {
         return {
           ...customer,
           lastDateOfService: lastServiceDate,
+          lastTask,
+        };
+      }
+      if (lastTask) {
+        return {
+          ...customer,
+          lastTask,
         };
       }
       return customer;

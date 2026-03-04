@@ -18,6 +18,15 @@ type Task = {
   status: string;
 };
 
+const formatCoordinate = (
+  value: number,
+  positiveLabel: "N" | "E",
+  negativeLabel: "S" | "W"
+) => {
+  const direction = value < 0 ? negativeLabel : positiveLabel;
+  return `${Math.abs(value)} ${direction}`;
+};
+
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const router = useRouter();
@@ -144,7 +153,8 @@ export default function StaffTasksPage() {
                       rel="noopener noreferrer"
                       className="mt-1 inline-block text-sm text-blue-600 underline"
                     >
-                      {task.latitude}, {task.longitude}
+                      {formatCoordinate(task.latitude, "N", "S")},{" "}
+                      {formatCoordinate(task.longitude, "E", "W")}
                     </a>
                   )}
               </div>

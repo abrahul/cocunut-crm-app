@@ -44,6 +44,16 @@ const getDueDays = (value?: string) => {
   return diff < 0 ? "0" : String(diff);
 };
 
+const formatCoordinate = (
+  value?: number,
+  positiveLabel?: "N" | "E",
+  negativeLabel?: "S" | "W"
+) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "-";
+  const direction = value < 0 ? negativeLabel : positiveLabel;
+  return `${Math.abs(value)} ${direction}`;
+};
+
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState("");
@@ -212,8 +222,12 @@ export default function AdminCustomersPage() {
                   <td className="crm-td">
                     {customer.location?.name || "-"}
                   </td>
-                  <td className="crm-td">{customer.latitude ?? "-"}</td>
-                  <td className="crm-td">{customer.longitude ?? "-"}</td>
+                  <td className="crm-td">
+                    {formatCoordinate(customer.latitude, "N", "S")}
+                  </td>
+                  <td className="crm-td">
+                    {formatCoordinate(customer.longitude, "E", "W")}
+                  </td>
                   <td className="crm-td">{customer.remark || "-"}</td>
                   <td className="crm-td">
                     {formatDate(customer.lastDateOfService)}

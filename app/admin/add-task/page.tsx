@@ -8,6 +8,7 @@ type Customer = {
   _id: string;
   name: string;
   mobile?: string;
+  numberOfTrees?: number;
   latitude?: number;
   longitude?: number;
   address?: string;
@@ -210,10 +211,16 @@ function AddTaskPageContent() {
     const defaultRate = selected?.location?.defaultRate;
     const nextPreviousRemark = selected?.remark || "";
     const nextExactAddress = selected?.address || "";
+    const nextTreesCount =
+      typeof selected?.numberOfTrees === "number"
+        ? String(selected.numberOfTrees)
+        : typeof selected?.lastTask?.numberOfTrees === "number"
+          ? String(selected.lastTask.numberOfTrees)
+        : "";
     setForm((prev) => ({
       ...prev,
       customerId,
-      treesCount: "",
+      treesCount: nextTreesCount,
       rate:
         typeof defaultRate === "number"
           ? String(defaultRate)
@@ -252,7 +259,9 @@ function AddTaskPageContent() {
                   ? String(data.location.defaultRate)
                   : prev.rate,
             treesCount:
-              typeof data?.lastTask?.numberOfTrees === "number"
+              typeof data?.numberOfTrees === "number"
+                ? String(data.numberOfTrees)
+                : typeof data?.lastTask?.numberOfTrees === "number"
                 ? String(data.lastTask.numberOfTrees)
                 : prev.treesCount,
             latitude:

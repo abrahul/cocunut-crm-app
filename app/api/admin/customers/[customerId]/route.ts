@@ -103,6 +103,7 @@ export async function PATCH(
       mobile,
       alternateMobile,
       profession,
+      numberOfTrees,
       latitude,
       longitude,
       address,
@@ -114,18 +115,33 @@ export async function PATCH(
 
     const latNumber = Number(latitude);
     const lngNumber = Number(longitude);
+    const treesProvided =
+      numberOfTrees !== undefined &&
+      numberOfTrees !== null &&
+      String(numberOfTrees).trim() !== "";
+    const treesNumber = treesProvided ? Number(numberOfTrees) : undefined;
 
     if (
       !name ||
       !mobile ||
       !address ||
-      !email ||
       !locationId ||
       Number.isNaN(latNumber) ||
       Number.isNaN(lngNumber) ||
       !mongoose.Types.ObjectId.isValid(locationId)
     ) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+    if (
+      treesProvided &&
+      (treesNumber === undefined ||
+        !Number.isFinite(treesNumber) ||
+        treesNumber < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid number of trees" },
+        { status: 400 }
+      );
     }
 
     const hasLastDate =
@@ -148,6 +164,7 @@ export async function PATCH(
       mobile,
       alternateMobile,
       profession,
+      numberOfTrees: treesProvided ? treesNumber : undefined,
       latitude: latNumber,
       longitude: lngNumber,
       address,

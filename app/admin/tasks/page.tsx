@@ -14,6 +14,9 @@ type Task = {
   customer?: Entity;
   location?: Entity;
   staff?: Entity;
+  exactAddress?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   serviceDate?: string;
   completedDate?: string;
   numberOfTrees: number;
@@ -30,6 +33,16 @@ type EditForm = {
   numberOfTrees: string;
   ratePerTree: string;
   status: "pending" | "completed";
+};
+
+const formatCoordinate = (
+  value: number | null | undefined,
+  positiveLabel: "N" | "E",
+  negativeLabel: "S" | "W"
+) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "-";
+  const direction = value < 0 ? negativeLabel : positiveLabel;
+  return `${Math.abs(value)} ${direction}`;
 };
 
 export default function AdminTasksPage() {
@@ -537,6 +550,8 @@ export default function AdminTasksPage() {
                 <th className="crm-th">No.</th>
                 <th className="crm-th">Customer</th>
                 <th className="crm-th">Phone</th>
+                <th className="crm-th">Exact Address</th>
+                <th className="crm-th">Lat/Lon</th>
                 <th className="crm-th">Location</th>
                 <th className="crm-th">Service due</th>
                 <th className="crm-th">Completed on</th>
@@ -566,6 +581,17 @@ export default function AdminTasksPage() {
                       {task.customer?.name || "-"}
                     </td>
                     <td className="crm-td">{task.customer?.mobile || "-"}</td>
+                    <td className="crm-td">{task.exactAddress || "-"}</td>
+                    <td className="crm-td">
+                      {typeof task.latitude === "number" &&
+                      typeof task.longitude === "number"
+                        ? `${formatCoordinate(task.latitude, "N", "S")}, ${formatCoordinate(
+                            task.longitude,
+                            "E",
+                            "W"
+                          )}`
+                        : "-"}
+                    </td>
                     <td className="crm-td">{task.location?.name || "-"}</td>
                     <td className="crm-td">{task.serviceDate || "-"}</td>
                     <td className="crm-td">
@@ -610,7 +636,7 @@ export default function AdminTasksPage() {
 
                   {editingId === task._id && editForm && (
                     <tr className="bg-white/70">
-                      <td colSpan={13} className="px-4 py-4">
+                      <td colSpan={15} className="px-4 py-4">
                         <div className="grid gap-3 md:grid-cols-7">
                           <label className="block">
                             <span className="crm-label crm-label-required">Staff</span>
