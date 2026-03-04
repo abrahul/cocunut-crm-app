@@ -54,6 +54,8 @@ function AddTaskPageContent() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [updatingRemark, setUpdatingRemark] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [latitudeDirection, setLatitudeDirection] = useState("N");
+  const [longitudeDirection, setLongitudeDirection] = useState("E");
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +123,13 @@ function AddTaskPageContent() {
 
     setLoading(true);
 
+    const latInput = Number(form.latitude);
+    const lngInput = Number(form.longitude);
+    const latitude =
+      latitudeDirection === "S" ? -Math.abs(latInput) : Math.abs(latInput);
+    const longitude =
+      longitudeDirection === "W" ? -Math.abs(lngInput) : Math.abs(lngInput);
+
     const res = await adminFetch("/api/admin/add-task", {
       method: "POST",
       headers: {
@@ -131,8 +140,8 @@ function AddTaskPageContent() {
         staffId: form.staffId,
         treesCount: Number(form.treesCount),
         rate: Number(form.rate),
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
+        latitude,
+        longitude,
         serviceDate: form.serviceDate,
         serviceTime: form.serviceTime,
         medicine: form.medicine === "yes",
@@ -159,6 +168,8 @@ function AddTaskPageContent() {
         exactAddress: "",
         remark: "",
       });
+      setLatitudeDirection("N");
+      setLongitudeDirection("E");
       setPreviousRemark("");
     } else {
       alert(data.error || "Something went wrong");
@@ -217,6 +228,18 @@ function AddTaskPageContent() {
         : typeof selected?.lastTask?.numberOfTrees === "number"
           ? String(selected.lastTask.numberOfTrees)
         : "";
+    const selectedLatitude = Number(selected?.latitude);
+    const selectedLongitude = Number(selected?.longitude);
+    if (Number.isFinite(selectedLatitude)) {
+      setLatitudeDirection(selectedLatitude < 0 ? "S" : "N");
+    } else {
+      setLatitudeDirection("N");
+    }
+    if (Number.isFinite(selectedLongitude)) {
+      setLongitudeDirection(selectedLongitude < 0 ? "W" : "E");
+    } else {
+      setLongitudeDirection("E");
+    }
     setForm((prev) => ({
       ...prev,
       customerId,
@@ -227,11 +250,11 @@ function AddTaskPageContent() {
           : "",
       latitude:
         typeof selected?.latitude === "number"
-          ? String(selected.latitude)
+          ? String(Math.abs(selected.latitude))
           : "",
       longitude:
         typeof selected?.longitude === "number"
-          ? String(selected.longitude)
+          ? String(Math.abs(selected.longitude))
           : "",
       exactAddress: nextExactAddress,
       remark: "",
@@ -243,6 +266,14 @@ function AddTaskPageContent() {
         .then((res) => res.json())
         .then((data) => {
           if (!data || data?.error) return;
+          const dataLatitude = Number(data?.latitude);
+          const dataLongitude = Number(data?.longitude);
+          if (Number.isFinite(dataLatitude)) {
+            setLatitudeDirection(dataLatitude < 0 ? "S" : "N");
+          }
+          if (Number.isFinite(dataLongitude)) {
+            setLongitudeDirection(dataLongitude < 0 ? "W" : "E");
+          }
           setPreviousRemark(
             typeof data.remark === "string" ? data.remark : ""
           );
@@ -266,11 +297,11 @@ function AddTaskPageContent() {
                 : prev.treesCount,
             latitude:
               typeof data?.latitude === "number"
-                ? String(data.latitude)
+                ? String(Math.abs(data.latitude))
                 : prev.latitude,
             longitude:
               typeof data?.longitude === "number"
-                ? String(data.longitude)
+                ? String(Math.abs(data.longitude))
                 : prev.longitude,
           }));
         })
@@ -299,6 +330,8 @@ function AddTaskPageContent() {
       exactAddress: "",
       remark: "",
     }));
+    setLatitudeDirection("N");
+    setLongitudeDirection("E");
     setPreviousRemark("");
   };
 
@@ -479,36 +512,60 @@ function AddTaskPageContent() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="crm-label crm-label-required">Latitude</span>
-            <input
-              type="number"
-              step="any"
-              className="crm-input mt-2"
-              required
-              value={form.latitude}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  latitude: e.target.value,
-                })
-              }
-            />
+            <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                max="90"
+                className="crm-input"
+                required
+                value={form.latitude}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    latitude: e.target.value,
+                  })
+                }
+              />
+              <select
+                className="crm-select"
+                value={latitudeDirection}
+                onChange={(e) => setLatitudeDirection(e.target.value)}
+              >
+                <option value="N">North</option>
+                <option value="S">South</option>
+              </select>
+            </div>
           </label>
 
           <label className="block">
             <span className="crm-label crm-label-required">Longitude</span>
-            <input
-              type="number"
-              step="any"
-              className="crm-input mt-2"
-              required
-              value={form.longitude}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  longitude: e.target.value,
-                })
-              }
-            />
+            <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                max="180"
+                className="crm-input"
+                required
+                value={form.longitude}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    longitude: e.target.value,
+                  })
+                }
+              />
+              <select
+                className="crm-select"
+                value={longitudeDirection}
+                onChange={(e) => setLongitudeDirection(e.target.value)}
+              >
+                <option value="E">East</option>
+                <option value="W">West</option>
+              </select>
+            </div>
           </label>
         </div>
 
