@@ -8,6 +8,9 @@ type Task = {
   _id: string;
   customer: { name: string };
   location: { name: string };
+  exactAddress?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   serviceDate?: string;
   completedDate?: string;
   numberOfTrees: number;
@@ -23,6 +26,16 @@ type EditForm = {
   numberOfTrees: string;
   ratePerTree: string;
   status: "pending" | "completed";
+};
+
+const formatCoordinate = (
+  value: number | null | undefined,
+  positiveLabel: "N" | "E",
+  negativeLabel: "S" | "W"
+) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "-";
+  const direction = value < 0 ? negativeLabel : positiveLabel;
+  return `${Math.abs(value)} ${direction}`;
 };
 
 export default function StaffTaskHistoryPage() {
@@ -275,6 +288,25 @@ export default function StaffTaskHistoryPage() {
                 <span className="crm-label">Service due</span>
                 <p className="mt-1 text-[color:var(--muted)]">
                   {task.serviceDate || "-"}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Exact address</span>
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {task.exactAddress || "-"}
+                </p>
+              </div>
+              <div>
+                <span className="crm-label">Lat/Lon</span>
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {typeof task.latitude === "number" &&
+                  typeof task.longitude === "number"
+                    ? `${formatCoordinate(task.latitude, "N", "S")}, ${formatCoordinate(
+                        task.longitude,
+                        "E",
+                        "W"
+                      )}`
+                    : "-"}
                 </p>
               </div>
               <div>
