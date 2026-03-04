@@ -125,7 +125,6 @@ export async function PATCH(
       !name ||
       !mobile ||
       !address ||
-      !email ||
       !locationId ||
       Number.isNaN(latNumber) ||
       Number.isNaN(lngNumber) ||
