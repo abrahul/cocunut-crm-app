@@ -4,7 +4,6 @@ import Task from "@/models/Task";
 import Customer from "@/models/Customer";
 import { getAuthUser } from "@/lib/authServer";
 
-// FORCE schema registration
 import "@/models/Staff";
 import "@/models/Customer";
 import "@/models/Location";
@@ -14,10 +13,7 @@ export async function GET(request: Request) {
     await connectDB();
     const auth = await getAuthUser();
     if (!auth || auth.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -34,7 +30,7 @@ export async function GET(request: Request) {
     const pageSize = Math.min(pageSizeRaw, 100);
 
     const taskFilter: Record<string, any> = {
-      taskType: "main",
+      taskType: "side",
     };
 
     if (q) {
@@ -47,15 +43,10 @@ export async function GET(request: Request) {
         .select("_id")
         .lean();
       const ids = customers.map((c: any) => c._id);
-      if (ids.length === 0) {
-        return NextResponse.json({
-          tasks: [],
-          total: 0,
-          page,
-          pageSize,
-        });
-      }
-      taskFilter.customer = { $in: ids };
+      taskFilter.$or = [
+        { customer: { $in: ids } },
+        { sideTaskCustomerPhone: { $regex: q, $options: "i" } },
+      ];
     }
 
     if (staffId && staffId !== "all") taskFilter.staff = staffId;
@@ -67,6 +58,7 @@ export async function GET(request: Request) {
         .populate("customer", "name mobile")
         .populate("location", "name")
         .populate("staff", "name phone")
+        .populate("parentTask", "serviceDate")
         .sort({ createdAt: -1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize)
@@ -81,9 +73,6 @@ export async function GET(request: Request) {
       pageSize,
     });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

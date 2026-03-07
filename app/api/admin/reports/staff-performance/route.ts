@@ -25,9 +25,12 @@ export async function GET(request: Request) {
     const to = searchParams.get("to")?.trim();
     const staffId = searchParams.get("staffId")?.trim();
     const locationId = searchParams.get("locationId")?.trim();
+    const taskTypeParam = searchParams.get("taskType")?.trim();
+    const taskType = taskTypeParam === "side" ? "side" : "main";
 
     const match: Record<string, any> = {
       completedDate: { $ne: null },
+      taskType,
     };
     const completedDateRange: Record<string, Date> = {};
     if (from) {

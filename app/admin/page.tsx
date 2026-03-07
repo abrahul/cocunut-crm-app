@@ -35,6 +35,11 @@ export default function AdminDashboard() {
       description: "View and edit tasks",
     },
     {
+      title: "Side Tasks",
+      href: "/admin/side-tasks",
+      description: "View side tasks separately",
+    },
+    {
       title: "Add Location",
       href: "/admin/add-location",
       description: "Create a new location",

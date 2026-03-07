@@ -86,6 +86,7 @@ export default function ReportsPage() {
   const [locationOptions, setLocationOptions] = useState<Option[]>([]);
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [reportTab, setReportTab] = useState<"main" | "side">("main");
   const [rangePreset, setRangePreset] = useState<
     "today" | "week" | "month" | "custom"
   >("week");
@@ -162,6 +163,7 @@ export default function ReportsPage() {
         if (locationFilter !== "all") {
           params.set("locationId", locationFilter);
         }
+        params.set("taskType", reportTab);
 
         const [dailyRes, staffRes] = await Promise.all([
           adminFetch(`/api/admin/reports/daily?${params.toString()}`),
@@ -239,6 +241,7 @@ export default function ReportsPage() {
     toDate,
     staffFilter,
     locationFilter,
+    reportTab,
   ]);
 
   useEffect(() => {
@@ -276,7 +279,9 @@ export default function ReportsPage() {
         Reports
       </h1>
       <p className="mt-1 text-sm text-[color:var(--muted)]">
-        Daily stats grouped by completed date
+        {reportTab === "side"
+          ? "Side task analytics grouped by completed date"
+          : "Daily stats grouped by completed date"}
       </p>
     </div>
   );
@@ -434,6 +439,23 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setReportTab("main")}
+          className={reportTab === "main" ? "crm-btn-primary" : "crm-btn-outline"}
+        >
+          Main Tasks
+        </button>
+        <button
+          type="button"
+          onClick={() => setReportTab("side")}
+          className={reportTab === "side" ? "crm-btn-primary" : "crm-btn-outline"}
+        >
+          Side Tasks
+        </button>
+      </div>
+
       <div className="crm-toolbar">
         <label className="block">
           <span className="crm-label">From</span>
@@ -562,65 +584,67 @@ export default function ReportsPage() {
             </div>
           )}
 
-          <div className="mt-8 space-y-4">
-            <div>
-              <p className="crm-pill">Sessions</p>
-              <h2 className="mt-3 text-2xl font-semibold text-[color:var(--ink)]">
-                Admin Login Sessions
-              </h2>
-            </div>
+          {reportTab === "main" && (
+            <div className="mt-8 space-y-4">
+              <div>
+                <p className="crm-pill">Sessions</p>
+                <h2 className="mt-3 text-2xl font-semibold text-[color:var(--ink)]">
+                  Admin Login Sessions
+                </h2>
+              </div>
 
-            {adminSessions.length === 0 ? (
-              <div className="crm-card">
-                <p className="text-sm text-[color:var(--muted)]">
-                  No admin sessions for this range.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
-                <table className="crm-table">
-                  <thead className="bg-white/70">
-                    <tr>
-                      <th className="crm-th">Date</th>
-                      <th className="crm-th">Admin</th>
-                      <th className="crm-th">Session Name</th>
-                      <th className="crm-th">Login</th>
-                      <th className="crm-th">Logout</th>
-                      <th className="crm-th">Type</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[color:var(--border)]">
-                    {adminSessions.map((row) => (
-                      <tr key={row.id} className="hover:bg-white/70">
-                        <td className="crm-td">
-                          {row.date ? new Date(row.date).toLocaleDateString() : "-"}
-                        </td>
-                        <td className="crm-td">{row.adminName || "-"}</td>
-                        <td className="crm-td">{row.sessionName || "-"}</td>
-                        <td className="crm-td">
-                          {row.loginAt
-                            ? new Date(row.loginAt).toLocaleString()
-                            : "-"}
-                        </td>
-                        <td className="crm-td">
-                          {row.logoutAt
-                            ? new Date(row.logoutAt).toLocaleString()
-                            : "Active"}
-                        </td>
-                        <td className="crm-td">
-                          {row.logoutReason === "timeout"
-                            ? "Timeout"
-                            : row.logoutReason === "manual"
-                            ? "Manual"
-                            : "Active"}
-                        </td>
+              {adminSessions.length === 0 ? (
+                <div className="crm-card">
+                  <p className="text-sm text-[color:var(--muted)]">
+                    No admin sessions for this range.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
+                  <table className="crm-table">
+                    <thead className="bg-white/70">
+                      <tr>
+                        <th className="crm-th">Date</th>
+                        <th className="crm-th">Admin</th>
+                        <th className="crm-th">Session Name</th>
+                        <th className="crm-th">Login</th>
+                        <th className="crm-th">Logout</th>
+                        <th className="crm-th">Type</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-[color:var(--border)]">
+                      {adminSessions.map((row) => (
+                        <tr key={row.id} className="hover:bg-white/70">
+                          <td className="crm-td">
+                            {row.date ? new Date(row.date).toLocaleDateString() : "-"}
+                          </td>
+                          <td className="crm-td">{row.adminName || "-"}</td>
+                          <td className="crm-td">{row.sessionName || "-"}</td>
+                          <td className="crm-td">
+                            {row.loginAt
+                              ? new Date(row.loginAt).toLocaleString()
+                              : "-"}
+                          </td>
+                          <td className="crm-td">
+                            {row.logoutAt
+                              ? new Date(row.logoutAt).toLocaleString()
+                              : "Active"}
+                          </td>
+                          <td className="crm-td">
+                            {row.logoutReason === "timeout"
+                              ? "Timeout"
+                              : row.logoutReason === "manual"
+                              ? "Manual"
+                              : "Active"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mt-8 space-y-4">
             <div>

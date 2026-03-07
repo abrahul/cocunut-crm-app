@@ -18,6 +18,13 @@ type Task = {
   status: string;
 };
 
+type SideTaskInput = {
+  enabled: boolean;
+  customerPhone: string;
+  numberOfTrees: string;
+  ratePerTree: string;
+};
+
 const formatCoordinate = (
   value: number,
   positiveLabel: "N" | "E",
@@ -29,6 +36,9 @@ const formatCoordinate = (
 
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [sideTaskInputs, setSideTaskInputs] = useState<
+    Record<string, SideTaskInput>
+  >({});
   const router = useRouter();
 
   const loadTasks = useCallback(async () => {
@@ -40,7 +50,20 @@ export default function StaffTasksPage() {
     }
 
     const data = await res.json();
-    setTasks(Array.isArray(data) ? data : []);
+    const nextTasks = Array.isArray(data) ? data : [];
+    setTasks(nextTasks);
+    setSideTaskInputs((prev) => {
+      const next: Record<string, SideTaskInput> = {};
+      nextTasks.forEach((task) => {
+        next[task._id] = prev[task._id] || {
+          enabled: false,
+          customerPhone: "",
+          numberOfTrees: "",
+          ratePerTree: "",
+        };
+      });
+      return next;
+    });
   }, [router]);
 
   useEffect(() => {
@@ -70,6 +93,38 @@ export default function StaffTasksPage() {
   }, [loadTasks]);
 
   async function submitTask(task: Task) {
+    const sideInput = sideTaskInputs[task._id];
+    let sideTaskPayload:
+      | {
+          customerPhone?: string;
+          numberOfTrees: number;
+          ratePerTree: number;
+        }
+      | undefined;
+
+    if (sideInput?.enabled) {
+      const sideTrees = Number(sideInput.numberOfTrees);
+      const sideRate = Number(sideInput.ratePerTree);
+      if (
+        !Number.isFinite(sideTrees) ||
+        !Number.isFinite(sideRate) ||
+        sideTrees < 0 ||
+        sideRate < 0
+      ) {
+        alert("Please enter valid side task trees and rate");
+        return;
+      }
+
+      sideTaskPayload = {
+        numberOfTrees: sideTrees,
+        ratePerTree: sideRate,
+      };
+
+      if (sideInput.customerPhone.trim()) {
+        sideTaskPayload.customerPhone = sideInput.customerPhone.trim();
+      }
+    }
+
     const res = await fetch("/api/tasks/update", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -77,6 +132,7 @@ export default function StaffTasksPage() {
         taskId: task._id,
         numberOfTrees: task.numberOfTrees,
         ratePerTree: task.ratePerTree,
+        sideTask: sideTaskPayload,
       }),
     });
 
@@ -87,6 +143,15 @@ export default function StaffTasksPage() {
     }
 
     alert("Task completed");
+    setSideTaskInputs((prev) => ({
+      ...prev,
+      [task._id]: {
+        enabled: false,
+        customerPhone: "",
+        numberOfTrees: "",
+        ratePerTree: "",
+      },
+    }));
     await loadTasks();
   }
 
@@ -202,6 +267,116 @@ export default function StaffTasksPage() {
                 />
               </label>
             </div>
+
+            {task.status !== "completed" && (
+              <div className="mt-6 rounded-2xl border border-[color:var(--border)] bg-white/70 p-4">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={!!sideTaskInputs[task._id]?.enabled}
+                    onChange={(event) =>
+                      setSideTaskInputs((prev) => ({
+                        ...prev,
+                        [task._id]: {
+                          ...(prev[task._id] || {
+                            customerPhone: "",
+                            numberOfTrees: "",
+                            ratePerTree: "",
+                          }),
+                          enabled: event.target.checked,
+                        } as SideTaskInput,
+                      }))
+                    }
+                  />
+                  <span className="crm-label">Add Side Task (Optional)</span>
+                </label>
+
+                {sideTaskInputs[task._id]?.enabled && (
+                  <div className="mt-4 grid gap-4 md:grid-cols-3">
+                    <label className="block">
+                      <span className="crm-label">Customer Phone (Optional)</span>
+                      <input
+                        type="text"
+                        value={sideTaskInputs[task._id]?.customerPhone || ""}
+                        onChange={(event) =>
+                          setSideTaskInputs((prev) => ({
+                            ...prev,
+                            [task._id]: {
+                              ...(prev[task._id] || {
+                                enabled: true,
+                                customerPhone: "",
+                                numberOfTrees: "",
+                                ratePerTree: "",
+                              }),
+                              customerPhone: event.target.value,
+                            },
+                          }))
+                        }
+                        className="crm-input mt-2"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="crm-label crm-label-required">Side Trees</span>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        value={sideTaskInputs[task._id]?.numberOfTrees || ""}
+                        onChange={(event) =>
+                          setSideTaskInputs((prev) => ({
+                            ...prev,
+                            [task._id]: {
+                              ...(prev[task._id] || {
+                                enabled: true,
+                                customerPhone: "",
+                                numberOfTrees: "",
+                                ratePerTree: "",
+                              }),
+                              numberOfTrees: event.target.value,
+                            },
+                          }))
+                        }
+                        className="crm-input mt-2"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="crm-label crm-label-required">Side Rate</span>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        value={sideTaskInputs[task._id]?.ratePerTree || ""}
+                        onChange={(event) =>
+                          setSideTaskInputs((prev) => ({
+                            ...prev,
+                            [task._id]: {
+                              ...(prev[task._id] || {
+                                enabled: true,
+                                customerPhone: "",
+                                numberOfTrees: "",
+                                ratePerTree: "",
+                              }),
+                              ratePerTree: event.target.value,
+                            },
+                          }))
+                        }
+                        className="crm-input mt-2"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {sideTaskInputs[task._id]?.enabled && (
+                  <p className="mt-3 text-sm font-semibold text-[color:var(--ink)]">
+                    Side Total: Rs.{" "}
+                    {(Number(sideTaskInputs[task._id]?.numberOfTrees || 0) || 0) *
+                      (Number(sideTaskInputs[task._id]?.ratePerTree || 0) || 0)}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-semibold text-[color:var(--ink)]">
