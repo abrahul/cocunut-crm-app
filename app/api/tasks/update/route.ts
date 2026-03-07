@@ -15,13 +15,56 @@ export async function PATCH(req: Request) {
     );
   }
 
-  const { taskId, numberOfTrees, ratePerTree } = await req.json();
+  const { taskId, numberOfTrees, ratePerTree, sideTask } = await req.json();
 
   if (!taskId || numberOfTrees == null || ratePerTree == null) {
     return NextResponse.json(
       { error: "Missing required fields" },
       { status: 400 }
     );
+  }
+
+  const mainTrees = Number(numberOfTrees);
+  const mainRate = Number(ratePerTree);
+  if (
+    !Number.isFinite(mainTrees) ||
+    !Number.isFinite(mainRate) ||
+    mainTrees < 0 ||
+    mainRate < 0
+  ) {
+    return NextResponse.json(
+      { error: "Trees and rate must be valid numbers" },
+      { status: 400 }
+    );
+  }
+
+  if (sideTask != null && typeof sideTask !== "object") {
+    return NextResponse.json(
+      { error: "Invalid side task payload" },
+      { status: 400 }
+    );
+  }
+
+  const hasSideTaskInput =
+    sideTask &&
+    (sideTask.numberOfTrees !== undefined || sideTask.ratePerTree !== undefined);
+  const sideTaskTrees = hasSideTaskInput ? Number(sideTask.numberOfTrees) : null;
+  const sideTaskRate = hasSideTaskInput ? Number(sideTask.ratePerTree) : null;
+
+  if (hasSideTaskInput) {
+    if (
+      sideTaskTrees === null ||
+      sideTaskRate === null ||
+      !Number.isFinite(sideTaskTrees) ||
+      !Number.isFinite(sideTaskRate) ||
+      sideTaskTrees < 0 ||
+      sideTaskRate < 0
+    ) {
+      return NextResponse.json(
+        { error: "Side task trees and rate must be valid numbers" },
+        { status: 400 }
+      );
+    }
   }
 
   const task = await Task.findById(taskId);
@@ -52,9 +95,9 @@ export async function PATCH(req: Request) {
   }
 
   // ✅ APPLY UPDATE
-  task.numberOfTrees = numberOfTrees;
-  task.ratePerTree = ratePerTree;
-  task.totalAmount = numberOfTrees * ratePerTree;
+  task.numberOfTrees = mainTrees;
+  task.ratePerTree = mainRate;
+  task.totalAmount = mainTrees * mainRate;
   task.status = "completed";
   task.completedDate = new Date();
 
@@ -64,6 +107,37 @@ export async function PATCH(req: Request) {
   }
 
   await task.save();
+
+  if (hasSideTaskInput) {
+    const sideTrees = sideTaskTrees as number;
+    const sideRate = sideTaskRate as number;
+    const sideTaskCustomerPhone =
+      typeof sideTask?.customerPhone === "string" &&
+      sideTask.customerPhone.trim()
+        ? sideTask.customerPhone.trim()
+        : undefined;
+
+    await Task.create({
+      customer: task.customer,
+      location: task.location,
+      staff: task.staff,
+      taskType: "side",
+      parentTask: task._id,
+      sideTaskCustomerPhone,
+      numberOfTrees: sideTrees,
+      ratePerTree: sideRate,
+      totalAmount: sideTrees * sideRate,
+      serviceDate: task.serviceDate,
+      serviceTime: task.serviceTime,
+      medicine: task.medicine,
+      exactAddress: task.exactAddress,
+      latitude: task.latitude,
+      longitude: task.longitude,
+      status: "completed",
+      completedDate: new Date(),
+      adminEdited: auth.role === "admin",
+    });
+  }
 
   return NextResponse.json({ success: true });
 }

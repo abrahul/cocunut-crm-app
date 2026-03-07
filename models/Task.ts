@@ -17,6 +17,22 @@ const TaskSchema = new Schema(
       ref: "Staff",
       required: true,
     },
+    taskType: {
+      type: String,
+      enum: ["main", "side"],
+      default: "main",
+    },
+    parentTask: {
+      type: Schema.Types.ObjectId,
+      ref: "Task",
+      required: false,
+      default: undefined,
+    },
+    sideTaskCustomerPhone: {
+      type: String,
+      required: false,
+      default: undefined,
+    },
     numberOfTrees: Number,
     ratePerTree: Number,
     totalAmount: Number,
