@@ -27,7 +27,7 @@ export async function GET() {
         $addFields: {
           serviceDateAsDate: {
             $dateFromString: {
-              dateString: "$serviceDate", 
+              dateString: "$serviceDate",
               onError: null,
               onNull: null,
             },
