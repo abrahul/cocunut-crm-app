@@ -25,6 +25,8 @@ export async function GET(request: Request) {
     const staffId = searchParams.get("staffId")?.trim();
     const locationId = searchParams.get("locationId")?.trim();
     const status = searchParams.get("status")?.trim();
+    const from = searchParams.get("from")?.trim();
+    const to = searchParams.get("to")?.trim();
 
     const pageParam = Number(searchParams.get("page") || 1);
     const pageSizeParam = Number(searchParams.get("pageSize") || 25);
@@ -61,6 +63,12 @@ export async function GET(request: Request) {
     if (staffId && staffId !== "all") taskFilter.staff = staffId;
     if (locationId && locationId !== "all") taskFilter.location = locationId;
     if (status && status !== "all") taskFilter.status = status;
+    if (from || to) {
+      const serviceDateRange: Record<string, string> = {};
+      if (from) serviceDateRange.$gte = from;
+      if (to) serviceDateRange.$lte = to;
+      taskFilter.serviceDate = serviceDateRange;
+    }
 
     const [tasks, total] = await Promise.all([
       Task.find(taskFilter)

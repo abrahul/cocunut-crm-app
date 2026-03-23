@@ -36,6 +36,26 @@ type EditForm = {
   status: "pending" | "completed";
 };
 
+const toLocalInputDate = (date: Date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().split("T")[0];
+};
+
+const startOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const startOfMonth = (date: Date) => {
+  const d = new Date(date.getFullYear(), date.getMonth(), 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 const formatCoordinate = (
   value: number | null | undefined,
   positiveLabel: "N" | "E",
@@ -55,6 +75,11 @@ export default function AdminTasksPage() {
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [rangePreset, setRangePreset] = useState<
+    "today" | "week" | "month" | "custom"
+  >("custom");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [total, setTotal] = useState(0);
@@ -125,7 +150,15 @@ export default function AdminTasksPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, staffFilter, locationFilter, statusFilter, pageSize]);
+  }, [
+    searchQuery,
+    staffFilter,
+    locationFilter,
+    statusFilter,
+    fromDate,
+    toDate,
+    pageSize,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -139,6 +172,8 @@ export default function AdminTasksPage() {
           if (staffFilter !== "all") params.set("staffId", staffFilter);
           if (locationFilter !== "all") params.set("locationId", locationFilter);
           if (statusFilter !== "all") params.set("status", statusFilter);
+          if (fromDate) params.set("from", fromDate);
+          if (toDate) params.set("to", toDate);
           params.set("page", String(page));
           params.set("pageSize", String(pageSize));
 
@@ -170,7 +205,17 @@ export default function AdminTasksPage() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [adminFetch, searchQuery, staffFilter, locationFilter, statusFilter, page, pageSize]);
+  }, [
+    adminFetch,
+    searchQuery,
+    staffFilter,
+    locationFilter,
+    statusFilter,
+    fromDate,
+    toDate,
+    page,
+    pageSize,
+  ]);
 
   const startEdit = (task: Task) => {
     setEditingId(task._id);
@@ -415,6 +460,9 @@ export default function AdminTasksPage() {
               setStaffFilter("all");
               setLocationFilter("all");
               setStatusFilter("all");
+              setFromDate("");
+              setToDate("");
+              setRangePreset("custom");
             }}
             className="crm-btn-outline"
           >
@@ -434,6 +482,83 @@ export default function AdminTasksPage() {
           {notice}
         </div>
       )}
+
+      <div className="crm-toolbar">
+        <span className="text-xs font-semibold text-[color:var(--muted)]">
+          Service date
+        </span>
+        <div className="flex flex-wrap items-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              const date = toLocalInputDate(now);
+              setFromDate(date);
+              setToDate(date);
+              setRangePreset("today");
+            }}
+            className={
+              rangePreset === "today" ? "crm-btn-primary" : "crm-btn-outline"
+            }
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              setFromDate(toLocalInputDate(startOfWeek(now)));
+              setToDate(toLocalInputDate(now));
+              setRangePreset("week");
+            }}
+            className={
+              rangePreset === "week" ? "crm-btn-primary" : "crm-btn-outline"
+            }
+          >
+            This Week
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              setFromDate(toLocalInputDate(startOfMonth(now)));
+              setToDate(toLocalInputDate(now));
+              setRangePreset("month");
+            }}
+            className={
+              rangePreset === "month" ? "crm-btn-primary" : "crm-btn-outline"
+            }
+          >
+            This Month
+          </button>
+        </div>
+
+        <label className="block w-full max-w-[180px]">
+          <span className="crm-label">From</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={fromDate}
+            onChange={(event) => {
+              setFromDate(event.target.value);
+              setRangePreset("custom");
+            }}
+          />
+        </label>
+
+        <label className="block w-full max-w-[180px]">
+          <span className="crm-label">To</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={toDate}
+            onChange={(event) => {
+              setToDate(event.target.value);
+              setRangePreset("custom");
+            }}
+          />
+        </label>
+      </div>
 
       <div className="crm-toolbar">
         <label className="block w-full md:max-w-xs">
