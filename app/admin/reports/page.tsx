@@ -281,8 +281,8 @@ export default function ReportsPage() {
       </h1>
       <p className="mt-1 text-sm text-[color:var(--muted)]">
         {reportTab === "side"
-          ? "Side task analytics grouped by completed date"
-          : "Daily stats grouped by completed date"}
+          ? "Side task analytics grouped by completed or service date"
+          : "Daily stats grouped by completed or service date"}
       </p>
     </div>
   );

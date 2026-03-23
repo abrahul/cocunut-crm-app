@@ -29,27 +29,20 @@ export async function GET(request: Request) {
     const taskType = taskTypeParam === "side" ? "side" : "main";
 
     const match: Record<string, any> = {
-      completedDate: { $ne: null },
       taskType,
     };
-    const completedDateRange: Record<string, Date> = {};
+    const reportDateRange: Record<string, Date> = {};
     if (from) {
       const fromDate = new Date(`${from}T00:00:00.000Z`);
       if (!Number.isNaN(fromDate.getTime())) {
-        completedDateRange.$gte = fromDate;
+        reportDateRange.$gte = fromDate;
       }
     }
     if (to) {
       const toDate = new Date(`${to}T23:59:59.999Z`);
       if (!Number.isNaN(toDate.getTime())) {
-        completedDateRange.$lte = toDate;
+        reportDateRange.$lte = toDate;
       }
-    }
-    if (Object.keys(completedDateRange).length > 0) {
-      match.completedDate = {
-        ...match.completedDate,
-        ...completedDateRange,
-      };
     }
 
     if (staffId && mongoose.Types.ObjectId.isValid(staffId)) {
@@ -60,8 +53,32 @@ export async function GET(request: Request) {
       match.location = new mongoose.Types.ObjectId(locationId);
     }
 
+    const reportDateMatch =
+      Object.keys(reportDateRange).length > 0
+        ? { reportDate: { ...reportDateRange } }
+        : { reportDate: { $ne: null } };
+
     const data = await Task.aggregate([
       { $match: match },
+      {
+        $addFields: {
+          reportDate: {
+            $cond: [
+              { $eq: ["$status", "completed"] },
+              "$completedDate",
+              {
+                $dateFromString: {
+                  dateString: "$serviceDate",
+                  format: "%Y-%m-%d",
+                  onError: null,
+                  onNull: null,
+                },
+              },
+            ],
+          },
+        },
+      },
+      { $match: reportDateMatch },
       {
         $group: {
           _id: "$staff",
@@ -77,7 +94,11 @@ export async function GET(request: Request) {
             },
           },
           totalTrees: { $sum: "$numberOfTrees" },
-          totalEarnings: { $sum: "$totalAmount" },
+          totalEarnings: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "completed"] }, "$totalAmount", 0],
+            },
+          },
           lastCompletedDate: { $max: "$completedDate" },
         },
       },
