@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 export default function AddStaffPage() {
   const router = useRouter();
@@ -24,10 +25,16 @@ export default function AddStaffPage() {
       return;
     }
 
+    const normalizedMobile = normalizePhoneDigits(mobile);
     const res = await adminFetch("/api/admin/add-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, mobile, password, isActive: true }),
+      body: JSON.stringify({
+        name,
+        mobile: normalizedMobile,
+        password,
+        isActive: true,
+      }),
     });
 
     const data = await res.json();
@@ -72,7 +79,7 @@ export default function AddStaffPage() {
             placeholder="Mobile Number"
             required
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => setMobile(formatPhoneInput(e.target.value))}
           />
         </label>
 

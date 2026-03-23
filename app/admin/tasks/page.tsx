@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type Entity = {
   _id: string;
@@ -585,7 +586,9 @@ export default function AdminTasksPage() {
                     <td className="crm-td font-semibold text-[color:var(--ink)]">
                       {task.customer?.name || "-"}
                     </td>
-                    <td className="crm-td">{task.customer?.mobile || "-"}</td>
+                    <td className="crm-td">
+                      {formatPhone(task.customer?.mobile)}
+                    </td>
                     <td className="crm-td">{task.exactAddress || "-"}</td>
                     <td className="crm-td">
                       {typeof task.latitude === "number" &&

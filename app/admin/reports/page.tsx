@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type DailyRow = {
   date: string;
@@ -682,7 +683,7 @@ export default function ReportsPage() {
                             {row.staffName}
                           </div>
                           <div className="text-xs text-[color:var(--muted)]">
-                            {row.mobile || "-"}
+                            {formatPhone(row.mobile)}
                           </div>
                         </td>
                         <td className="crm-td">{row.totalTasks}</td>

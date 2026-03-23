@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 export default function EditStaffPage() {
   const params = useParams();
@@ -29,7 +30,7 @@ export default function EditStaffPage() {
       .then((data) => {
         if (!data) return;
         setName(data.name);
-        setMobile(data.mobile);
+        setMobile(formatPhoneInput(data.mobile));
       })
       .catch((err) => {
         alert(err.message);
@@ -43,12 +44,13 @@ export default function EditStaffPage() {
       return;
     }
 
+    const normalizedMobile = normalizePhoneDigits(mobile);
     const res = await adminFetch(`/api/admin/staff/${staffId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        mobile,
+        mobile: normalizedMobile,
         password: password.trim() ? password : undefined,
       }),
     });
@@ -97,7 +99,7 @@ export default function EditStaffPage() {
             placeholder="Mobile"
             required
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => setMobile(formatPhoneInput(e.target.value))}
           />
         </label>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 type Location = {
   _id: string;
@@ -107,8 +108,8 @@ export default function EditCustomerPage() {
 
         setForm({
           name: customer?.name || "",
-          mobile: customer?.mobile || "",
-          alternateMobile: customer?.alternateMobile || "",
+          mobile: formatPhoneInput(customer?.mobile),
+          alternateMobile: formatPhoneInput(customer?.alternateMobile),
           profession: customer?.profession || "",
           numberOfTrees:
             typeof customer?.numberOfTrees === "number"
@@ -146,7 +147,9 @@ export default function EditCustomerPage() {
     if (!form.name.trim()) {
       nextErrors.name = "Name is required";
     }
-    if (!form.mobile.trim()) {
+    const normalizedMobile = normalizePhoneDigits(form.mobile);
+    const normalizedAlternate = normalizePhoneDigits(form.alternateMobile);
+    if (!normalizedMobile) {
       nextErrors.mobile = "Mobile is required";
     }
     if (!form.address.trim()) {
@@ -191,6 +194,8 @@ export default function EditCustomerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...payload,
+        mobile: normalizedMobile,
+        alternateMobile: normalizedAlternate,
         numberOfTrees: treesInput ? Number(treesInput) : undefined,
         latitude: latNumber,
         longitude: lngNumber,
@@ -246,7 +251,12 @@ export default function EditCustomerPage() {
               className="crm-input mt-2"
               required
               value={form.mobile}
-              onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  mobile: formatPhoneInput(e.target.value),
+                })
+              }
             />
             {errors.mobile && (
               <p className="mt-2 text-xs font-semibold text-red-600">
@@ -262,7 +272,10 @@ export default function EditCustomerPage() {
               className="crm-input mt-2"
               value={form.alternateMobile}
               onChange={(e) =>
-                setForm({ ...form, alternateMobile: e.target.value })
+                setForm({
+                  ...form,
+                  alternateMobile: formatPhoneInput(e.target.value),
+                })
               }
             />
           </label>

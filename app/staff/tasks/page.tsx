@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatPhone, formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 type Task = {
   _id: string;
@@ -120,8 +121,9 @@ export default function StaffTasksPage() {
         ratePerTree: sideRate,
       };
 
-      if (sideInput.customerPhone.trim()) {
-        sideTaskPayload.customerPhone = sideInput.customerPhone.trim();
+      const normalizedSidePhone = normalizePhoneDigits(sideInput.customerPhone);
+      if (normalizedSidePhone) {
+        sideTaskPayload.customerPhone = normalizedSidePhone;
       }
     }
 
@@ -200,11 +202,11 @@ export default function StaffTasksPage() {
                   {task.location}
                 </p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">
-                  Phone: {task.customerMobile || "-"}
+                  Phone: {formatPhone(task.customerMobile)}
                 </p>
                 {task.customerAlternateMobile && (
                   <p className="mt-1 text-sm text-[color:var(--muted)]">
-                    Alt Phone: {task.customerAlternateMobile}
+                    Alt Phone: {formatPhone(task.customerAlternateMobile)}
                   </p>
                 )}
                 <p className="mt-1 text-sm text-[color:var(--muted)]">
@@ -308,7 +310,7 @@ export default function StaffTasksPage() {
                                 numberOfTrees: "",
                                 ratePerTree: "",
                               }),
-                              customerPhone: event.target.value,
+                              customerPhone: formatPhoneInput(event.target.value),
                             },
                           }))
                         }
