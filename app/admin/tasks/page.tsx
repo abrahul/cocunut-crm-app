@@ -68,6 +68,7 @@ export default function AdminTasksPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { adminFetch } = useAdminAuth();
+  const todayIso = () => new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     if (!success) return;
@@ -318,6 +319,10 @@ export default function AdminTasksPage() {
 
     const trees = Number(editForm.numberOfTrees);
     const rate = Number(editForm.ratePerTree);
+    const completedDateToSend =
+      editForm.status === "completed" && !editForm.completedDate
+        ? todayIso()
+        : editForm.completedDate;
 
     if (
       !editForm.staffId ||
@@ -346,7 +351,7 @@ export default function AdminTasksPage() {
           ratePerTree: rate,
           status: editForm.status,
           serviceDate: editForm.serviceDate,
-          completedDate: editForm.completedDate,
+          completedDate: completedDateToSend,
         }),
       });
 
@@ -361,7 +366,7 @@ export default function AdminTasksPage() {
           if (task._id !== editingId) return task;
           const nextCompletedDate =
             editForm.status === "completed"
-              ? editForm.completedDate || task.completedDate || new Date().toISOString()
+              ? completedDateToSend || task.completedDate || new Date().toISOString()
               : undefined;
           return {
             ...task,
@@ -667,11 +672,11 @@ export default function AdminTasksPage() {
                               className="crm-select mt-2"
                               required
                               value={editForm.locationId}
-                              onChange={(event) =>
-                                setEditForm((prev) =>
-                                  prev
-                                    ? {
-                                        ...prev,
+                            onChange={(event) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
                                         locationId: event.target.value,
                                       }
                                     : prev
@@ -783,6 +788,11 @@ export default function AdminTasksPage() {
                                           event.target.value === "completed"
                                             ? "completed"
                                             : "pending",
+                                        completedDate:
+                                          event.target.value === "completed" &&
+                                          !prev.completedDate
+                                            ? todayIso()
+                                            : prev.completedDate,
                                       }
                                     : prev
                                 )

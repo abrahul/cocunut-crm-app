@@ -47,6 +47,7 @@ export default function StaffTaskHistoryPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { adminFetch } = useAdminAuth();
+  const todayIso = () => new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     const normalizedStaffId = Array.isArray(staffId) ? staffId[0] : staffId;
@@ -150,6 +151,10 @@ export default function StaffTaskHistoryPage() {
 
     const trees = Number(editForm.numberOfTrees);
     const rate = Number(editForm.ratePerTree);
+    const completedDateToSend =
+      editForm.status === "completed" && !editForm.completedDate
+        ? todayIso()
+        : editForm.completedDate;
 
     if (!editForm.serviceDate || !Number.isFinite(trees) || !Number.isFinite(rate)) {
       setNotice("Please fill all fields with valid values.");
@@ -170,7 +175,7 @@ export default function StaffTaskHistoryPage() {
           ratePerTree: rate,
           status: editForm.status,
           serviceDate: editForm.serviceDate,
-          completedDate: editForm.completedDate,
+          completedDate: completedDateToSend,
         }),
       });
 
@@ -179,7 +184,7 @@ export default function StaffTaskHistoryPage() {
           if (task._id !== editingId) return task;
           const nextCompletedDate =
             editForm.status === "completed"
-              ? editForm.completedDate || task.completedDate || new Date().toISOString()
+              ? completedDateToSend || task.completedDate || new Date().toISOString()
               : undefined;
           return {
             ...task,
@@ -421,6 +426,11 @@ export default function StaffTaskHistoryPage() {
                                   event.target.value === "completed"
                                     ? "completed"
                                     : "pending",
+                                completedDate:
+                                  event.target.value === "completed" &&
+                                  !prev.completedDate
+                                    ? todayIso()
+                                    : prev.completedDate,
                               }
                             : prev
                         )
