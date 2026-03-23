@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type Staff = {
   _id: string;
@@ -147,7 +148,7 @@ export default function StaffListPage() {
                       {s.name}
                     </Link>
                   </td>
-                  <td className="crm-td">{s.mobile}</td>
+                  <td className="crm-td">{formatPhone(s.mobile)}</td>
                   <td className="crm-td">
                     <span
                       className={

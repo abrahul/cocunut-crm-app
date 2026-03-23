@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -74,7 +75,8 @@ export default function StaffLoginPage() {
   }, []);
 
   async function login() {
-    if (!mobile.trim()) {
+    const normalizedMobile = normalizePhoneDigits(mobile);
+    if (!normalizedMobile) {
       setError("Please enter your mobile number.");
       return;
     }
@@ -87,7 +89,7 @@ export default function StaffLoginPage() {
     const res = await fetch("/api/auth/staff-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, password }),
+      body: JSON.stringify({ mobile: normalizedMobile, password }),
     });
 
     const data = await res.json();
@@ -144,7 +146,7 @@ export default function StaffLoginPage() {
                 required
                 disabled={!isMobileApp}
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
+                onChange={(e) => setMobile(formatPhoneInput(e.target.value))}
                 inputMode="numeric"
                 autoComplete="tel"
               />
