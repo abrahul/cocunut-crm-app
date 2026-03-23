@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
 export default function AddCustomerPage() {
   const [locations, setLocations] = useState([]);
@@ -41,7 +42,9 @@ export default function AddCustomerPage() {
     if (!form.name.trim()) {
       nextErrors.name = "Name is required";
     }
-    if (!form.mobile.trim()) {
+    const normalizedMobile = normalizePhoneDigits(form.mobile);
+    const normalizedAlternate = normalizePhoneDigits(form.alternateMobile);
+    if (!normalizedMobile) {
       nextErrors.mobile = "Mobile is required";
     }
     if (!form.address.trim()) {
@@ -87,6 +90,8 @@ export default function AddCustomerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        mobile: normalizedMobile,
+        alternateMobile: normalizedAlternate,
         numberOfTrees: Number(treesInput),
         latitude: latNumber,
         longitude: lngNumber,
@@ -120,7 +125,10 @@ export default function AddCustomerPage() {
               required
               value={form.mobile}
               onChange={(e) =>
-                setForm({ ...form, mobile: e.target.value })
+                setForm({
+                  ...form,
+                  mobile: formatPhoneInput(e.target.value),
+                })
               }
             />
             {errors.mobile && (
@@ -139,7 +147,7 @@ export default function AddCustomerPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  alternateMobile: e.target.value,
+                  alternateMobile: formatPhoneInput(e.target.value),
                 })
               }
             />

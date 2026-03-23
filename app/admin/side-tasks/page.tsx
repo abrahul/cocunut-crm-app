@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type Entity = {
   _id: string;
@@ -262,7 +263,9 @@ export default function AdminSideTasksPage() {
                     {task.customer?.name || "-"}
                   </td>
                   <td className="crm-td">
-                    {task.sideTaskCustomerPhone || task.customer?.mobile || "-"}
+                    {formatPhone(
+                      task.sideTaskCustomerPhone || task.customer?.mobile
+                    )}
                   </td>
                   <td className="crm-td">{task.location?.name || "-"}</td>
                   <td className="crm-td">{task.staff?.name || "-"}</td>

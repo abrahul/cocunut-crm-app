@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type Customer = {
   _id: string;
@@ -405,8 +406,10 @@ function AddTaskPageContent() {
                     {selectedCustomer.name}
                   </div>
                   <div className="text-[color:var(--muted)]">
-                    {selectedCustomer.mobile || "No mobile"} -{" "}
-                    {selectedCustomer.location?.name || "No location"}
+                    {selectedCustomer.mobile
+                      ? formatPhone(selectedCustomer.mobile)
+                      : "No mobile"}{" "}
+                    - {selectedCustomer.location?.name || "No location"}
                   </div>
                   <button
                     type="button"
@@ -441,7 +444,7 @@ function AddTaskPageContent() {
                           {c.name}
                         </span>
                         <span className="text-xs text-[color:var(--muted)]">
-                          {c.mobile || "No mobile"} -{" "}
+                          {c.mobile ? formatPhone(c.mobile) : "No mobile"} -{" "}
                           {c.location?.name || "No location"}
                         </span>
                       </button>

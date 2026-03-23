@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatPhone } from "@/lib/formatPhone";
 
 type Location = {
   _id: string;
@@ -212,9 +213,9 @@ export default function AdminCustomersPage() {
                   <td className="crm-td font-semibold text-[color:var(--ink)]">
                     {customer.name || "-"}
                   </td>
-                  <td className="crm-td">{customer.mobile || "-"}</td>
+                  <td className="crm-td">{formatPhone(customer.mobile)}</td>
                   <td className="crm-td">
-                    {customer.alternateMobile || "-"}
+                    {formatPhone(customer.alternateMobile)}
                   </td>
                   <td className="crm-td">{customer.profession || "-"}</td>
                   <td className="crm-td">{customer.email || "-"}</td>
