@@ -23,6 +23,7 @@ type Customer = {
   remark?: string;
   lastDateOfService?: string;
   location?: Location;
+  isArchived?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -61,6 +62,9 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"active" | "archived" | "all">(
+    "active"
+  );
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
@@ -72,7 +76,7 @@ export default function AdminCustomersPage() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    adminFetch("/api/admin/customers")
+    adminFetch("/api/admin/customers?includeArchived=true")
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
@@ -94,14 +98,51 @@ export default function AdminCustomersPage() {
 
   const filteredCustomers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return customers;
-    return customers.filter((customer) => {
+    const visible =
+      statusFilter === "all"
+        ? customers
+        : customers.filter((customer) =>
+            statusFilter === "archived" ? customer.isArchived : !customer.isArchived
+          );
+    if (!q) return visible;
+    return visible.filter((customer) => {
       const name = customer.name?.toLowerCase() || "";
       const mobile = customer.mobile || "";
       const alt = customer.alternateMobile || "";
       return name.includes(q) || mobile.includes(q) || alt.includes(q);
     });
-  }, [customers, query]);
+  }, [customers, query, statusFilter]);
+
+  const handleArchiveToggle = async (customer: Customer) => {
+    setNotice(null);
+    setSuccess(null);
+    try {
+      const res = await adminFetch(
+        `/api/admin/customers/${customer._id}/archive`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isArchived: !customer.isArchived }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setNotice(data?.error || "Update failed.");
+        return;
+      }
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c._id === customer._id ? { ...c, isArchived: data.isArchived } : c
+        )
+      );
+      setSuccess(
+        customer.isArchived ? "Customer restored." : "Customer archived."
+      );
+    } catch (err) {
+      console.error("Archive customer error", err);
+      setNotice("Update failed. Please try again.");
+    }
+  };
 
   const handleDelete = async (customerId: string) => {
     if (!window.confirm("Delete this customer? This cannot be undone.")) return;
@@ -166,6 +207,22 @@ export default function AdminCustomersPage() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Status</span>
+          <select
+            className="crm-input mt-2"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as "active" | "archived" | "all"
+              )
+            }
+          >
+            <option value="active">Active only</option>
+            <option value="archived">Archived only</option>
+            <option value="all">All customers</option>
+          </select>
+        </label>
       </div>
 
       {customers.length === 0 && (
@@ -201,6 +258,7 @@ export default function AdminCustomersPage() {
                 <th className="crm-th">Remark</th>
                 <th className="crm-th">Last Climbed</th>
                 <th className="crm-th">Due Days</th>
+                <th className="crm-th">Status</th>
                 <th className="crm-th">Actions</th>
               </tr>
             </thead>
@@ -237,6 +295,9 @@ export default function AdminCustomersPage() {
                     {getDueDays(customer.lastDateOfService)}
                   </td>
                   <td className="crm-td">
+                    {customer.isArchived ? "Archived" : "Active"}
+                  </td>
+                  <td className="crm-td">
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/add-task?customerId=${customer._id}`}
@@ -250,6 +311,12 @@ export default function AdminCustomersPage() {
                       >
                         Edit
                       </Link>
+                      <button
+                        onClick={() => handleArchiveToggle(customer)}
+                        className="text-amber-700 hover:text-amber-800 font-semibold"
+                      >
+                        {customer.isArchived ? "Unarchive" : "Archive"}
+                      </button>
                       <button
                         onClick={() => handleDelete(customer._id)}
                         className="text-red-600 hover:text-red-700 font-semibold"

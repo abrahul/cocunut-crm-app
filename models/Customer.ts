@@ -13,6 +13,7 @@ const CustomerSchema = new Schema(
     email: { type: String },
     remark: { type: String },
     lastDateOfService: { type: Date },
+    isArchived: { type: Boolean, default: false },
     location: {
       type: Schema.Types.ObjectId,
       ref: "Location",
