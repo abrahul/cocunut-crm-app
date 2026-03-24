@@ -6,7 +6,7 @@ import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
     const auth = await getAuthUser();
@@ -17,7 +17,11 @@ export async function GET() {
       );
     }
 
-    const customers = await Customer.find()
+    const { searchParams } = new URL(request.url);
+    const includeArchived = searchParams.get("includeArchived") === "true";
+    const customerFilter = includeArchived ? {} : { isArchived: { $ne: true } };
+
+    const customers = await Customer.find(customerFilter)
       .populate("location")
       .lean();
 
