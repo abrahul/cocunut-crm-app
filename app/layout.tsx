@@ -8,7 +8,7 @@ const coconutSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-const coconutDisplay = DM_Serif_Display({
+const coconutDisplay = DM_Serif_Display({ 
   variable: "--font-coconut-display",
   subsets: ["latin"],
   weight: ["400"],
