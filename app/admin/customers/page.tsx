@@ -65,6 +65,9 @@ export default function AdminCustomersPage() {
   const [statusFilter, setStatusFilter] = useState<"active" | "archived" | "all">(
     "active"
   );
+  const [sortOrder, setSortOrder] = useState<
+    "name-asc" | "name-desc" | "date-asc" | "date-desc"
+  >("name-asc");
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
@@ -104,14 +107,29 @@ export default function AdminCustomersPage() {
         : customers.filter((customer) =>
             statusFilter === "archived" ? customer.isArchived : !customer.isArchived
           );
-    if (!q) return visible;
-    return visible.filter((customer) => {
+    const searched = !q
+      ? visible
+      : visible.filter((customer) => {
       const name = customer.name?.toLowerCase() || "";
       const mobile = customer.mobile || "";
       const alt = customer.alternateMobile || "";
       return name.includes(q) || mobile.includes(q) || alt.includes(q);
     });
-  }, [customers, query, statusFilter]);
+    const sorted = [...searched].sort((a, b) => {
+      if (sortOrder.startsWith("name")) {
+        const aName = (a.name || "").toLowerCase();
+        const bName = (b.name || "").toLowerCase();
+        if (aName === bName) return 0;
+        const cmp = aName < bName ? -1 : 1;
+        return sortOrder === "name-asc" ? cmp : -cmp;
+      }
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const cmp = aDate - bDate;
+      return sortOrder === "date-asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [customers, query, statusFilter, sortOrder]);
 
   const handleArchiveToggle = async (customer: Customer) => {
     setNotice(null);
@@ -221,6 +239,27 @@ export default function AdminCustomersPage() {
             <option value="active">Active only</option>
             <option value="archived">Archived only</option>
             <option value="all">All customers</option>
+          </select>
+        </label>
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Sort</span>
+          <select
+            className="crm-input mt-2"
+            value={sortOrder}
+            onChange={(e) =>
+              setSortOrder(
+                e.target.value as
+                  | "name-asc"
+                  | "name-desc"
+                  | "date-asc"
+                  | "date-desc"
+              )
+            }
+          >
+            <option value="name-asc">Name A → Z</option>
+            <option value="name-desc">Name Z → A</option>
+            <option value="date-asc">Date added (oldest first)</option>
+            <option value="date-desc">Date added (newest first)</option>
           </select>
         </label>
       </div>
