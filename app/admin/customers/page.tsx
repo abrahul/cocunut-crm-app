@@ -68,6 +68,7 @@ export default function AdminCustomersPage() {
   const [sortOrder, setSortOrder] = useState<
     "name-asc" | "name-desc" | "date-asc" | "date-desc"
   >("name-asc");
+  const [locationFilter, setLocationFilter] = useState("all");
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
@@ -99,6 +100,20 @@ export default function AdminCustomersPage() {
     };
   }, [adminFetch]);
 
+  const availableLocations = useMemo(() => {
+    const map = new Map<string, string>();
+    customers.forEach((customer) => {
+      const id = customer.location?._id;
+      const name = customer.location?.name;
+      if (id && name) {
+        map.set(id, name);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [customers]);
+
   const filteredCustomers = useMemo(() => {
     const q = query.trim().toLowerCase();
     const visible =
@@ -107,9 +122,13 @@ export default function AdminCustomersPage() {
         : customers.filter((customer) =>
             statusFilter === "archived" ? customer.isArchived : !customer.isArchived
           );
+    const byLocation =
+      locationFilter === "all"
+        ? visible
+        : visible.filter((customer) => customer.location?._id === locationFilter);
     const searched = !q
-      ? visible
-      : visible.filter((customer) => {
+      ? byLocation
+      : byLocation.filter((customer) => {
       const name = customer.name?.toLowerCase() || "";
       const mobile = customer.mobile || "";
       const alt = customer.alternateMobile || "";
@@ -129,7 +148,7 @@ export default function AdminCustomersPage() {
       return sortOrder === "date-asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [customers, query, statusFilter, sortOrder]);
+  }, [customers, query, statusFilter, sortOrder, locationFilter]);
 
   const handleArchiveToggle = async (customer: Customer) => {
     setNotice(null);
@@ -239,6 +258,21 @@ export default function AdminCustomersPage() {
             <option value="active">Active only</option>
             <option value="archived">Archived only</option>
             <option value="all">All customers</option>
+          </select>
+        </label>
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Location</span>
+          <select
+            className="crm-input mt-2"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          >
+            <option value="all">All locations</option>
+            {availableLocations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="block w-full md:max-w-xs">
