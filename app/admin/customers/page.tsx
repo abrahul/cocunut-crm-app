@@ -69,7 +69,7 @@ export default function AdminCustomersPage() {
   );
   const [sortOrder, setSortOrder] = useState<
     "name-asc" | "name-desc" | "date-asc" | "date-desc"
-  >("name-asc");
+  >("date-desc");
   const [locationFilter, setLocationFilter] = useState("all");
   const { adminFetch } = useAdminAuth();
 
