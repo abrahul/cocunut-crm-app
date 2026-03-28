@@ -71,9 +71,11 @@ export default function AdminTasksPage() {
   const [staffOptions, setStaffOptions] = useState<Entity[]>([]);
   const [locationOptions, setLocationOptions] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -149,6 +151,13 @@ export default function AdminTasksPage() {
   }, [adminFetch]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     setPage(1);
   }, [
     searchQuery,
@@ -193,7 +202,10 @@ export default function AdminTasksPage() {
           setTasks([]);
           setTotal(0);
         } finally {
-          if (active) setLoading(false);
+          if (active) {
+            setLoading(false);
+            setInitialLoading(false);
+          }
         }
       };
 
@@ -438,7 +450,8 @@ export default function AdminTasksPage() {
     }
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
+  if (initialLoading) return <p className="p-4">Loading...</p>;
+  const isRefreshing = loading && !initialLoading;
 
   return (
     <div className="space-y-6">
@@ -456,6 +469,7 @@ export default function AdminTasksPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => {
+              setSearchInput("");
               setSearchQuery("");
               setStaffFilter("all");
               setLocationFilter("all");
@@ -567,8 +581,8 @@ export default function AdminTasksPage() {
             type="text"
             placeholder="Customer name or mobile"
             className="crm-input mt-2"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
           />
         </label>
 
@@ -617,6 +631,10 @@ export default function AdminTasksPage() {
           </select>
         </label>
       </div>
+
+      {isRefreshing && (
+        <p className="text-xs text-[color:var(--muted)]">Updating list...</p>
+      )}
 
       <div className="crm-toolbar">
         <span className="text-xs font-semibold text-[color:var(--muted)]">

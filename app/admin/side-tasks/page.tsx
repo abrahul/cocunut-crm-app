@@ -32,9 +32,11 @@ export default function AdminSideTasksPage() {
   const [staffOptions, setStaffOptions] = useState<Entity[]>([]);
   const [locationOptions, setLocationOptions] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -85,6 +87,13 @@ export default function AdminSideTasksPage() {
   }, [adminFetch]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     setPage(1);
   }, [searchQuery, staffFilter, locationFilter, statusFilter, pageSize]);
 
@@ -118,7 +127,10 @@ export default function AdminSideTasksPage() {
           setTasks([]);
           setTotal(0);
         } finally {
-          if (active) setLoading(false);
+          if (active) {
+            setLoading(false);
+            setInitialLoading(false);
+          }
         }
       };
 
@@ -154,6 +166,7 @@ export default function AdminSideTasksPage() {
         </div>
         <button
           onClick={() => {
+            setSearchInput("");
             setSearchQuery("");
             setStaffFilter("all");
             setLocationFilter("all");
@@ -178,8 +191,8 @@ export default function AdminSideTasksPage() {
             type="text"
             placeholder="Customer or phone"
             className="crm-input mt-2"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
           />
         </label>
 
@@ -229,7 +242,7 @@ export default function AdminSideTasksPage() {
         </label>
       </div>
 
-      {loading ? (
+      {initialLoading ? (
         <p className="text-sm text-[color:var(--muted)]">Loading...</p>
       ) : tasks.length === 0 ? (
         <div className="crm-card">
@@ -294,6 +307,10 @@ export default function AdminSideTasksPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {loading && !initialLoading && (
+        <p className="text-xs text-[color:var(--muted)]">Updating list...</p>
       )}
 
       {total > 0 && (
