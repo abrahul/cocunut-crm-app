@@ -28,6 +28,7 @@ type Staff = {
   _id: string;
   name: string;
   isActive?: boolean;
+  lastCompletedDate?: string | null;
 };
 
 function AddTaskPageContent() {
@@ -363,6 +364,18 @@ function AddTaskPageContent() {
       : customers.slice(0, 8);
   }, [customers, filteredCustomers, normalizedCustomerSearch, searchDigits]);
 
+  const formatDaysSinceWorked = (lastCompletedDate?: string | null) => {
+    if (!lastCompletedDate) return "No work yet";
+    const parsed = new Date(lastCompletedDate);
+    if (Number.isNaN(parsed.getTime())) return "No work yet";
+    const today = new Date();
+    const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffMs = end.getTime() - start.getTime();
+    const days = Math.max(0, Math.floor(diffMs / 86400000));
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -471,7 +484,7 @@ function AddTaskPageContent() {
               <option value="">Select Staff</option>
               {staff.map((s) => (
                 <option key={s._id} value={s._id}>
-                  {s.name}
+                  {s.name} - {formatDaysSinceWorked(s.lastCompletedDate)}
                 </option>
               ))}
             </select>
