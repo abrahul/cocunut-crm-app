@@ -62,6 +62,8 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [statusFilter, setStatusFilter] = useState<"active" | "archived" | "all">(
     "active"
   );
@@ -99,6 +101,10 @@ export default function AdminCustomersPage() {
       active = false;
     };
   }, [adminFetch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter, sortOrder, locationFilter, pageSize]);
 
   const availableLocations = useMemo(() => {
     const map = new Map<string, string>();
@@ -149,6 +155,22 @@ export default function AdminCustomersPage() {
     });
     return sorted;
   }, [customers, query, statusFilter, sortOrder, locationFilter]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
+  }, [filteredCustomers.length, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const pagedCustomers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredCustomers.slice(start, end);
+  }, [filteredCustomers, page, pageSize]);
 
   const handleArchiveToggle = async (customer: Customer) => {
     setNotice(null);
@@ -336,10 +358,10 @@ export default function AdminCustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--border)]">
-              {filteredCustomers.map((customer, index) => (
+              {pagedCustomers.map((customer, index) => (
                 <tr key={customer._id} className="hover:bg-white/70">
                   <td className="crm-td text-[color:var(--muted)]">
-                    {index + 1}
+                    {(page - 1) * pageSize + index + 1}
                   </td>
                   <td className="crm-td font-semibold text-[color:var(--ink)]">
                     {customer.name || "-"}
@@ -402,6 +424,41 @@ export default function AdminCustomersPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {filteredCustomers.length > 0 && (
+        <div className="crm-toolbar">
+          <span className="text-xs font-semibold text-[color:var(--muted)]">
+            Page {page} of {totalPages}
+          </span>
+          <label className="block w-full max-w-[140px]">
+            <span className="crm-label">Page size</span>
+            <select
+              className="crm-select mt-2"
+              value={pageSize}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
+          <button
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={page <= 1}
+            className="crm-btn-outline disabled:opacity-60"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={page >= totalPages}
+            className="crm-btn-outline disabled:opacity-60"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
