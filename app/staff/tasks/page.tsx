@@ -40,6 +40,12 @@ export default function StaffTasksPage() {
   const [sideTaskInputs, setSideTaskInputs] = useState<
     Record<string, SideTaskInput>
   >({});
+  const [drafts, setDrafts] = useState<
+    Record<
+      string,
+      { numberOfTrees: string; ratePerTree: string; dirty: boolean }
+    >
+  >({});
   const router = useRouter();
 
   const loadTasks = useCallback(async () => {
@@ -53,6 +59,27 @@ export default function StaffTasksPage() {
     const data = await res.json();
     const nextTasks = Array.isArray(data) ? data : [];
     setTasks(nextTasks);
+    setDrafts((prev) => {
+      const next: Record<
+        string,
+        { numberOfTrees: string; ratePerTree: string; dirty: boolean }
+      > = {};
+      nextTasks.forEach((task) => {
+        const prevDraft = prev[task._id];
+        const shouldUseServer =
+          task.status === "completed" || !prevDraft?.dirty;
+        if (shouldUseServer) {
+          next[task._id] = {
+            numberOfTrees: String(task.numberOfTrees ?? ""),
+            ratePerTree: String(task.ratePerTree ?? ""),
+            dirty: false,
+          };
+        } else {
+          next[task._id] = prevDraft;
+        }
+      });
+      return next;
+    });
     setSideTaskInputs((prev) => {
       const next: Record<string, SideTaskInput> = {};
       nextTasks.forEach((task) => {
@@ -103,6 +130,14 @@ export default function StaffTasksPage() {
         }
       | undefined;
 
+    const draft = drafts[task._id];
+    const treesValue =
+      draft?.numberOfTrees !== undefined ? draft.numberOfTrees : String(task.numberOfTrees);
+    const rateValue =
+      draft?.ratePerTree !== undefined ? draft.ratePerTree : String(task.ratePerTree);
+    const numberOfTrees = Number(treesValue);
+    const ratePerTree = Number(rateValue);
+
     if (sideInput?.enabled) {
       const sideTrees = Number(sideInput.numberOfTrees);
       const sideRate = Number(sideInput.ratePerTree);
@@ -132,8 +167,8 @@ export default function StaffTasksPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         taskId: task._id,
-        numberOfTrees: task.numberOfTrees,
-        ratePerTree: task.ratePerTree,
+        numberOfTrees,
+        ratePerTree,
         sideTask: sideTaskPayload,
       }),
     });
@@ -145,6 +180,14 @@ export default function StaffTasksPage() {
     }
 
     alert("Task completed");
+    setDrafts((prev) => ({
+      ...prev,
+      [task._id]: {
+        numberOfTrees: String(numberOfTrees),
+        ratePerTree: String(ratePerTree),
+        dirty: false,
+      },
+    }));
     setSideTaskInputs((prev) => ({
       ...prev,
       [task._id]: {
@@ -190,9 +233,16 @@ export default function StaffTasksPage() {
       )}
 
       <div className="grid gap-4">
-        {tasks.map((task, index) => (
-          <div key={task._id} className="crm-card">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        {tasks.map((task) => {
+          const draft = drafts[task._id];
+          const treesValue =
+            draft?.numberOfTrees ?? String(task.numberOfTrees ?? "");
+          const rateValue =
+            draft?.ratePerTree ?? String(task.ratePerTree ?? "");
+          const total = (Number(treesValue) || 0) * (Number(rateValue) || 0);
+          return (
+            <div key={task._id} className="crm-card">
+              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="crm-label">Customer</p>
                 <p className="mt-1 text-lg font-semibold text-[color:var(--ink)]">
@@ -242,12 +292,20 @@ export default function StaffTasksPage() {
                 <input
                   type="number"
                   required
-                  value={task.numberOfTrees}
+                  value={treesValue}
                   disabled={task.status === "completed"}
                   onChange={(e) => {
-                    const updated = [...tasks];
-                    updated[index].numberOfTrees = Number(e.target.value);
-                    setTasks(updated);
+                    const nextValue = e.target.value;
+                    setDrafts((prev) => ({
+                      ...prev,
+                      [task._id]: {
+                        numberOfTrees: nextValue,
+                        ratePerTree:
+                          prev[task._id]?.ratePerTree ??
+                          String(task.ratePerTree ?? ""),
+                        dirty: true,
+                      },
+                    }));
                   }}
                   className="crm-input mt-2"
                 />
@@ -258,12 +316,20 @@ export default function StaffTasksPage() {
                 <input
                   type="number"
                   required
-                  value={task.ratePerTree}
+                  value={rateValue}
                   disabled={task.status === "completed"}
                   onChange={(e) => {
-                    const updated = [...tasks];
-                    updated[index].ratePerTree = Number(e.target.value);
-                    setTasks(updated);
+                    const nextValue = e.target.value;
+                    setDrafts((prev) => ({
+                      ...prev,
+                      [task._id]: {
+                        numberOfTrees:
+                          prev[task._id]?.numberOfTrees ??
+                          String(task.numberOfTrees ?? ""),
+                        ratePerTree: nextValue,
+                        dirty: true,
+                      },
+                    }));
                   }}
                   className="crm-input mt-2"
                 />
@@ -382,7 +448,7 @@ export default function StaffTasksPage() {
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-semibold text-[color:var(--ink)]">
-                Total: Rs. {task.numberOfTrees * task.ratePerTree}
+                Total: Rs. {total}
               </p>
 
               {task.status !== "completed" && (
@@ -395,7 +461,8 @@ export default function StaffTasksPage() {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
