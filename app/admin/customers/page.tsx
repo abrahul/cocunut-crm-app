@@ -408,6 +408,12 @@ export default function AdminCustomersPage() {
                       >
                         Add Task
                       </Link>
+                      <button
+                        onClick={() => handleArchiveToggle(customer)}
+                        className="text-amber-700 hover:text-amber-800 font-semibold cursor-pointer"
+                      >
+                        {customer.isArchived ? "Unarchive" : "Archive"}
+                      </button>
                       <Link
                         href={`/admin/customers/${customer._id}/edit`}
                         className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
@@ -428,12 +434,6 @@ export default function AdminCustomersPage() {
                           <path d="M12 20h9" />
                         </svg>
                       </Link>
-                      <button
-                        onClick={() => handleArchiveToggle(customer)}
-                        className="text-amber-700 hover:text-amber-800 font-semibold cursor-pointer"
-                      >
-                        {customer.isArchived ? "Unarchive" : "Archive"}
-                      </button>
                       <button
                         onClick={() => handleDelete(customer._id)}
                         className="text-red-600 hover:text-red-700 font-semibold cursor-pointer"
