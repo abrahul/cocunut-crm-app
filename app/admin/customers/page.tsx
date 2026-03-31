@@ -408,27 +408,58 @@ export default function AdminCustomersPage() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/add-task?customerId=${customer._id}`}
-                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
                       >
                         Add Task
                       </Link>
                       <Link
                         href={`/admin/customers/${customer._id}/edit`}
-                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
+                        aria-label="Edit customer"
+                        title="Edit"
                       >
-                        Edit
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
+                          <path d="M12 20h9" />
+                        </svg>
                       </Link>
                       <button
                         onClick={() => handleArchiveToggle(customer)}
-                        className="text-amber-700 hover:text-amber-800 font-semibold"
+                        className="text-amber-700 hover:text-amber-800 font-semibold cursor-pointer"
                       >
                         {customer.isArchived ? "Unarchive" : "Archive"}
                       </button>
                       <button
                         onClick={() => handleDelete(customer._id)}
-                        className="text-red-600 hover:text-red-700 font-semibold"
+                        className="text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                        aria-label="Delete customer"
+                        title="Delete"
                       >
-                        Delete
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M6 6l1 14h10l1-14" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
                       </button>
                     </div>
                   </td>
