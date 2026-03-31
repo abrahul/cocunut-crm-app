@@ -264,6 +264,18 @@ export default function AdminTasksPage() {
     return Math.max(1, Math.ceil(total / pageSize));
   }, [total, pageSize]);
 
+  const pageNumbers = useMemo(() => {
+    const maxButtons = 5;
+    const pages: number[] = [];
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }, [page, totalPages]);
+
   useEffect(() => {
     if (page > totalPages) {
       setPage(totalPages);
@@ -1009,6 +1021,19 @@ export default function AdminTasksPage() {
           >
             Previous
           </button>
+          <div className="flex flex-wrap gap-2">
+            {pageNumbers.map((number) => (
+              <button
+                key={number}
+                onClick={() => setPage(number)}
+                className={
+                  number === page ? "crm-btn-primary" : "crm-btn-outline"
+                }
+              >
+                {number}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={page >= totalPages}
