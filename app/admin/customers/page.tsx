@@ -356,8 +356,6 @@ export default function AdminCustomersPage() {
                 <th className="crm-th">Name</th>
                 <th className="crm-th">Mobile</th>
                 <th className="crm-th">Alternate</th>
-                <th className="crm-th">Profession</th>
-                <th className="crm-th">Email</th>
                 <th className="crm-th">Address</th>
                 <th className="crm-th">Location</th>
                 <th className="crm-th">Latitude</th>
@@ -382,8 +380,6 @@ export default function AdminCustomersPage() {
                   <td className="crm-td">
                     {formatPhone(customer.alternateMobile)}
                   </td>
-                  <td className="crm-td">{customer.profession || "-"}</td>
-                  <td className="crm-td">{customer.email || "-"}</td>
                   <td className="crm-td">{customer.address || "-"}</td>
                   <td className="crm-td">
                     {customer.location?.name || "-"}
