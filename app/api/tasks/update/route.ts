@@ -30,21 +30,6 @@ export async function PATCH(req: Request) {
     );
   }
 
-  const mainTrees = isCompleteAction ? Number(numberOfTrees) : null;
-  const mainRate = isCompleteAction ? Number(ratePerTree) : null;
-  if (
-    isCompleteAction &&
-    (!Number.isFinite(mainTrees) ||
-      !Number.isFinite(mainRate) ||
-      mainTrees < 0 ||
-      mainRate < 0)
-  ) {
-    return NextResponse.json(
-      { error: "Trees and rate must be valid numbers" },
-      { status: 400 }
-    );
-  }
-
   if (isCompleteAction && sideTask != null && typeof sideTask !== "object") {
     return NextResponse.json(
       { error: "Invalid side task payload" },
@@ -120,9 +105,23 @@ export async function PATCH(req: Request) {
   }
 
   // ✅ APPLY COMPLETE UPDATE
-  task.numberOfTrees = mainTrees as number;
-  task.ratePerTree = mainRate as number;
-  task.totalAmount = (mainTrees as number) * (mainRate as number);
+  const mainTrees = Number(numberOfTrees);
+  const mainRate = Number(ratePerTree);
+  if (
+    !Number.isFinite(mainTrees) ||
+    !Number.isFinite(mainRate) ||
+    mainTrees < 0 ||
+    mainRate < 0
+  ) {
+    return NextResponse.json(
+      { error: "Trees and rate must be valid numbers" },
+      { status: 400 }
+    );
+  }
+
+  task.numberOfTrees = mainTrees;
+  task.ratePerTree = mainRate;
+  task.totalAmount = mainTrees * mainRate;
   task.status = "completed";
   task.completedDate = new Date();
 
