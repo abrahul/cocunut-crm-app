@@ -22,6 +22,7 @@ type Customer = {
   email?: string;
   remark?: string;
   lastDateOfService?: string;
+  serviceDate?: string;
   location?: Location;
   isArchived?: boolean;
   createdAt?: string;
@@ -71,6 +72,7 @@ export default function AdminCustomersPage() {
     "name-asc" | "name-desc" | "date-asc" | "date-desc"
   >("date-desc");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [serviceDateFilter, setServiceDateFilter] = useState("");
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
@@ -104,7 +106,7 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [query, statusFilter, sortOrder, locationFilter, pageSize]);
+  }, [query, statusFilter, sortOrder, locationFilter, serviceDateFilter, pageSize]);
 
   const availableLocations = useMemo(() => {
     const map = new Map<string, string>();
@@ -140,7 +142,16 @@ export default function AdminCustomersPage() {
       const alt = customer.alternateMobile || "";
       return name.includes(q) || mobile.includes(q) || alt.includes(q);
     });
-    const sorted = [...searched].sort((a, b) => {
+    const withServiceDate = serviceDateFilter
+      ? searched.filter((customer) => {
+        if (!customer.serviceDate) return false;
+        const service = new Date(customer.serviceDate);
+        if (Number.isNaN(service.getTime())) return false;
+        const serviceValue = service.toISOString().slice(0, 10);
+        return serviceValue === serviceDateFilter;
+      })
+      : searched;
+    const sorted = [...withServiceDate].sort((a, b) => {
       if (sortOrder.startsWith("name")) {
         const aName = (a.name || "").toLowerCase();
         const bName = (b.name || "").toLowerCase();
@@ -154,11 +165,23 @@ export default function AdminCustomersPage() {
       return sortOrder === "date-asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [customers, query, statusFilter, sortOrder, locationFilter]);
+  }, [customers, query, statusFilter, sortOrder, locationFilter, serviceDateFilter]);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
   }, [filteredCustomers.length, pageSize]);
+
+  const pageNumbers = useMemo(() => {
+    const maxButtons = 5;
+    const pages: number[] = [];
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }, [page, totalPages]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -318,6 +341,15 @@ export default function AdminCustomersPage() {
             <option value="date-desc">Date added (newest first)</option>
           </select>
         </label>
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Service date</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={serviceDateFilter}
+            onChange={(e) => setServiceDateFilter(e.target.value)}
+          />
+        </label>
       </div>
 
       {customers.length === 0 && (
@@ -344,14 +376,13 @@ export default function AdminCustomersPage() {
                 <th className="crm-th">Name</th>
                 <th className="crm-th">Mobile</th>
                 <th className="crm-th">Alternate</th>
-                <th className="crm-th">Profession</th>
-                <th className="crm-th">Email</th>
                 <th className="crm-th">Address</th>
                 <th className="crm-th">Location</th>
                 <th className="crm-th">Latitude</th>
                 <th className="crm-th">Longitude</th>
                 <th className="crm-th">Remark</th>
                 <th className="crm-th">Last Climbed</th>
+                <th className="crm-th">Service Date</th>
                 <th className="crm-th">Due Days</th>
                 <th className="crm-th">Status</th>
                 <th className="crm-th">Actions</th>
@@ -370,8 +401,6 @@ export default function AdminCustomersPage() {
                   <td className="crm-td">
                     {formatPhone(customer.alternateMobile)}
                   </td>
-                  <td className="crm-td">{customer.profession || "-"}</td>
-                  <td className="crm-td">{customer.email || "-"}</td>
                   <td className="crm-td">{customer.address || "-"}</td>
                   <td className="crm-td">
                     {customer.location?.name || "-"}
@@ -387,6 +416,9 @@ export default function AdminCustomersPage() {
                     {formatDate(customer.lastDateOfService)}
                   </td>
                   <td className="crm-td">
+                    {formatDate(customer.serviceDate)}
+                  </td>
+                  <td className="crm-td">
                     {getDueDays(customer.lastDateOfService)}
                   </td>
                   <td className="crm-td">
@@ -396,27 +428,58 @@ export default function AdminCustomersPage() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/add-task?customerId=${customer._id}`}
-                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
                       >
                         Add Task
                       </Link>
-                      <Link
-                        href={`/admin/customers/${customer._id}/edit`}
-                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
-                      >
-                        Edit
-                      </Link>
                       <button
                         onClick={() => handleArchiveToggle(customer)}
-                        className="text-amber-700 hover:text-amber-800 font-semibold"
+                        className="text-amber-700 hover:text-amber-800 font-semibold cursor-pointer"
                       >
                         {customer.isArchived ? "Unarchive" : "Archive"}
                       </button>
+                      <Link
+                        href={`/admin/customers/${customer._id}/edit`}
+                        className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
+                        aria-label="Edit customer"
+                        title="Edit"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
+                          <path d="M12 20h9" />
+                        </svg>
+                      </Link>
                       <button
                         onClick={() => handleDelete(customer._id)}
-                        className="text-red-600 hover:text-red-700 font-semibold"
+                        className="text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                        aria-label="Delete customer"
+                        title="Delete"
                       >
-                        Delete
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M6 6l1 14h10l1-14" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -452,6 +515,19 @@ export default function AdminCustomersPage() {
           >
             Previous
           </button>
+          <div className="flex flex-wrap gap-2">
+            {pageNumbers.map((number) => (
+              <button
+                key={number}
+                onClick={() => setPage(number)}
+                className={
+                  number === page ? "crm-btn-primary" : "crm-btn-outline"
+                }
+              >
+                {number}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={page >= totalPages}

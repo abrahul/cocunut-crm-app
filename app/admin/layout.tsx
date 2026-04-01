@@ -186,7 +186,7 @@ export default function AdminLayout({
                 </p>
               </div>
               <div className="hidden items-center gap-2 md:flex">
-                {quickActions.slice(0, 2).map((item) => (
+                {quickActions.slice(0, 3).map((item) => (
                   <Link key={item.href} href={item.href} className="crm-btn-outline">
                     {item.label}
                   </Link>

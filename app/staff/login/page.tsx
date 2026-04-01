@@ -132,8 +132,9 @@ export default function StaffLoginPage() {
           </p>
 
           {!isMobileApp && (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              Staff login is available only in the Coconut Staff mobile app.
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              You are signing in from a desktop browser. The staff portal now
+              works on PC as well.
             </div>
           )}
 
@@ -144,7 +145,6 @@ export default function StaffLoginPage() {
                 className="crm-input mt-2"
                 placeholder="e.g. 5551234567"
                 required
-                disabled={!isMobileApp}
                 value={mobile}
                 onChange={(e) => setMobile(formatPhoneInput(e.target.value))}
                 inputMode="numeric"
@@ -158,7 +158,6 @@ export default function StaffLoginPage() {
                 className="crm-input mt-2"
                 placeholder="Enter password"
                 required
-                disabled={!isMobileApp}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
@@ -176,7 +175,7 @@ export default function StaffLoginPage() {
           <div className="mt-6 space-y-3">
             <button
               onClick={login}
-              disabled={loggingIn || !isMobileApp}
+              disabled={loggingIn}
               className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loggingIn ? "Signing in..." : "Sign in"}

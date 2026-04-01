@@ -75,9 +75,14 @@ export async function GET(request: Request) {
     const customersWithLastService = customers.map((customer: any) => {
       const lastServiceDate = lastServiceMap.get(String(customer._id));
       const lastTask = lastTaskMap.get(String(customer._id));
+      const legacyServiceDate =
+        customer.serviceDate ||
+        (customer as { dueDate?: unknown }).dueDate ||
+        undefined;
       if (lastServiceDate) {
         return {
           ...customer,
+          serviceDate: legacyServiceDate,
           lastDateOfService: lastServiceDate,
           lastTask,
         };
@@ -85,10 +90,14 @@ export async function GET(request: Request) {
       if (lastTask) {
         return {
           ...customer,
+          serviceDate: legacyServiceDate,
           lastTask,
         };
       }
-      return customer;
+      return {
+        ...customer,
+        serviceDate: legacyServiceDate,
+      };
     });
 
     return NextResponse.json(customersWithLastService, { status: 200 });
