@@ -170,6 +170,7 @@ export default function StaffTasksPage() {
         numberOfTrees,
         ratePerTree,
         sideTask: sideTaskPayload,
+        action: "complete",
       }),
     });
 
@@ -197,6 +198,26 @@ export default function StaffTasksPage() {
         ratePerTree: "",
       },
     }));
+    await loadTasks();
+  }
+
+  async function markNotCompleted(task: Task) {
+    const res = await fetch("/api/tasks/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        taskId: task._id,
+        action: "not_completed",
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || "Failed to update task");
+      return;
+    }
+
+    alert("Are you sure you want to mark this task as incomplete");
     await loadTasks();
   }
 
@@ -452,12 +473,20 @@ export default function StaffTasksPage() {
               </p>
 
               {task.status !== "completed" && (
-                <button
-                  onClick={() => submitTask(task)}
-                  className="crm-btn-primary"
-                >
-                  Complete Task
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => submitTask(task)}
+                    className="crm-btn-primary"
+                  >
+                    Complete Task
+                  </button>
+                  <button
+                    onClick={() => markNotCompleted(task)}
+                    className="crm-btn-outline"
+                  >
+                    Not Completed
+                  </button>
+                </div>
               )}
             </div>
           </div>

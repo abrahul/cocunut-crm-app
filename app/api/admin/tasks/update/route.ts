@@ -18,7 +18,12 @@ export async function PATCH(req: Request) {
     }
 
     if (typeof body.staffId === "string" && body.staffId) {
-      task.staff = body.staffId;
+      const nextStaffId = body.staffId;
+      if (String(task.staff) !== nextStaffId) {
+        task.staff = nextStaffId;
+        task.staffHidden = false;
+        task.staffHiddenAt = undefined;
+      }
     }
 
     if (typeof body.locationId === "string" && body.locationId) {
@@ -51,6 +56,8 @@ export async function PATCH(req: Request) {
         }
       } else {
         task.completedDate = undefined;
+        task.staffHidden = false;
+        task.staffHiddenAt = undefined;
       }
     }
 

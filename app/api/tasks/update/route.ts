@@ -15,22 +15,29 @@ export async function PATCH(req: Request) {
     );
   }
 
-  const { taskId, numberOfTrees, ratePerTree, sideTask } = await req.json();
+  const { taskId, numberOfTrees, ratePerTree, sideTask, action } =
+    await req.json();
+  const nextAction =
+    action === "not_completed" || action === "complete"
+      ? action
+      : "complete";
+  const isCompleteAction = nextAction === "complete";
 
-  if (!taskId || numberOfTrees == null || ratePerTree == null) {
+  if (!taskId) {
     return NextResponse.json(
       { error: "Missing required fields" },
       { status: 400 }
     );
   }
 
-  const mainTrees = Number(numberOfTrees);
-  const mainRate = Number(ratePerTree);
+  const mainTrees = isCompleteAction ? Number(numberOfTrees) : null;
+  const mainRate = isCompleteAction ? Number(ratePerTree) : null;
   if (
-    !Number.isFinite(mainTrees) ||
-    !Number.isFinite(mainRate) ||
-    mainTrees < 0 ||
-    mainRate < 0
+    isCompleteAction &&
+    (!Number.isFinite(mainTrees) ||
+      !Number.isFinite(mainRate) ||
+      mainTrees < 0 ||
+      mainRate < 0)
   ) {
     return NextResponse.json(
       { error: "Trees and rate must be valid numbers" },
@@ -38,7 +45,7 @@ export async function PATCH(req: Request) {
     );
   }
 
-  if (sideTask != null && typeof sideTask !== "object") {
+  if (isCompleteAction && sideTask != null && typeof sideTask !== "object") {
     return NextResponse.json(
       { error: "Invalid side task payload" },
       { status: 400 }
@@ -46,6 +53,7 @@ export async function PATCH(req: Request) {
   }
 
   const hasSideTaskInput =
+    isCompleteAction &&
     sideTask &&
     (sideTask.numberOfTrees !== undefined || sideTask.ratePerTree !== undefined);
   const sideTaskTrees = hasSideTaskInput ? Number(sideTask.numberOfTrees) : null;
@@ -94,10 +102,27 @@ export async function PATCH(req: Request) {
     }
   }
 
-  // ✅ APPLY UPDATE
-  task.numberOfTrees = mainTrees;
-  task.ratePerTree = mainRate;
-  task.totalAmount = mainTrees * mainRate;
+  if (!isCompleteAction) {
+    if (auth.role !== "staff") {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    task.status = "pending";
+    task.completedDate = undefined;
+    task.staffHidden = true;
+    task.staffHiddenAt = new Date();
+
+    await task.save();
+    return NextResponse.json({ success: true });
+  }
+
+  // ✅ APPLY COMPLETE UPDATE
+  task.numberOfTrees = mainTrees as number;
+  task.ratePerTree = mainRate as number;
+  task.totalAmount = (mainTrees as number) * (mainRate as number);
   task.status = "completed";
   task.completedDate = new Date();
 

@@ -22,6 +22,7 @@ export async function GET() {
   const tasks = await Task.find({
     staff: auth.staffId,
     status: { $ne: "completed" },
+    staffHidden: { $ne: true },
     taskType: "main",
   })
     .populate("customer")
