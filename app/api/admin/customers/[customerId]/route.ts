@@ -59,9 +59,15 @@ export async function GET(
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
+    const legacyServiceDate =
+      customer.serviceDate ||
+      (customer as { dueDate?: unknown }).dueDate ||
+      undefined;
+
     return NextResponse.json(
       {
         ...customer,
+        serviceDate: legacyServiceDate,
         lastDateOfService: lastServiceDate || customer?.lastDateOfService,
         lastTask: lastTask
           ? {
@@ -110,6 +116,8 @@ export async function PATCH(
       email,
       remark,
       lastDateOfService,
+      serviceDate,
+      dueDate,
       locationId,
     } = await req.json();
 
@@ -147,6 +155,15 @@ export async function PATCH(
     const hasLastDate =
       typeof lastDateOfService === "string" &&
       lastDateOfService.trim() !== "";
+    const serviceDateInput =
+      typeof serviceDate === "string" && serviceDate.trim() !== ""
+        ? serviceDate
+        : typeof dueDate === "string" && dueDate.trim() !== ""
+          ? dueDate
+          : "";
+    const hasServiceDate = Boolean(serviceDateInput);
+    const shouldClearServiceDate =
+      typeof serviceDate === "string" && !serviceDate.trim();
 
     let parsedLastDate: Date | undefined;
     if (hasLastDate) {
@@ -154,6 +171,16 @@ export async function PATCH(
       if (Number.isNaN(parsedLastDate.getTime())) {
         return NextResponse.json(
           { error: "Invalid last service date" },
+          { status: 400 }
+        );
+      }
+    }
+    let parsedServiceDate: Date | undefined;
+    if (hasServiceDate) {
+      parsedServiceDate = new Date(serviceDateInput);
+      if (Number.isNaN(parsedServiceDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid service date" },
           { status: 400 }
         );
       }
@@ -175,6 +202,11 @@ export async function PATCH(
 
     if (hasLastDate) {
       updateDoc.lastDateOfService = parsedLastDate;
+    }
+    if (hasServiceDate) {
+      updateDoc.serviceDate = parsedServiceDate;
+    } else if (shouldClearServiceDate) {
+      updateDoc.$unset = { serviceDate: "" };
     }
 
     const updated = await Customer.findByIdAndUpdate(

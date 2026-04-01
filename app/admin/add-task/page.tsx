@@ -14,6 +14,7 @@ type Customer = {
   longitude?: number;
   address?: string;
   remark?: string;
+  serviceDate?: string;
   location?: {
     name: string;
     defaultRate?: number;
@@ -230,6 +231,9 @@ function AddTaskPageContent() {
         : typeof selected?.lastTask?.numberOfTrees === "number"
           ? String(selected.lastTask.numberOfTrees)
         : "";
+    const nextServiceDate = selected?.serviceDate
+      ? new Date(selected.serviceDate).toISOString().slice(0, 10)
+      : "";
     const selectedLatitude = Number(selected?.latitude);
     const selectedLongitude = Number(selected?.longitude);
     if (Number.isFinite(selectedLatitude)) {
@@ -250,6 +254,7 @@ function AddTaskPageContent() {
         typeof defaultRate === "number"
           ? String(defaultRate)
           : "",
+      serviceDate: nextServiceDate,
       latitude:
         typeof selected?.latitude === "number"
           ? String(Math.abs(selected.latitude))
@@ -291,6 +296,10 @@ function AddTaskPageContent() {
                 : typeof data?.location?.defaultRate === "number"
                   ? String(data.location.defaultRate)
                   : prev.rate,
+            serviceDate:
+              typeof data?.serviceDate === "string"
+                ? new Date(data.serviceDate).toISOString().slice(0, 10)
+                : prev.serviceDate,
             treesCount:
               typeof data?.numberOfTrees === "number"
                 ? String(data.numberOfTrees)

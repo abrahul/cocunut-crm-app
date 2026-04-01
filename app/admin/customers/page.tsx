@@ -22,6 +22,7 @@ type Customer = {
   email?: string;
   remark?: string;
   lastDateOfService?: string;
+  serviceDate?: string;
   location?: Location;
   isArchived?: boolean;
   createdAt?: string;
@@ -71,6 +72,7 @@ export default function AdminCustomersPage() {
     "name-asc" | "name-desc" | "date-asc" | "date-desc"
   >("date-desc");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [serviceDateFilter, setServiceDateFilter] = useState("");
   const { adminFetch } = useAdminAuth();
 
   useEffect(() => {
@@ -104,7 +106,7 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [query, statusFilter, sortOrder, locationFilter, pageSize]);
+  }, [query, statusFilter, sortOrder, locationFilter, serviceDateFilter, pageSize]);
 
   const availableLocations = useMemo(() => {
     const map = new Map<string, string>();
@@ -140,7 +142,16 @@ export default function AdminCustomersPage() {
       const alt = customer.alternateMobile || "";
       return name.includes(q) || mobile.includes(q) || alt.includes(q);
     });
-    const sorted = [...searched].sort((a, b) => {
+    const withServiceDate = serviceDateFilter
+      ? searched.filter((customer) => {
+        if (!customer.serviceDate) return false;
+        const service = new Date(customer.serviceDate);
+        if (Number.isNaN(service.getTime())) return false;
+        const serviceValue = service.toISOString().slice(0, 10);
+        return serviceValue === serviceDateFilter;
+      })
+      : searched;
+    const sorted = [...withServiceDate].sort((a, b) => {
       if (sortOrder.startsWith("name")) {
         const aName = (a.name || "").toLowerCase();
         const bName = (b.name || "").toLowerCase();
@@ -154,7 +165,7 @@ export default function AdminCustomersPage() {
       return sortOrder === "date-asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [customers, query, statusFilter, sortOrder, locationFilter]);
+  }, [customers, query, statusFilter, sortOrder, locationFilter, serviceDateFilter]);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
@@ -330,6 +341,15 @@ export default function AdminCustomersPage() {
             <option value="date-desc">Date added (newest first)</option>
           </select>
         </label>
+        <label className="block w-full md:max-w-xs">
+          <span className="crm-label">Service date</span>
+          <input
+            type="date"
+            className="crm-input mt-2"
+            value={serviceDateFilter}
+            onChange={(e) => setServiceDateFilter(e.target.value)}
+          />
+        </label>
       </div>
 
       {customers.length === 0 && (
@@ -362,6 +382,7 @@ export default function AdminCustomersPage() {
                 <th className="crm-th">Longitude</th>
                 <th className="crm-th">Remark</th>
                 <th className="crm-th">Last Climbed</th>
+                <th className="crm-th">Service Date</th>
                 <th className="crm-th">Due Days</th>
                 <th className="crm-th">Status</th>
                 <th className="crm-th">Actions</th>
@@ -393,6 +414,9 @@ export default function AdminCustomersPage() {
                   <td className="crm-td">{customer.remark || "-"}</td>
                   <td className="crm-td">
                     {formatDate(customer.lastDateOfService)}
+                  </td>
+                  <td className="crm-td">
+                    {formatDate(customer.serviceDate)}
                   </td>
                   <td className="crm-td">
                     {getDueDays(customer.lastDateOfService)}

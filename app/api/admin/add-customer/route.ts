@@ -26,6 +26,8 @@ export async function POST(req: Request) {
       email,
       remark,
       lastDateOfService,
+      serviceDate,
+      dueDate,
       locationId,
     } = await req.json();
 
@@ -36,6 +38,13 @@ export async function POST(req: Request) {
       numberOfTrees !== null &&
       String(numberOfTrees).trim() !== "";
     const treesNumber = treesProvided ? Number(numberOfTrees) : undefined;
+    const serviceDateInput =
+      typeof serviceDate === "string" && serviceDate.trim() !== ""
+        ? serviceDate
+        : typeof dueDate === "string" && dueDate.trim() !== ""
+          ? dueDate
+          : "";
+    const hasServiceDate = Boolean(serviceDateInput);
 
     if (
       !name ||
@@ -62,6 +71,15 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    if (hasServiceDate) {
+      const parsedService = new Date(serviceDateInput);
+      if (Number.isNaN(parsedService.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid service date" },
+          { status: 400 }
+        );
+      }
+    }
 
     const customer = await Customer.create({
       name,
@@ -77,6 +95,7 @@ export async function POST(req: Request) {
       lastDateOfService: lastDateOfService
         ? new Date(lastDateOfService)
         : undefined,
+      serviceDate: hasServiceDate ? new Date(serviceDateInput) : undefined,
       location: locationId,
     });
 

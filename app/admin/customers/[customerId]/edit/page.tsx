@@ -22,6 +22,7 @@ type FormState = {
   email: string;
   remark: string;
   lastDateOfService: string;
+  serviceDate: string;
   locationId: string;
 };
 
@@ -37,6 +38,7 @@ const emptyForm: FormState = {
   email: "",
   remark: "",
   lastDateOfService: "",
+  serviceDate: "",
   locationId: "",
 };
 
@@ -123,6 +125,9 @@ export default function EditCustomerPage() {
           email: customer?.email || "",
           remark: customer?.remark || "",
           lastDateOfService: "",
+          serviceDate: customer?.serviceDate
+            ? new Date(customer.serviceDate).toISOString().slice(0, 10)
+            : "",
           locationId: customer?.location?._id || "",
         });
         setLastClimbedDate(customer?.lastDateOfService || "");
@@ -199,6 +204,7 @@ export default function EditCustomerPage() {
         numberOfTrees: treesInput ? Number(treesInput) : undefined,
         latitude: latNumber,
         longitude: lngNumber,
+        serviceDate: form.serviceDate,
       }),
     });
 
@@ -433,6 +439,17 @@ export default function EditCustomerPage() {
                 {errors.locationId}
               </p>
             )}
+          </label>
+          <label className="block">
+            <span className="crm-label">Service date</span>
+            <input
+              type="date"
+              className="crm-input mt-2"
+              value={form.serviceDate}
+              onChange={(e) =>
+                setForm({ ...form, serviceDate: e.target.value })
+              }
+            />
           </label>
         </div>
 
