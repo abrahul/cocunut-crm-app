@@ -62,6 +62,7 @@ export default function StaffLoginPage() {
     getAppModeSnapshot,
     () => false
   );
+  const isDesktop = !isMobileApp;
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -75,6 +76,11 @@ export default function StaffLoginPage() {
   }, []);
 
   async function login() {
+    if (isDesktop) {
+      setError("Staff login is disabled on desktop. Please use the mobile app.");
+      return;
+    }
+
     const normalizedMobile = normalizePhoneDigits(mobile);
     if (!normalizedMobile) {
       setError("Please enter your mobile number.");
@@ -133,8 +139,8 @@ export default function StaffLoginPage() {
 
           {!isMobileApp && (
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              You are signing in from a desktop browser. The staff portal now
-              works on PC as well.
+              Staff login is disabled on desktop. Please sign in using the mobile
+              app.
             </div>
           )}
 
@@ -175,7 +181,7 @@ export default function StaffLoginPage() {
           <div className="mt-6 space-y-3">
             <button
               onClick={login}
-              disabled={loggingIn}
+              disabled={loggingIn || isDesktop}
               className="crm-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loggingIn ? "Signing in..." : "Sign in"}

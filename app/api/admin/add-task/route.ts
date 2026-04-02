@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       medicine,
       exactAddress,
       remark,
+      allowDuplicate,
     } = body;
 
     const trees = Number(treesCount);
@@ -91,6 +92,36 @@ export async function POST(req: Request) {
         { error: "Customer or location not found" },
         { status: 404 }
       );
+    }
+
+    if (!allowDuplicate) {
+      const pendingTask = await Task.findOne({
+        customer: customerId,
+        status: "pending",
+        taskType: "main",
+      })
+        .sort({ createdAt: -1 })
+        .populate("staff", "name")
+        .select("serviceDate staff createdAt")
+        .lean();
+
+      if (pendingTask) {
+        const staffName =
+          typeof (pendingTask as any)?.staff?.name === "string"
+            ? (pendingTask as any).staff.name
+            : undefined;
+        return NextResponse.json(
+          {
+            error: "Pending task exists",
+            pendingTask: {
+              serviceDate: pendingTask.serviceDate,
+              createdAt: pendingTask.createdAt,
+              staffName,
+            },
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const latCandidate =

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhone } from "@/lib/formatPhone";
+import { formatDateDisplayIST, formatDateInputIST } from "@/lib/date";
 
 type DailyRow = {
   date: string;
@@ -48,10 +49,7 @@ type StaffPerformance = {
   lastCompletedDate: string;
 };
 
-const toLocalInputDate = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split("T")[0];
-};
+const toLocalInputDate = (date: Date) => formatDateInputIST(date);
 
 const startOfWeek = (date: Date) => {
   const d = new Date(date);
@@ -567,7 +565,7 @@ export default function ReportsPage() {
                   {days.map((row) => (
                     <tr key={row.date} className="hover:bg-white/70">
                       <td className="crm-td">
-                        {new Date(row.date).toLocaleDateString()}
+                        {formatDateDisplayIST(new Date(row.date))}
                       </td>
                       <td className="crm-td">{row.totalTasks}</td>
                       <td className="crm-td text-emerald-700">
@@ -617,7 +615,7 @@ export default function ReportsPage() {
                       {adminSessions.map((row) => (
                         <tr key={row.id} className="hover:bg-white/70">
                           <td className="crm-td">
-                            {row.date ? new Date(row.date).toLocaleDateString() : "-"}
+                            {row.date ? formatDateDisplayIST(new Date(row.date)) : "-"}
                           </td>
                           <td className="crm-td">{row.adminName || "-"}</td>
                           <td className="crm-td">{row.sessionName || "-"}</td>
@@ -697,7 +695,7 @@ export default function ReportsPage() {
                         <td className="crm-td">Rs. {row.totalEarnings}</td>
                         <td className="crm-td">
                           {row.lastCompletedDate
-                            ? new Date(row.lastCompletedDate).toLocaleDateString()
+                            ? formatDateDisplayIST(new Date(row.lastCompletedDate))
                             : "-"}
                         </td>
                       </tr>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatPhone, formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
+import { formatDateDisplayIST, formatDateInputIST } from "@/lib/date";
 
 type Task = {
   _id: string;
@@ -43,10 +44,7 @@ const formatCoordinate = (
   return `${Math.abs(value)} ${direction}`;
 };
 
-const toLocalInputDate = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split("T")[0];
-};
+const toLocalInputDate = (date: Date) => formatDateInputIST(date);
 
 export default function StaffTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -623,7 +621,7 @@ export default function StaffTasksPage() {
                           className="hover:bg-white/70"
                         >
                           <td className="crm-td">
-                            {new Date(day.date).toLocaleDateString()}
+                            {formatDateDisplayIST(new Date(day.date))}
                           </td>
                           <td className="crm-td">{task.customerName || "-"}</td>
                           <td className="crm-td">{task.numberOfTrees ?? 0}</td>
@@ -662,7 +660,7 @@ export default function StaffTasksPage() {
                           className="hover:bg-white/70"
                         >
                           <td className="crm-td">
-                            {new Date(day.date).toLocaleDateString()}
+                            {formatDateDisplayIST(new Date(day.date))}
                           </td>
                           <td className="crm-td">{task.customerName || "-"}</td>
                           <td className="crm-td">{task.numberOfTrees ?? 0}</td>

@@ -3,7 +3,7 @@ import mongoose, { Schema, models } from "mongoose";
 const CustomerSchema = new Schema(
   {
     name: { type: String, required: true },
-    mobile: { type: String, required: true },
+    mobile: { type: String, required: true, unique: true, index: true },
     alternateMobile: { type: String },
     profession: { type: String },
     latitude: { type: Number, required: true },
@@ -24,6 +24,8 @@ const CustomerSchema = new Schema(
   },
   { timestamps: true }
 );
+
+CustomerSchema.index({ mobile: 1 }, { unique: true });
 
 export default models.Customer ||
   mongoose.model("Customer", CustomerSchema);
