@@ -23,6 +23,10 @@ type Customer = {
     numberOfTrees?: number;
     ratePerTree?: number;
   };
+  lastWorkedStaff?: {
+    _id: string;
+    name: string;
+  };
 };
 
 type Staff = {
@@ -252,6 +256,10 @@ function AddTaskPageContent() {
     const defaultRate = selected?.location?.defaultRate;
     const nextPreviousRemark = selected?.remark || "";
     const nextExactAddress = selected?.address || "";
+    const lastWorkedStaffId = selected?.lastWorkedStaff?._id || "";
+    const hasLastWorkedStaff =
+      lastWorkedStaffId &&
+      staff.some((member) => member._id === lastWorkedStaffId);
     const nextTreesCount =
       typeof selected?.numberOfTrees === "number"
         ? String(selected.numberOfTrees)
@@ -276,6 +284,7 @@ function AddTaskPageContent() {
     setForm((prev) => ({
       ...prev,
       customerId,
+      staffId: hasLastWorkedStaff ? lastWorkedStaffId : "",
       treesCount: nextTreesCount,
       rate:
         typeof defaultRate === "number"
@@ -317,6 +326,11 @@ function AddTaskPageContent() {
               typeof data.address === "string"
                 ? data.address
                 : prev.exactAddress,
+            staffId:
+              data?.lastWorkedStaff?._id &&
+              staff.some((member) => member._id === data.lastWorkedStaff._id)
+                ? data.lastWorkedStaff._id
+                : "",
             rate:
               typeof data?.lastTask?.ratePerTree === "number"
                 ? String(data.lastTask.ratePerTree)
@@ -345,7 +359,7 @@ function AddTaskPageContent() {
         })
         .catch(() => {});
     }
-  }, [adminFetch, customers]);
+  }, [adminFetch, customers, staff]);
 
   useEffect(() => {
     if (!prefillCustomerId) return;
@@ -361,6 +375,7 @@ function AddTaskPageContent() {
     setForm((prev) => ({
       ...prev,
       customerId: "",
+      staffId: "",
       treesCount: "",
       rate: "",
       latitude: "",
@@ -460,6 +475,10 @@ function AddTaskPageContent() {
                       : "No mobile"}{" "}
                     - {selectedCustomer.location?.name || "No location"}
                   </div>
+                  <div className="text-[color:var(--muted)]">
+                    Last staff:{" "}
+                    {selectedCustomer.lastWorkedStaff?.name || "Not assigned yet"}
+                  </div>
                   <button
                     type="button"
                     className="crm-btn-outline mt-3"
@@ -494,7 +513,8 @@ function AddTaskPageContent() {
                         </span>
                         <span className="text-xs text-[color:var(--muted)]">
                           {c.mobile ? formatPhone(c.mobile) : "No mobile"} -{" "}
-                          {c.location?.name || "No location"}
+                          {c.location?.name || "No location"} - Last staff:{" "}
+                          {c.lastWorkedStaff?.name || "Not assigned yet"}
                         </span>
                       </button>
                     ))

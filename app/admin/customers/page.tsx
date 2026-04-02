@@ -24,6 +24,10 @@ type Customer = {
   remark?: string;
   lastDateOfService?: string;
   serviceDate?: string;
+  lastWorkedStaff?: {
+    _id: string;
+    name: string;
+  };
   location?: Location;
   isArchived?: boolean;
   createdAt?: string;
@@ -382,6 +386,7 @@ export default function AdminCustomersPage() {
                 <th className="crm-th">Latitude</th>
                 <th className="crm-th">Longitude</th>
                 <th className="crm-th">Remark</th>
+                <th className="crm-th">Last Staff</th>
                 <th className="crm-th">Last Climbed</th>
                 <th className="crm-th">Service Date</th>
                 <th className="crm-th">Due Days</th>
@@ -413,6 +418,9 @@ export default function AdminCustomersPage() {
                     {formatCoordinate(customer.longitude, "E", "W")}
                   </td>
                   <td className="crm-td">{customer.remark || "-"}</td>
+                  <td className="crm-td">
+                    {customer.lastWorkedStaff?.name || "-"}
+                  </td>
                   <td className="crm-td">
                     {formatDate(customer.lastDateOfService)}
                   </td>

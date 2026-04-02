@@ -56,6 +56,15 @@ export async function GET(
       .select("numberOfTrees ratePerTree")
       .lean();
 
+    const lastWorkedTask = await Task.findOne({
+      customer: new mongoose.Types.ObjectId(customerId),
+      status: "completed",
+    })
+      .sort({ completedDate: -1, createdAt: -1 })
+      .populate("staff", "name")
+      .select("staff completedDate")
+      .lean();
+
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
@@ -76,6 +85,14 @@ export async function GET(
               ratePerTree: lastTask.ratePerTree,
             }
           : undefined,
+        lastWorkedStaff:
+          (lastWorkedTask as any)?.staff?._id &&
+          (lastWorkedTask as any)?.staff?.name
+            ? {
+                _id: String((lastWorkedTask as any).staff._id),
+                name: (lastWorkedTask as any).staff.name,
+              }
+            : undefined,
       },
       { status: 200 }
     );

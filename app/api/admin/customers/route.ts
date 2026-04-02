@@ -55,6 +55,34 @@ export async function GET(request: Request) {
         },
       },
     ]);
+    const lastWorkedStaff = await Task.aggregate([
+      { $match: { status: "completed" } },
+      { $sort: { completedDate: -1, createdAt: -1 } },
+      {
+        $group: {
+          _id: "$customer",
+          staffId: { $first: "$staff" },
+          completedDate: { $first: "$completedDate" },
+        },
+      },
+      {
+        $lookup: {
+          from: "staffs",
+          localField: "staffId",
+          foreignField: "_id",
+          as: "staffDoc",
+        },
+      },
+      { $unwind: { path: "$staffDoc", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          staffId: 1,
+          staffName: "$staffDoc.name",
+          completedDate: 1,
+        },
+      },
+    ]);
 
     const lastServiceMap = new Map(
       lastServiceDates.map((item: any) => [
@@ -71,6 +99,14 @@ export async function GET(request: Request) {
         },
       ])
     );
+    const lastWorkedMap = new Map(
+      lastWorkedStaff.map((item: any) => [
+        String(item._id),
+        item.staffId && item.staffName
+          ? { _id: String(item.staffId), name: item.staffName }
+          : undefined,
+      ])
+    );
 
     const customersWithLastService = customers.map((customer: any) => {
       const lastServiceDate = lastServiceMap.get(String(customer._id));
@@ -79,12 +115,14 @@ export async function GET(request: Request) {
         customer.serviceDate ||
         (customer as { dueDate?: unknown }).dueDate ||
         undefined;
+      const lastWorked = lastWorkedMap.get(String(customer._id));
       if (lastServiceDate) {
         return {
           ...customer,
           serviceDate: legacyServiceDate,
           lastDateOfService: lastServiceDate,
           lastTask,
+          lastWorkedStaff: lastWorked,
         };
       }
       if (lastTask) {
@@ -92,11 +130,13 @@ export async function GET(request: Request) {
           ...customer,
           serviceDate: legacyServiceDate,
           lastTask,
+          lastWorkedStaff: lastWorked,
         };
       }
       return {
         ...customer,
         serviceDate: legacyServiceDate,
+        lastWorkedStaff: lastWorked,
       };
     });
 
