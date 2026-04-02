@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
 
@@ -25,7 +26,9 @@ export default function AddCustomerPage() {
   const [errors, setErrors] = useState<
     Record<string, string>
   >({});
+  const [createTaskAfter, setCreateTaskAfter] = useState(false);
   const { adminFetch } = useAdminAuth();
+  const router = useRouter();
 
   useEffect(() => {
     adminFetch("/api/admin/locations")
@@ -102,7 +105,15 @@ export default function AddCustomerPage() {
 
     const data = await res.json();
 
-    alert(data.message || data.error);
+    if (res.ok) {
+      alert(data.message || "Customer added");
+      if (createTaskAfter && data?.customer?._id) {
+        router.push(`/admin/add-task?customerId=${data.customer._id}`);
+        return;
+      }
+    } else {
+      alert(data.error || "Something went wrong");
+    }
   };
 
   return (
@@ -374,6 +385,15 @@ export default function AddCustomerPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <button className="crm-btn-primary">Add Customer</button>
+          <label className="flex items-center gap-2 text-xs text-[color:var(--muted)]">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={createTaskAfter}
+              onChange={(e) => setCreateTaskAfter(e.target.checked)}
+            />
+            Create a task for this customer after saving
+          </label>
           <p className="text-xs text-[color:var(--muted)]">
             Required fields are marked with an asterisk (*).
           </p>
