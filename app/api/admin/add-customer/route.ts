@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Customer from "@/models/Customer";
 import { getAuthUser } from "@/lib/authServer";
+import { normalizePhoneDigits } from "@/lib/formatPhone";
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +34,8 @@ export async function POST(req: Request) {
 
     const latNumber = Number(latitude);
     const lngNumber = Number(longitude);
+    const normalizedMobile = normalizePhoneDigits(mobile);
+    const normalizedAlternate = normalizePhoneDigits(alternateMobile);
     const treesProvided =
       numberOfTrees !== undefined &&
       numberOfTrees !== null &&
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
 
     if (
       !name ||
-      !mobile ||
+      !normalizedMobile ||
       !locationId ||
       !address ||
       Number.isNaN(latNumber) ||
@@ -81,10 +84,22 @@ export async function POST(req: Request) {
       }
     }
 
+    const existing = await Customer.findOne({
+      mobile: normalizedMobile,
+    })
+      .select("_id")
+      .lean();
+    if (existing) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
+
     const customer = await Customer.create({
       name,
-      mobile,
-      alternateMobile,
+      mobile: normalizedMobile,
+      alternateMobile: normalizedAlternate,
       profession,
       numberOfTrees: treesProvided ? treesNumber : undefined,
       latitude: latNumber,
@@ -105,6 +120,12 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error(err);
+    if (err?.code === 11000) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: err.message },
       { status: 500 }

@@ -5,6 +5,7 @@ import Task from "@/models/Task";
 import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
+import { normalizePhoneDigits } from "@/lib/formatPhone";
 
 export async function GET(
   _req: Request,
@@ -123,6 +124,8 @@ export async function PATCH(
 
     const latNumber = Number(latitude);
     const lngNumber = Number(longitude);
+    const normalizedMobile = normalizePhoneDigits(mobile);
+    const normalizedAlternate = normalizePhoneDigits(alternateMobile);
     const treesProvided =
       numberOfTrees !== undefined &&
       numberOfTrees !== null &&
@@ -131,7 +134,7 @@ export async function PATCH(
 
     if (
       !name ||
-      !mobile ||
+      !normalizedMobile ||
       !address ||
       !locationId ||
       Number.isNaN(latNumber) ||
@@ -186,10 +189,23 @@ export async function PATCH(
       }
     }
 
+    const existing = await Customer.findOne({
+      mobile: normalizedMobile,
+      _id: { $ne: customerId },
+    })
+      .select("_id")
+      .lean();
+    if (existing) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
+
     const updateDoc: Record<string, any> = {
       name,
-      mobile,
-      alternateMobile,
+      mobile: normalizedMobile,
+      alternateMobile: normalizedAlternate,
       profession,
       numberOfTrees: treesProvided ? treesNumber : undefined,
       latitude: latNumber,
@@ -224,6 +240,12 @@ export async function PATCH(
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
     console.error("CUSTOMER UPDATE ERROR:", error);
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
