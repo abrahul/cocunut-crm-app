@@ -6,7 +6,7 @@ import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
     const auth = await getAuthUser();
@@ -17,7 +17,11 @@ export async function GET() {
       );
     }
 
-    const customers = await Customer.find()
+    const { searchParams } = new URL(request.url);
+    const includeArchived = searchParams.get("includeArchived") === "true";
+    const customerFilter = includeArchived ? {} : { isArchived: { $ne: true } };
+
+    const customers = await Customer.find(customerFilter)
       .populate("location")
       .lean();
 
@@ -71,9 +75,14 @@ export async function GET() {
     const customersWithLastService = customers.map((customer: any) => {
       const lastServiceDate = lastServiceMap.get(String(customer._id));
       const lastTask = lastTaskMap.get(String(customer._id));
+      const legacyServiceDate =
+        customer.serviceDate ||
+        (customer as { dueDate?: unknown }).dueDate ||
+        undefined;
       if (lastServiceDate) {
         return {
           ...customer,
+          serviceDate: legacyServiceDate,
           lastDateOfService: lastServiceDate,
           lastTask,
         };
@@ -81,10 +90,14 @@ export async function GET() {
       if (lastTask) {
         return {
           ...customer,
+          serviceDate: legacyServiceDate,
           lastTask,
         };
       }
-      return customer;
+      return {
+        ...customer,
+        serviceDate: legacyServiceDate,
+      };
     });
 
     return NextResponse.json(customersWithLastService, { status: 200 });

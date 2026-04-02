@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Staff from "@/models/Staff";
+import Task from "@/models/Task";
 import { getAuthUser } from "@/lib/authServer";
 
 export const dynamic = "force-dynamic";
@@ -41,11 +42,33 @@ export async function GET(req: Request) {
     }
 
     const staff = await Staff.find(filter).sort({ createdAt: -1 });
+    const staffIds = staff.map((s) => s._id);
+    const lastCompleted = staffIds.length
+      ? await Task.aggregate([
+          {
+            $match: {
+              staff: { $in: staffIds },
+              status: "completed",
+              completedDate: { $ne: null },
+            },
+          },
+          {
+            $group: {
+              _id: "$staff",
+              lastCompletedDate: { $max: "$completedDate" },
+            },
+          },
+        ])
+      : [];
+    const lastCompletedMap = new Map(
+      lastCompleted.map((row) => [String(row._id), row.lastCompletedDate])
+    );
 
     return NextResponse.json(
       staff.map((s) => ({
         ...s.toObject(),
         isActive: normalizeIsActive(s.isActive),
+        lastCompletedDate: lastCompletedMap.get(String(s._id)) || null,
       }))
     );
   } catch (err: any) {

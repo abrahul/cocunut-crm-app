@@ -49,6 +49,14 @@ const TaskSchema = new Schema(
       enum: ["pending", "completed"],
       default: "pending",
     },
+    staffHidden: {
+      type: Boolean,
+      default: false,
+    },
+    staffHiddenAt: {
+      type: Date,
+      default: undefined,
+    },
     completedDate: {
       type: Date,
     },

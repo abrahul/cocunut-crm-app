@@ -19,6 +19,7 @@ export default function AddCustomerPage() {
     address: "",
     email: "",
     remark: "",
+    serviceDate: "",
     locationId: "",
   });
   const [errors, setErrors] = useState<
@@ -95,6 +96,7 @@ export default function AddCustomerPage() {
         numberOfTrees: Number(treesInput),
         latitude: latNumber,
         longitude: lngNumber,
+        serviceDate: form.serviceDate || undefined,
       }),
     });
 
@@ -344,6 +346,17 @@ export default function AddCustomerPage() {
                 {errors.locationId}
               </p>
             )}
+          </label>
+          <label className="block">
+            <span className="crm-label">Service date</span>
+            <input
+              type="date"
+              className="crm-input mt-2"
+              value={form.serviceDate}
+              onChange={(e) =>
+                setForm({ ...form, serviceDate: e.target.value })
+              }
+            />
           </label>
         </div>
 

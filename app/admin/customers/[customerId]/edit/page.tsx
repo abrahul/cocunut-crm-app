@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
+import { formatDateDisplayIST } from "@/lib/date";
 
 type Location = {
   _id: string;
@@ -22,6 +23,7 @@ type FormState = {
   email: string;
   remark: string;
   lastDateOfService: string;
+  serviceDate: string;
   locationId: string;
 };
 
@@ -37,6 +39,7 @@ const emptyForm: FormState = {
   email: "",
   remark: "",
   lastDateOfService: "",
+  serviceDate: "",
   locationId: "",
 };
 
@@ -44,7 +47,7 @@ const formatDate = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString();
+  return formatDateDisplayIST(date);
 };
 
 const getDueDays = (value?: string) => {
@@ -123,6 +126,9 @@ export default function EditCustomerPage() {
           email: customer?.email || "",
           remark: customer?.remark || "",
           lastDateOfService: "",
+          serviceDate: customer?.serviceDate
+            ? new Date(customer.serviceDate).toISOString().slice(0, 10)
+            : "",
           locationId: customer?.location?._id || "",
         });
         setLastClimbedDate(customer?.lastDateOfService || "");
@@ -199,6 +205,7 @@ export default function EditCustomerPage() {
         numberOfTrees: treesInput ? Number(treesInput) : undefined,
         latitude: latNumber,
         longitude: lngNumber,
+        serviceDate: form.serviceDate,
       }),
     });
 
@@ -433,6 +440,17 @@ export default function EditCustomerPage() {
                 {errors.locationId}
               </p>
             )}
+          </label>
+          <label className="block">
+            <span className="crm-label">Service date</span>
+            <input
+              type="date"
+              className="crm-input mt-2"
+              value={form.serviceDate}
+              onChange={(e) =>
+                setForm({ ...form, serviceDate: e.target.value })
+              }
+            />
           </label>
         </div>
 

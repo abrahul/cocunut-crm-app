@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhone } from "@/lib/formatPhone";
+import { formatDateDisplayIST, formatDateInputIST } from "@/lib/date";
 
 type Entity = {
   _id: string;
@@ -36,10 +37,7 @@ type EditForm = {
   status: "pending" | "completed";
 };
 
-const toLocalInputDate = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split("T")[0];
-};
+const toLocalInputDate = (date: Date) => formatDateInputIST(date);
 
 const startOfWeek = (date: Date) => {
   const d = new Date(date);
@@ -71,9 +69,11 @@ export default function AdminTasksPage() {
   const [staffOptions, setStaffOptions] = useState<Entity[]>([]);
   const [locationOptions, setLocationOptions] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -149,6 +149,13 @@ export default function AdminTasksPage() {
   }, [adminFetch]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     setPage(1);
   }, [
     searchQuery,
@@ -193,7 +200,10 @@ export default function AdminTasksPage() {
           setTasks([]);
           setTotal(0);
         } finally {
-          if (active) setLoading(false);
+          if (active) {
+            setLoading(false);
+            setInitialLoading(false);
+          }
         }
       };
 
@@ -251,6 +261,18 @@ export default function AdminTasksPage() {
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(total / pageSize));
   }, [total, pageSize]);
+
+  const pageNumbers = useMemo(() => {
+    const maxButtons = 5;
+    const pages: number[] = [];
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }, [page, totalPages]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -438,7 +460,8 @@ export default function AdminTasksPage() {
     }
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
+  if (initialLoading) return <p className="p-4">Loading...</p>;
+  const isRefreshing = loading && !initialLoading;
 
   return (
     <div className="space-y-6">
@@ -456,6 +479,7 @@ export default function AdminTasksPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => {
+              setSearchInput("");
               setSearchQuery("");
               setStaffFilter("all");
               setLocationFilter("all");
@@ -567,8 +591,8 @@ export default function AdminTasksPage() {
             type="text"
             placeholder="Customer name or mobile"
             className="crm-input mt-2"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
           />
         </label>
 
@@ -617,6 +641,10 @@ export default function AdminTasksPage() {
           </select>
         </label>
       </div>
+
+      {isRefreshing && (
+        <p className="text-xs text-[color:var(--muted)]">Updating list...</p>
+      )}
 
       <div className="crm-toolbar">
         <span className="text-xs font-semibold text-[color:var(--muted)]">
@@ -729,7 +757,7 @@ export default function AdminTasksPage() {
                     <td className="crm-td">{task.serviceDate || "-"}</td>
                     <td className="crm-td">
                       {task.completedDate
-                        ? new Date(task.completedDate).toLocaleDateString()
+                        ? formatDateDisplayIST(new Date(task.completedDate))
                         : "-"}
                     </td>
                     <td className="crm-td">{task.staff?.name || "-"}</td>
@@ -753,15 +781,46 @@ export default function AdminTasksPage() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => startEdit(task)}
-                          className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold"
+                          className="text-[color:var(--brand)] hover:text-[color:var(--brand-dark)] font-semibold cursor-pointer"
+                          aria-label="Edit task"
+                          title="Edit"
                         >
-                          Edit
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
+                            <path d="M12 20h9" />
+                          </svg>
                         </button>
                         <button
                           onClick={() => handleDelete(task._id)}
-                          className="text-red-600 hover:text-red-700 font-semibold"
+                          className="text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                          aria-label="Delete task"
+                          title="Delete"
                         >
-                          Delete
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M6 6l1 14h10l1-14" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -991,6 +1050,19 @@ export default function AdminTasksPage() {
           >
             Previous
           </button>
+          <div className="flex flex-wrap gap-2">
+            {pageNumbers.map((number) => (
+              <button
+                key={number}
+                onClick={() => setPage(number)}
+                className={
+                  number === page ? "crm-btn-primary" : "crm-btn-outline"
+                }
+              >
+                {number}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={page >= totalPages}

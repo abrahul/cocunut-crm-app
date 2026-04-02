@@ -20,6 +20,35 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Database Maintenance Scripts
+
+These scripts live in `scripts/db` and are intended for one-off data cleanup.
+
+Prerequisites:
+- Ensure `MONGODB_URI` is set in `.env.local` for local runs, or in the environment where you execute the script for production.
+
+Scripts:
+1. Find duplicate mobile numbers:
+```bash
+npm run db:duplicates
+```
+
+2. Merge duplicate customers (keeps newest, reassigns tasks, deletes older records):
+```bash
+npm run db:merge-duplicates
+```
+
+3. Normalize customer mobile numbers (removes spaces/symbols):
+```bash
+npm run db:normalize-mobiles
+```
+
+Recommended order:
+1. Run find duplicates.
+2. Merge duplicates.
+3. Normalize mobiles.
+4. Create the unique index on `customers.mobile` in MongoDB.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

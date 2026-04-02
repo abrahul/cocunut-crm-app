@@ -14,6 +14,7 @@ type Customer = {
   longitude?: number;
   address?: string;
   remark?: string;
+  serviceDate?: string;
   location?: {
     name: string;
     defaultRate?: number;
@@ -28,6 +29,7 @@ type Staff = {
   _id: string;
   name: string;
   isActive?: boolean;
+  lastCompletedDate?: string | null;
 };
 
 function AddTaskPageContent() {
@@ -122,8 +124,6 @@ function AddTaskPageContent() {
       return;
     }
 
-    setLoading(true);
-
     const latInput = Number(form.latitude);
     const lngInput = Number(form.longitude);
     const latitude =
@@ -131,49 +131,78 @@ function AddTaskPageContent() {
     const longitude =
       longitudeDirection === "W" ? -Math.abs(lngInput) : Math.abs(lngInput);
 
-    const res = await adminFetch("/api/admin/add-task", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customerId: form.customerId,
-        staffId: form.staffId,
-        treesCount: Number(form.treesCount),
-        rate: Number(form.rate),
-        latitude,
-        longitude,
-        serviceDate: form.serviceDate,
-        serviceTime: form.serviceTime,
-        medicine: form.medicine === "yes",
-        exactAddress: form.exactAddress,
-        remark: form.remark,
-      }),
-    });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (res.ok) {
-      alert("Task created successfully");
-      setForm({
-        customerId: "",
-        staffId: "",
-        treesCount: "",
-        rate: "",
-        latitude: "",
-        longitude: "",
-        serviceDate: "",
-        serviceTime: "",
-        medicine: "",
-        exactAddress: "",
-        remark: "",
+    const createTask = (allowDuplicate: boolean) =>
+      adminFetch("/api/admin/add-task", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerId: form.customerId,
+          staffId: form.staffId,
+          treesCount: Number(form.treesCount),
+          rate: Number(form.rate),
+          latitude,
+          longitude,
+          serviceDate: form.serviceDate,
+          serviceTime: form.serviceTime,
+          medicine: form.medicine === "yes",
+          exactAddress: form.exactAddress,
+          remark: form.remark,
+          allowDuplicate,
+        }),
       });
-      setLatitudeDirection("N");
-      setLongitudeDirection("E");
-      setPreviousRemark("");
-    } else {
-      alert(data.error || "Something went wrong");
+
+    setLoading(true);
+    try {
+      let res = await createTask(false);
+      let data = await res.json();
+
+      if (!res.ok && res.status === 409 && data?.pendingTask) {
+        const pendingDate = data.pendingTask?.serviceDate
+          ? `Service date: ${data.pendingTask.serviceDate}`
+          : "";
+        const pendingStaff = data.pendingTask?.staffName
+          ? `Assigned staff: ${data.pendingTask.staffName}`
+          : "";
+        const pendingDetails = [pendingDate, pendingStaff]
+          .filter(Boolean)
+          .join(". ");
+        const confirmMessage = `There is already a pending task for this customer.${
+          pendingDetails ? ` ${pendingDetails}.` : ""
+        } Do you want to add another task anyway?`;
+        const proceed = window.confirm(confirmMessage);
+        if (!proceed) {
+          alert("Task creation cancelled.");
+          return;
+        }
+        res = await createTask(true);
+        data = await res.json();
+      }
+
+      if (res.ok) {
+        alert("Task created successfully");
+        setForm({
+          customerId: "",
+          staffId: "",
+          treesCount: "",
+          rate: "",
+          latitude: "",
+          longitude: "",
+          serviceDate: "",
+          serviceTime: "",
+          medicine: "",
+          exactAddress: "",
+          remark: "",
+        });
+        setLatitudeDirection("N");
+        setLongitudeDirection("E");
+        setPreviousRemark("");
+      } else {
+        alert(data.error || "Something went wrong");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -229,6 +258,9 @@ function AddTaskPageContent() {
         : typeof selected?.lastTask?.numberOfTrees === "number"
           ? String(selected.lastTask.numberOfTrees)
         : "";
+    const nextServiceDate = selected?.serviceDate
+      ? new Date(selected.serviceDate).toISOString().slice(0, 10)
+      : "";
     const selectedLatitude = Number(selected?.latitude);
     const selectedLongitude = Number(selected?.longitude);
     if (Number.isFinite(selectedLatitude)) {
@@ -249,6 +281,7 @@ function AddTaskPageContent() {
         typeof defaultRate === "number"
           ? String(defaultRate)
           : "",
+      serviceDate: nextServiceDate,
       latitude:
         typeof selected?.latitude === "number"
           ? String(Math.abs(selected.latitude))
@@ -290,6 +323,10 @@ function AddTaskPageContent() {
                 : typeof data?.location?.defaultRate === "number"
                   ? String(data.location.defaultRate)
                   : prev.rate,
+            serviceDate:
+              typeof data?.serviceDate === "string"
+                ? new Date(data.serviceDate).toISOString().slice(0, 10)
+                : prev.serviceDate,
             treesCount:
               typeof data?.numberOfTrees === "number"
                 ? String(data.numberOfTrees)
@@ -365,6 +402,18 @@ function AddTaskPageContent() {
       ? filteredCustomers
       : customers.slice(0, 8);
   }, [customers, filteredCustomers, normalizedCustomerSearch, searchDigits]);
+
+  const formatDaysSinceWorked = (lastCompletedDate?: string | null) => {
+    if (!lastCompletedDate) return "No work yet";
+    const parsed = new Date(lastCompletedDate);
+    if (Number.isNaN(parsed.getTime())) return "No work yet";
+    const today = new Date();
+    const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffMs = end.getTime() - start.getTime();
+    const days = Math.max(0, Math.floor(diffMs / 86400000));
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  };
 
   return (
     <div className="space-y-6">
@@ -474,7 +523,7 @@ function AddTaskPageContent() {
               <option value="">Select Staff</option>
               {staff.map((s) => (
                 <option key={s._id} value={s._id}>
-                  {s.name}
+                  {s.name} - {formatDaysSinceWorked(s.lastCompletedDate)}
                 </option>
               ))}
             </select>

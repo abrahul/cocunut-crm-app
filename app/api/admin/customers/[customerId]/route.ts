@@ -5,6 +5,7 @@ import Task from "@/models/Task";
 import "@/models/Location";
 import { getAuthUser } from "@/lib/authServer";
 import mongoose from "mongoose";
+import { normalizePhoneDigits } from "@/lib/formatPhone";
 
 export async function GET(
   _req: Request,
@@ -59,9 +60,15 @@ export async function GET(
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
+    const legacyServiceDate =
+      customer.serviceDate ||
+      (customer as { dueDate?: unknown }).dueDate ||
+      undefined;
+
     return NextResponse.json(
       {
         ...customer,
+        serviceDate: legacyServiceDate,
         lastDateOfService: lastServiceDate || customer?.lastDateOfService,
         lastTask: lastTask
           ? {
@@ -110,11 +117,15 @@ export async function PATCH(
       email,
       remark,
       lastDateOfService,
+      serviceDate,
+      dueDate,
       locationId,
     } = await req.json();
 
     const latNumber = Number(latitude);
     const lngNumber = Number(longitude);
+    const normalizedMobile = normalizePhoneDigits(mobile);
+    const normalizedAlternate = normalizePhoneDigits(alternateMobile);
     const treesProvided =
       numberOfTrees !== undefined &&
       numberOfTrees !== null &&
@@ -123,7 +134,7 @@ export async function PATCH(
 
     if (
       !name ||
-      !mobile ||
+      !normalizedMobile ||
       !address ||
       !locationId ||
       Number.isNaN(latNumber) ||
@@ -147,6 +158,15 @@ export async function PATCH(
     const hasLastDate =
       typeof lastDateOfService === "string" &&
       lastDateOfService.trim() !== "";
+    const serviceDateInput =
+      typeof serviceDate === "string" && serviceDate.trim() !== ""
+        ? serviceDate
+        : typeof dueDate === "string" && dueDate.trim() !== ""
+          ? dueDate
+          : "";
+    const hasServiceDate = Boolean(serviceDateInput);
+    const shouldClearServiceDate =
+      typeof serviceDate === "string" && !serviceDate.trim();
 
     let parsedLastDate: Date | undefined;
     if (hasLastDate) {
@@ -158,11 +178,34 @@ export async function PATCH(
         );
       }
     }
+    let parsedServiceDate: Date | undefined;
+    if (hasServiceDate) {
+      parsedServiceDate = new Date(serviceDateInput);
+      if (Number.isNaN(parsedServiceDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid service date" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const existing = await Customer.findOne({
+      mobile: normalizedMobile,
+      _id: { $ne: customerId },
+    })
+      .select("_id")
+      .lean();
+    if (existing) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
 
     const updateDoc: Record<string, any> = {
       name,
-      mobile,
-      alternateMobile,
+      mobile: normalizedMobile,
+      alternateMobile: normalizedAlternate,
       profession,
       numberOfTrees: treesProvided ? treesNumber : undefined,
       latitude: latNumber,
@@ -175,6 +218,11 @@ export async function PATCH(
 
     if (hasLastDate) {
       updateDoc.lastDateOfService = parsedLastDate;
+    }
+    if (hasServiceDate) {
+      updateDoc.serviceDate = parsedServiceDate;
+    } else if (shouldClearServiceDate) {
+      updateDoc.$unset = { serviceDate: "" };
     }
 
     const updated = await Customer.findByIdAndUpdate(
@@ -192,6 +240,12 @@ export async function PATCH(
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
     console.error("CUSTOMER UPDATE ERROR:", error);
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        { error: "Customer with this mobile already exists" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -212,6 +266,19 @@ export async function DELETE(
     if (!mongoose.Types.ObjectId.isValid(customerId)) {
       return NextResponse.json(
         { error: "Invalid customer id" },
+        { status: 400 }
+      );
+    }
+
+    const taskCount = await Task.countDocuments({
+      customer: new mongoose.Types.ObjectId(customerId),
+    });
+    if (taskCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Customer has tasks assigned. Please reassign or archive instead.",
+        },
         { status: 400 }
       );
     }
