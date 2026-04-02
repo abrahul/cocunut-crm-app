@@ -316,8 +316,11 @@ function AddTaskPageContent() {
     if (prefillAppliedRef.current) return;
     const exists = customers.some((c) => c._id === prefillCustomerId);
     if (!exists) return;
-    handleCustomerSelect(prefillCustomerId);
-    prefillAppliedRef.current = true;
+    const timeoutId = setTimeout(() => {
+      handleCustomerSelect(prefillCustomerId);
+      prefillAppliedRef.current = true;
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [customers, handleCustomerSelect, prefillCustomerId]);
 
   const clearSelectedCustomer = () => {
