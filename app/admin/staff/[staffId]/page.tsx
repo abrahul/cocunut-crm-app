@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { formatDateDisplayIST } from "@/lib/date";
 
 type Task = {
   _id: string;
@@ -318,7 +319,7 @@ export default function StaffTaskHistoryPage() {
                 <span className="crm-label">Completed on</span>
                 <p className="mt-1 text-[color:var(--muted)]">
                   {task.completedDate
-                    ? new Date(task.completedDate).toLocaleDateString()
+                    ? formatDateDisplayIST(new Date(task.completedDate))
                     : "-"}
                 </p>
               </div>

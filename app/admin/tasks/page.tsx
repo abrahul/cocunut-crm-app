@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhone } from "@/lib/formatPhone";
+import { formatDateDisplayIST, formatDateInputIST } from "@/lib/date";
 
 type Entity = {
   _id: string;
@@ -36,10 +37,7 @@ type EditForm = {
   status: "pending" | "completed";
 };
 
-const toLocalInputDate = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split("T")[0];
-};
+const toLocalInputDate = (date: Date) => formatDateInputIST(date);
 
 const startOfWeek = (date: Date) => {
   const d = new Date(date);
@@ -759,7 +757,7 @@ export default function AdminTasksPage() {
                     <td className="crm-td">{task.serviceDate || "-"}</td>
                     <td className="crm-td">
                       {task.completedDate
-                        ? new Date(task.completedDate).toLocaleDateString()
+                        ? formatDateDisplayIST(new Date(task.completedDate))
                         : "-"}
                     </td>
                     <td className="crm-td">{task.staff?.name || "-"}</td>

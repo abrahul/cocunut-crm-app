@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhoneInput, normalizePhoneDigits } from "@/lib/formatPhone";
+import { formatDateDisplayIST } from "@/lib/date";
 
 type Location = {
   _id: string;
@@ -46,7 +47,7 @@ const formatDate = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString();
+  return formatDateDisplayIST(date);
 };
 
 const getDueDays = (value?: string) => {

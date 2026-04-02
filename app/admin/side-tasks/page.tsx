@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { formatPhone } from "@/lib/formatPhone";
+import { formatDateDisplayIST } from "@/lib/date";
 
 type Entity = {
   _id: string;
@@ -288,7 +289,7 @@ export default function AdminSideTasksPage() {
                   <td className="crm-td font-semibold">Rs. {task.totalAmount ?? 0}</td>
                   <td className="crm-td">
                     {task.completedDate
-                      ? new Date(task.completedDate).toLocaleDateString()
+                      ? formatDateDisplayIST(new Date(task.completedDate))
                       : "-"}
                   </td>
                   <td className="crm-td">
