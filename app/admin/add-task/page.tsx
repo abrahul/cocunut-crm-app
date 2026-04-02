@@ -124,8 +124,6 @@ function AddTaskPageContent() {
       return;
     }
 
-    setLoading(true);
-
     const latInput = Number(form.latitude);
     const lngInput = Number(form.longitude);
     const latitude =
@@ -133,49 +131,78 @@ function AddTaskPageContent() {
     const longitude =
       longitudeDirection === "W" ? -Math.abs(lngInput) : Math.abs(lngInput);
 
-    const res = await adminFetch("/api/admin/add-task", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customerId: form.customerId,
-        staffId: form.staffId,
-        treesCount: Number(form.treesCount),
-        rate: Number(form.rate),
-        latitude,
-        longitude,
-        serviceDate: form.serviceDate,
-        serviceTime: form.serviceTime,
-        medicine: form.medicine === "yes",
-        exactAddress: form.exactAddress,
-        remark: form.remark,
-      }),
-    });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (res.ok) {
-      alert("Task created successfully");
-      setForm({
-        customerId: "",
-        staffId: "",
-        treesCount: "",
-        rate: "",
-        latitude: "",
-        longitude: "",
-        serviceDate: "",
-        serviceTime: "",
-        medicine: "",
-        exactAddress: "",
-        remark: "",
+    const createTask = (allowDuplicate: boolean) =>
+      adminFetch("/api/admin/add-task", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerId: form.customerId,
+          staffId: form.staffId,
+          treesCount: Number(form.treesCount),
+          rate: Number(form.rate),
+          latitude,
+          longitude,
+          serviceDate: form.serviceDate,
+          serviceTime: form.serviceTime,
+          medicine: form.medicine === "yes",
+          exactAddress: form.exactAddress,
+          remark: form.remark,
+          allowDuplicate,
+        }),
       });
-      setLatitudeDirection("N");
-      setLongitudeDirection("E");
-      setPreviousRemark("");
-    } else {
-      alert(data.error || "Something went wrong");
+
+    setLoading(true);
+    try {
+      let res = await createTask(false);
+      let data = await res.json();
+
+      if (!res.ok && res.status === 409 && data?.pendingTask) {
+        const pendingDate = data.pendingTask?.serviceDate
+          ? `Service date: ${data.pendingTask.serviceDate}`
+          : "";
+        const pendingStaff = data.pendingTask?.staffName
+          ? `Assigned staff: ${data.pendingTask.staffName}`
+          : "";
+        const pendingDetails = [pendingDate, pendingStaff]
+          .filter(Boolean)
+          .join(". ");
+        const confirmMessage = `There is already a pending task for this customer.${
+          pendingDetails ? ` ${pendingDetails}.` : ""
+        } Do you want to add another task anyway?`;
+        const proceed = window.confirm(confirmMessage);
+        if (!proceed) {
+          alert("Task creation cancelled.");
+          return;
+        }
+        res = await createTask(true);
+        data = await res.json();
+      }
+
+      if (res.ok) {
+        alert("Task created successfully");
+        setForm({
+          customerId: "",
+          staffId: "",
+          treesCount: "",
+          rate: "",
+          latitude: "",
+          longitude: "",
+          serviceDate: "",
+          serviceTime: "",
+          medicine: "",
+          exactAddress: "",
+          remark: "",
+        });
+        setLatitudeDirection("N");
+        setLongitudeDirection("E");
+        setPreviousRemark("");
+      } else {
+        alert(data.error || "Something went wrong");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
