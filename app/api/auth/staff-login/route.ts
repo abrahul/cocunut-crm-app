@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
   const staff = await Staff.findOne({ mobile }).select(
     "+passwordHash +passwordSalt"
-  );
+  ).lean();
   if (!staff) {
     return NextResponse.json(
       { error: "Staff not found" },

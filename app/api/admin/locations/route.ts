@@ -13,7 +13,7 @@ export async function GET() {
         { status: 401 }
       );
     }
-    const locations = await Location.find().sort({ name: 1 });
+    const locations = await Location.find().sort({ name: 1 }).lean();
     return NextResponse.json(locations);
   } catch (err: any) {
     return NextResponse.json(

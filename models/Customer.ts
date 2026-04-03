@@ -26,6 +26,11 @@ const CustomerSchema = new Schema(
 );
 
 CustomerSchema.index({ mobile: 1 }, { unique: true });
+CustomerSchema.index({ isArchived: 1, createdAt: -1 });
+CustomerSchema.index({ name: 1 });
+CustomerSchema.index({ alternateMobile: 1 });
+CustomerSchema.index({ location: 1 });
+CustomerSchema.index({ serviceDate: 1 });
 
 export default models.Customer ||
   mongoose.model("Customer", CustomerSchema);

@@ -41,8 +41,11 @@ export async function GET(req: Request) {
       };
     }
 
-    const staff = await Staff.find(filter).sort({ createdAt: -1 });
-    const staffIds = staff.map((s) => s._id);
+    const staff = await Staff.find(filter)
+      .select("name mobile isActive")
+      .sort({ createdAt: -1 })
+      .lean();
+    const staffIds = staff.map((s: any) => s._id);
     const lastCompleted = staffIds.length
       ? await Task.aggregate([
           {
@@ -66,7 +69,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(
       staff.map((s) => ({
-        ...s.toObject(),
+        ...s,
         isActive: normalizeIsActive(s.isActive),
         lastCompletedDate: lastCompletedMap.get(String(s._id)) || null,
       }))

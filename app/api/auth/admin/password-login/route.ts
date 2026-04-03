@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         { username: { $regex: `^${escapeRegex(normalizedUsername)}$`, $options: "i" } },
         { mobile: normalizedUsername },
       ],
-    }).select("+password");
+    }).select("+password").lean();
 
     if (!admin) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

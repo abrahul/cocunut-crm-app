@@ -85,7 +85,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const customer = await Customer.findById(customerId).populate("location");
+    const customer = await Customer.findById(customerId)
+      .select("latitude longitude lastDateOfService location")
+      .populate("location", "defaultRate")
+      .lean();
 
     if (!customer || !customer.location) {
       return NextResponse.json(
@@ -167,7 +170,7 @@ export async function POST(req: Request) {
 
     const task = await Task.create({
       customer: customerId,
-      location: customer.location._id,
+      location: (customer.location as any)._id,
       staff: staffId,
       numberOfTrees: trees,
       ratePerTree,

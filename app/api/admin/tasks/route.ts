@@ -72,9 +72,12 @@ export async function GET(request: Request) {
 
     const [tasks, total] = await Promise.all([
       Task.find(taskFilter)
+        .select(
+          "customer location staff exactAddress latitude longitude serviceDate completedDate numberOfTrees ratePerTree totalAmount status createdAt"
+        )
         .populate("customer", "name mobile")
         .populate("location", "name")
-        .populate("staff", "name phone")
+        .populate("staff", "name")
         .sort({ createdAt: -1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize)
