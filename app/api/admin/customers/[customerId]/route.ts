@@ -27,7 +27,10 @@ export async function GET(
     }
 
     const customer = await Customer.findById(customerId)
-      .populate("location")
+      .select(
+        "name mobile alternateMobile profession numberOfTrees latitude longitude address email remark lastDateOfService serviceDate dueDate location isArchived"
+      )
+      .populate("location", "name defaultRate")
       .lean();
 
     const lastService = await Task.aggregate([
@@ -247,7 +250,10 @@ export async function PATCH(
       updateDoc,
       { new: true }
     )
-      .populate("location")
+      .select(
+        "name mobile alternateMobile profession numberOfTrees latitude longitude address email remark lastDateOfService serviceDate dueDate location isArchived"
+      )
+      .populate("location", "name defaultRate")
       .lean();
 
     if (!updated) {

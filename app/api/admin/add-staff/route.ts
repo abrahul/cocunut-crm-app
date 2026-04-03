@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     // Ensure mobile uniqueness
-    const existing = await Staff.findOne({ mobile });
+    const existing = await Staff.findOne({ mobile }).select("_id").lean();
     if (existing) {
       return NextResponse.json(
         { error: "Staff with this mobile already exists" },

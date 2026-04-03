@@ -64,10 +64,14 @@ const formatCoordinate = (
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [query, setQuery] = useState("");
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [statusFilter, setStatusFilter] = useState<"active" | "archived" | "all">(
@@ -87,21 +91,23 @@ export default function AdminCustomersPage() {
   }, [success]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     let active = true;
-    setLoading(true);
-    adminFetch("/api/admin/customers?includeArchived=true")
+    adminFetch("/api/admin/locations")
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
-        setCustomers(Array.isArray(data) ? data : []);
+        setLocations(Array.isArray(data) ? data : []);
       })
-      .catch((err) => {
-        console.error("Admin customers fetch error", err);
+      .catch(() => {
         if (!active) return;
-        setCustomers([]);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
+        setLocations([]);
       });
 
     return () => {
@@ -110,71 +116,72 @@ export default function AdminCustomersPage() {
   }, [adminFetch]);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      params.set("includeArchived", "true");
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
+      params.set("status", statusFilter);
+      params.set("sort", sortOrder);
+      if (searchQuery) params.set("q", searchQuery);
+      if (locationFilter !== "all") params.set("locationId", locationFilter);
+      if (serviceDateFilter) params.set("serviceDate", serviceDateFilter);
+
+      adminFetch(`/api/admin/customers?${params.toString()}`, {
+        signal: controller.signal,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!active) return;
+          setCustomers(Array.isArray(data?.customers) ? data.customers : []);
+          setTotal(Number.isFinite(data?.total) ? data.total : 0);
+        })
+        .catch((err) => {
+          console.error("Admin customers fetch error", err);
+          if (!active) return;
+          setCustomers([]);
+          setTotal(0);
+        })
+        .finally(() => {
+          if (active) {
+            setLoading(false);
+            setInitialLoading(false);
+          }
+        });
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    adminFetch,
+    page,
+    pageSize,
+    searchQuery,
+    statusFilter,
+    sortOrder,
+    locationFilter,
+    serviceDateFilter,
+  ]);
+
+  useEffect(() => {
     setPage(1);
-  }, [query, statusFilter, sortOrder, locationFilter, serviceDateFilter, pageSize]);
+  }, [searchQuery, statusFilter, sortOrder, locationFilter, serviceDateFilter, pageSize]);
 
   const availableLocations = useMemo(() => {
-    const map = new Map<string, string>();
-    customers.forEach((customer) => {
-      const id = customer.location?._id;
-      const name = customer.location?.name;
-      if (id && name) {
-        map.set(id, name);
-      }
-    });
-    return Array.from(map.entries())
-      .map(([id, name]) => ({ id, name }))
+    return [...locations]
+      .map((loc) => ({ id: loc._id, name: loc.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [customers]);
-
-  const filteredCustomers = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const visible =
-      statusFilter === "all"
-        ? customers
-        : customers.filter((customer) =>
-            statusFilter === "archived" ? customer.isArchived : !customer.isArchived
-          );
-    const byLocation =
-      locationFilter === "all"
-        ? visible
-        : visible.filter((customer) => customer.location?._id === locationFilter);
-    const searched = !q
-      ? byLocation
-      : byLocation.filter((customer) => {
-      const name = customer.name?.toLowerCase() || "";
-      const mobile = customer.mobile || "";
-      const alt = customer.alternateMobile || "";
-      return name.includes(q) || mobile.includes(q) || alt.includes(q);
-    });
-    const withServiceDate = serviceDateFilter
-      ? searched.filter((customer) => {
-        if (!customer.serviceDate) return false;
-        const service = new Date(customer.serviceDate);
-        if (Number.isNaN(service.getTime())) return false;
-        const serviceValue = service.toISOString().slice(0, 10);
-        return serviceValue === serviceDateFilter;
-      })
-      : searched;
-    const sorted = [...withServiceDate].sort((a, b) => {
-      if (sortOrder.startsWith("name")) {
-        const aName = (a.name || "").toLowerCase();
-        const bName = (b.name || "").toLowerCase();
-        if (aName === bName) return 0;
-        const cmp = aName < bName ? -1 : 1;
-        return sortOrder === "name-asc" ? cmp : -cmp;
-      }
-      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      const cmp = aDate - bDate;
-      return sortOrder === "date-asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [customers, query, statusFilter, sortOrder, locationFilter, serviceDateFilter]);
+  }, [locations]);
 
   const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-  }, [filteredCustomers.length, pageSize]);
+    return Math.max(1, Math.ceil(total / pageSize));
+  }, [total, pageSize]);
 
   const pageNumbers = useMemo(() => {
     const maxButtons = 5;
@@ -194,11 +201,7 @@ export default function AdminCustomersPage() {
     }
   }, [page, totalPages]);
 
-  const pagedCustomers = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredCustomers.slice(start, end);
-  }, [filteredCustomers, page, pageSize]);
+  const pagedCustomers = customers;
 
   const handleArchiveToggle = async (customer: Customer) => {
     setNotice(null);
@@ -252,7 +255,8 @@ export default function AdminCustomersPage() {
     }
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
+  if (initialLoading) return <p className="p-4">Loading...</p>;
+  const isRefreshing = loading && !initialLoading;
 
   return (
     <div className="space-y-6">
@@ -263,8 +267,7 @@ export default function AdminCustomersPage() {
             Manage Customers
           </h1>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            {filteredCustomers.length}{" "}
-            {filteredCustomers.length === 1 ? "customer" : "customers"}
+            {total} {total === 1 ? "customer" : "customers"}
           </p>
         </div>
         <Link href="/admin/add-customer" className="crm-btn-primary">
@@ -290,8 +293,8 @@ export default function AdminCustomersPage() {
           <input
             placeholder="Search by name or phone number"
             className="crm-input mt-2"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </label>
         <label className="block w-full md:max-w-xs">
@@ -357,14 +360,18 @@ export default function AdminCustomersPage() {
         </label>
       </div>
 
-      {customers.length === 0 && (
+      {isRefreshing && (
+        <p className="text-xs text-[color:var(--muted)]">Updating list...</p>
+      )}
+
+      {customers.length === 0 && total === 0 && (
         <div className="crm-card">
           <p className="text-sm text-[color:var(--muted)]">
             No customers found.
           </p>
         </div>
       )}
-      {customers.length > 0 && filteredCustomers.length === 0 && (
+      {customers.length === 0 && total > 0 && (
         <div className="crm-card">
           <p className="text-sm text-[color:var(--muted)]">
             No customers match the search.
@@ -372,7 +379,7 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      {filteredCustomers.length > 0 && (
+      {customers.length > 0 && (
         <div className="overflow-x-auto rounded-2xl border border-[color:var(--border)] bg-white/90">
           <table className="crm-table">
             <thead className="bg-white/70">
@@ -499,7 +506,7 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      {filteredCustomers.length > 0 && (
+      {total > 0 && (
         <div className="crm-toolbar">
           <span className="text-xs font-semibold text-[color:var(--muted)]">
             Page {page} of {totalPages}

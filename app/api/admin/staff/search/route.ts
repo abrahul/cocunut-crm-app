@@ -26,11 +26,13 @@ export async function GET(req: Request) {
         { name: { $regex: q, $options: "i" } },
         { phone: { $regex: q, $options: "i" } },
       ],
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json(
       staff.map((s) => ({
-        ...s.toObject(),
+        ...s,
         isActive: s.isActive ?? true,
       }))
     );

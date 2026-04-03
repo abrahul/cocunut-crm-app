@@ -17,5 +17,8 @@ const AdminSessionSchema = new Schema(
   { timestamps: true }
 );
 
+// Speeds up stale-session cleanup scans.
+AdminSessionSchema.index({ logoutAt: 1, lastActivityAt: 1 });
+
 export default models.AdminSession ||
   mongoose.model("AdminSession", AdminSessionSchema);

@@ -21,9 +21,13 @@ export async function GET(
   }
 
   const tasks = await Task.find({ staff: staffId })
-    .populate("customer", "name phone location")
+    .select(
+      "customer location exactAddress latitude longitude serviceDate completedDate numberOfTrees ratePerTree totalAmount status createdAt"
+    )
+    .populate("customer", "name")
     .populate("location", "name")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
   return NextResponse.json(tasks);
 }
