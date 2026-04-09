@@ -7,6 +7,8 @@ import { getReportUnlock } from "@/lib/reportAuth";
 import mongoose from "mongoose";
 
 const ADMIN_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+const ADMIN_SESSION_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+let lastSessionCleanupAt = 0;
 
 export async function GET(request: Request) {
   try {
@@ -56,29 +58,33 @@ export async function GET(request: Request) {
       match.location = new mongoose.Types.ObjectId(locationId);
     }
 
-    const staleSessions = await AdminSession.find({
-      logoutAt: null,
-      lastActivityAt: { $lte: new Date(Date.now() - ADMIN_SESSION_TIMEOUT_MS) },
-    })
-      .select("_id lastActivityAt")
-      .lean();
+    const now = Date.now();
+    if (now - lastSessionCleanupAt > ADMIN_SESSION_CLEANUP_INTERVAL_MS) {
+      lastSessionCleanupAt = now;
+      const staleSessions = await AdminSession.find({
+        logoutAt: null,
+        lastActivityAt: { $lte: new Date(now - ADMIN_SESSION_TIMEOUT_MS) },
+      })
+        .select("_id lastActivityAt")
+        .lean();
 
-    if (staleSessions.length > 0) {
-      await AdminSession.bulkWrite(
-        staleSessions.map((session) => ({
-          updateOne: {
-            filter: { _id: session._id, logoutAt: null },
-            update: {
-              $set: {
-                logoutAt: new Date(
-                  new Date(session.lastActivityAt).getTime() + ADMIN_SESSION_TIMEOUT_MS
-                ),
-                logoutReason: "timeout",
+      if (staleSessions.length > 0) {
+        await AdminSession.bulkWrite(
+          staleSessions.map((session) => ({
+            updateOne: {
+              filter: { _id: session._id, logoutAt: null },
+              update: {
+                $set: {
+                  logoutAt: new Date(
+                    new Date(session.lastActivityAt).getTime() + ADMIN_SESSION_TIMEOUT_MS
+                  ),
+                  logoutReason: "timeout",
+                },
               },
             },
-          },
-        }))
-      );
+          }))
+        );
+      }
     }
 
     const reportDateMatch =

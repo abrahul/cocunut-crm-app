@@ -10,6 +10,7 @@
     "db:duplicates": "node scripts/db/find-duplicate-mobiles.js",
     "db:merge-duplicates": "node scripts/db/merge-duplicate-customers.js",
     "db:normalize-mobiles": "node scripts/db/normalize-customer-mobiles.js",
+    "db:create-indexes": "node scripts/db/create-indexes.js",
     "android:init": "npx cap add android",
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",

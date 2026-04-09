@@ -25,9 +25,16 @@ export async function GET() {
     staffHidden: { $ne: true },
     taskType: "main",
   })
-    .populate("customer")
-    .populate("location")
-    .sort({ createdAt: -1 });
+    .select(
+      "customer location exactAddress latitude longitude numberOfTrees ratePerTree totalAmount status"
+    )
+    .populate(
+      "customer",
+      "name mobile alternateMobile address latitude longitude"
+    )
+    .populate("location", "name")
+    .sort({ createdAt: -1 })
+    .lean();
 
   return NextResponse.json(
     tasks.map((t) => ({

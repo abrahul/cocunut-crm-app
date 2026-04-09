@@ -70,6 +70,24 @@ const TaskSchema = new Schema(
   { timestamps: true }
 );
 
+// Indexes tuned for common admin/report queries and "last task" lookups.
+TaskSchema.index({ customer: 1, createdAt: -1 });
+TaskSchema.index({ customer: 1, completedDate: -1, createdAt: -1 });
+TaskSchema.index({ status: 1, completedDate: -1 });
+TaskSchema.index({ taskType: 1, staff: 1, location: 1 });
+TaskSchema.index({ taskType: 1, serviceDate: 1 });
+TaskSchema.index({
+  staff: 1,
+  status: 1,
+  taskType: 1,
+  staffHidden: 1,
+  createdAt: -1,
+});
+TaskSchema.index({ location: 1, createdAt: -1 });
+TaskSchema.index({ status: 1, createdAt: -1 });
+TaskSchema.index({ completedDate: -1 });
+TaskSchema.index({ serviceDate: 1 });
+
 const TaskModel = models.Task || mongoose.model("Task", TaskSchema);
 
 // In dev/hot-reload, an already-compiled model can retain old required flags.

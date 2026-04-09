@@ -36,7 +36,7 @@ export async function GET(
     );
   }
 
-  const staff = await Staff.findById(staffId);
+  const staff = await Staff.findById(staffId).lean();
 
   if (!staff) {
     return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    ...staff.toObject(),
+    ...staff,
     isActive: normalizeIsActive(staff.isActive),
   });
 }
@@ -99,7 +99,9 @@ export async function PATCH(
     const exists = await Staff.findOne({
       mobile,
       _id: { $ne: staffId },
-    });
+    })
+      .select("_id")
+      .lean();
 
     if (exists) {
       return NextResponse.json(
