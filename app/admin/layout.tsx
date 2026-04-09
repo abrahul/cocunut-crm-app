@@ -1,28 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 const REFRESH_THROTTLE_MS = 20_000;
 
 const navItems = [
-  { label: "Dashboard", href: "/admin" },
   { label: "Customers", href: "/admin/customers" },
   { label: "Staff", href: "/admin/staff" },
-  { label: "Tasks", href: "/admin/tasks" },
-  { label: "Side Tasks", href: "/admin/side-tasks" },
-  { label: "Locations", href: "/admin/locations" },
-  { label: "Reports", href: "/admin/reports" },
 ];
 
-const quickActions = [
-  { label: "Add Customer", href: "/admin/add-customer" },
-  { label: "Add Staff", href: "/admin/add-staff" },
-  { label: "Add Task", href: "/admin/add-task" },
-  { label: "Add Location", href: "/admin/add-location" },
-];
+const quickActions: { label: string; href: string }[] = [];
+const allowedRoutes = new Set(["/admin/customers", "/admin/staff"]);
 
 export default function AdminLayout({
   children,
@@ -30,10 +21,15 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isAuthRoute = pathname?.startsWith("/admin/login");
 
   useEffect(() => {
     if (isAuthRoute) return;
+    if (pathname && !allowedRoutes.has(pathname)) {
+      router.replace("/admin/customers");
+      return;
+    }
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let lastRefreshAt = 0;
@@ -102,7 +98,7 @@ export default function AdminLayout({
       );
       document.removeEventListener("visibilitychange", touchActivity);
     };
-  }, [isAuthRoute]);
+  }, [isAuthRoute, pathname, router, allowedRoutes]);
 
   async function logoutAdmin() {
     try {
@@ -156,22 +152,24 @@ export default function AdminLayout({
             })}
           </nav>
 
-          <div className="mt-8 rounded-2xl border border-[color:var(--border)] bg-white/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
-              Quick Actions
-            </p>
-            <div className="mt-3 flex flex-col gap-2">
-              {quickActions.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-xl border border-[color:var(--border)] bg-white/90 px-3 py-2 text-xs font-semibold text-[color:var(--ink)] transition hover:border-transparent hover:bg-[color:var(--brand)] hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
+          {quickActions.length > 0 && (
+            <div className="mt-8 rounded-2xl border border-[color:var(--border)] bg-white/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                Quick Actions
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                {quickActions.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="rounded-xl border border-[color:var(--border)] bg-white/90 px-3 py-2 text-xs font-semibold text-[color:var(--ink)] transition hover:border-transparent hover:bg-[color:var(--brand)] hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </aside>
 
         <div className="flex flex-1 flex-col">

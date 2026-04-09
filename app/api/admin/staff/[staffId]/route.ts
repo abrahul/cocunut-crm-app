@@ -176,16 +176,6 @@ export async function DELETE(
     );
   }
 
-  const { default: Task } = await import("@/models/Task");
-  const taskCount = await Task.countDocuments({ staff: staffId });
-
-  if (taskCount > 0) {
-    return NextResponse.json(
-      { error: "Staff has tasks assigned. Reassign tasks before deleting." },
-      { status: 409 }
-    );
-  }
-
   const staff = await Staff.findByIdAndDelete(staffId);
   if (!staff) {
     return NextResponse.json(

@@ -293,19 +293,6 @@ export async function DELETE(
       );
     }
 
-    const taskCount = await Task.countDocuments({
-      customer: new mongoose.Types.ObjectId(customerId),
-    });
-    if (taskCount > 0) {
-      return NextResponse.json(
-        {
-          error:
-            "Customer has tasks assigned. Please reassign or archive instead.",
-        },
-        { status: 400 }
-      );
-    }
-
     const deleted = await Customer.findByIdAndDelete(customerId).lean();
     if (!deleted) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
