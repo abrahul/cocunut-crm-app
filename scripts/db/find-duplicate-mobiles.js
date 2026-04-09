@@ -55,9 +55,7 @@ const main = async () => {
   } else {
     console.log(`Found ${results.length} duplicate mobile numbers:`);
     results.forEach((row) => {
-      console.log(
-        `- ${row._id || "(empty)"}: ${row.count} records`
-      );
+      console.log(`- ${row._id || "(empty)"}: ${row.count} records`);
       row.names.forEach((name, idx) => {
         console.log(`  ${idx + 1}. ${name} (${row.ids[idx]})`);
       });
